@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('phone_number');
             $table->foreignId('address_id')->constrained('addresses')->onDelete('cascade');
-            $table->foreignId('office_id')->constrained('office')->onDelete('cascade');
+            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->string('organizational_unit');
             $table->string('gender');
             $table->string('tin_number');
