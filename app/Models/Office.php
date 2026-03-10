@@ -20,7 +20,7 @@ class Office extends Model
     ];
      public function employees(): HasMany
     {
-        return $this->hasMany(Employee::class, 'office_id', 'office_id');
+        return $this->hasMany(Employee::class, 'office_id','id');
     }
     //
 }
