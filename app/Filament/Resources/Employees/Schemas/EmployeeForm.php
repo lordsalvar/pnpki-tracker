@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Employees\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -24,12 +25,24 @@ class EmployeeForm
                 TextInput::make('phone_number')
                     ->tel()
                     ->required(),
-                TextInput::make('address_id')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('office_id')
-                    ->required()
-                    ->numeric(),
+                TextInput::make('address.house_no')
+                    ->required(),
+                TextInput::make('address.street')
+                    ->required(),
+                TextInput::make('address.barangay')
+                    ->required(),
+                TextInput::make('address.municipality')
+                    ->required(),
+                TextInput::make('address.province')
+                    ->required(),
+                TextInput::make('address.zip_code')
+                    ->required(),
+                Select::make('office_id')
+                    ->label('Office')
+                    ->relationship('office', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
                 TextInput::make('organizational_unit')
                     ->required(),
                 TextInput::make('gender')

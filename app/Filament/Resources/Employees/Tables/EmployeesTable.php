@@ -27,11 +27,11 @@ class EmployeesTable
                     ->searchable(),
                 TextColumn::make('phone_number')
                     ->searchable(),
-                TextColumn::make('address_id')
-                    ->numeric()
+                TextColumn::make('address.street')
+                    ->label('Street')
                     ->sortable(),
-                TextColumn::make('office_id')
-                    ->numeric()
+                TextColumn::make('office.name')
+                    ->label('Office')
                     ->sortable(),
                 TextColumn::make('organizational_unit')
                     ->searchable(),

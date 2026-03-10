@@ -10,17 +10,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Office extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'offices';
-    protected $primaryKey = 'office_id';
 
     protected $fillable = [
         'name',
-        'acronym'
+        'acronym',
     ];
-     public function employees(): HasMany
+
+    public function employees(): HasMany
     {
-        return $this->hasMany(Employee::class, 'office_id','id');
+        return $this->hasMany(Employee::class);
     }
-    //
 }
