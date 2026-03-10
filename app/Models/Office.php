@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
 class Office extends Model
@@ -17,7 +18,7 @@ class Office extends Model
         'name',
         'acronym'
     ];
-     public function employees()
+     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class, 'office_id', 'office_id');
     }
