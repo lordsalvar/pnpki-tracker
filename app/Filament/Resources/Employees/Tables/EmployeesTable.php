@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class EmployeesTable
@@ -15,17 +16,17 @@ class EmployeesTable
         return $table
             ->columns([
 
-                //Full Name combined
+                // ✅ Full Name
                 TextColumn::make('fullname')
                     ->label('Full Name')
                     ->getStateUsing(fn ($record) => trim(
                         $record->firstname . ' ' .
-                        (($record->middlename && $record->middlename !== 'N/A') 
-                            ? strtoupper(substr($record->middlename, 0, 1)) . '. ' 
+                        (($record->middlename && $record->middlename !== 'N/A')
+                            ? strtoupper(substr($record->middlename, 0, 1)) . '. '
                             : '') .
                         $record->lastname .
-                        (($record->suffix && $record->suffix !== 'N/A') 
-                            ? ', ' . $record->suffix 
+                        (($record->suffix && $record->suffix !== 'N/A')
+                            ? ', ' . $record->suffix
                             : '')
                     ))
                     ->searchable(query: function ($query, string $search) {
@@ -34,17 +35,35 @@ class EmployeesTable
                             ->orWhere('middlename', 'like', "%{$search}%");
                     }),
 
-                //Officeacronym with full name as tooltip
+                // ✅ Office
                 TextColumn::make('office.acronym')
                     ->label('Office')
                     ->searchable()
                     ->tooltip(fn ($record) => $record->office?->name),
 
-                TextColumn::make('organizational_unit')
-                    ->label('Org. Unit')
+                // Email
+                TextColumn::make('email')
+                    ->label('Email')
                     ->searchable(),
 
-                // Full Address combined
+                // Phone
+                TextColumn::make('phone_number')
+                    ->label('Phone')
+                    ->searchable(),
+
+                    // Hidden by default
+                // Gender
+                TextColumn::make('gender')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+
+                
+                TextColumn::make('organizational_unit')
+                    ->label('Org. Unit')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('full_address')
                     ->label('Address')
                     ->getStateUsing(fn ($record) => implode(', ', array_filter([
@@ -63,27 +82,29 @@ class EmployeesTable
                             ->orWhere('province', 'like', "%{$search}%")
                         );
                     })
-                    ->wrap(),
-
-                // ✅ Rest
-                TextColumn::make('email')
-                    ->label('Email')
-                    ->searchable(),
-
-                TextColumn::make('phone_number')
-                    ->label('Phone')
-                    ->searchable(),
-
-                TextColumn::make('gender')
-                    ->searchable(),
+                    ->wrap()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('tin_number')
                     ->label('TIN')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
             ])
             ->filters([
-                //
+
+                \Filament\Tables\Filters\SelectFilter::make('gender')
+                    ->label('Gender')
+                    ->options([
+                        'male'   => 'Male',
+                        'female' => 'Female',
+                        'other'  => 'Other',
+                    ]),
+
+                \Filament\Tables\Filters\SelectFilter::make('office_id')
+                    ->label('Office')
+                    ->relationship('office', 'acronym'),
+
             ])
             ->recordActions([
                 EditAction::make(),
