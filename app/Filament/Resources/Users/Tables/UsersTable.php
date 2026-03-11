@@ -24,6 +24,7 @@ class UsersTable
                     ->color(fn (string $state): string => match ($state) {
                         'Admin' => 'danger',
                         'Client' => 'success',
+                        default => 'gray'
                     })
                     ->sortable(),
                 TextColumn::make('email_verified_at')
