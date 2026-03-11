@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Address extends Model
 {
@@ -11,12 +12,19 @@ class Address extends Model
         'house_no',
         'street',
         'barangay',
-        'municaplity',
+        'municapality',
         'province',
         'zip_code'
     ];
     
 
     
+
+
+    public function Employee(): HasOne
+    {
+        return $this->HasOne(Employee::class);
+    }
+
 
 }
