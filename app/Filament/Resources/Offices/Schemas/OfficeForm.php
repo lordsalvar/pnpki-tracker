@@ -15,7 +15,7 @@ class OfficeForm
                     ->required()
                     ->placeholder('Enter Office Name')
                     ->extraInputAttributes(['oninput' => 'this.value = this.value.toUpperCase()']),
-                    
+
                 TextInput::make('acronym')
                     ->required()
                     ->placeholder('Enter Acronym')

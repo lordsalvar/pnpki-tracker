@@ -10,10 +10,33 @@ class EditOffice extends EditRecord
 {
     protected static string $resource = OfficeResource::class;
 
+    
+
+    public function getTitle(): string
+    {
+        return $this->record->acronym;
+    }
+
+    public function getSubheading(): string
+    {
+        return $this->record->name;
+    }
+
+
+
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            $this->getSaveFormAction(),
+            $this->getCancelFormAction(),
+
         ];
     }
+
+    protected function getFormActions(): array
+    {
+        return [];
+    }
+
+
 }
