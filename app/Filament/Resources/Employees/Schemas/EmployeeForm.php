@@ -8,6 +8,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use App\Services\PsgcService;
+use Filament\Schemas\Components\Utilities\Get;
 
 
 class EmployeeForm
@@ -76,22 +78,52 @@ class EmployeeForm
                             ->label('Street')
                             ->required()
                             ->maxLength(255),
-                        TextInput::make('barangay')
-                            ->label('Barangay')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('municipality')
-                            ->label('Municipality')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('province')
+                        Select::make('province')
                             ->label('Province')
-                            ->required()
-                            ->maxLength(255),
+                            ->options(fn () => app(PsgcService::class)->provinces())
+                            ->searchable()
+                            ->preload()
+                            ->live()
+                            ->afterStateUpdated(function (Set $set) {
+                                $set('municipality', null);
+                                $set('barangay', null);
+                            })
+                            ->required(),
+
+                        Select::make('municipality')
+                            ->label('City / Municipality')
+                            ->options(function (Get $get) {
+                                $province = $get('province');
+                                if (!$province) return [];
+                                return app(PsgcService::class)->municipalities($province);
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->live()
+                            ->afterStateUpdated(function (Set $set) {
+                                $set('barangay', null);
+                            })
+                            ->disabled(fn (Get $get) => !$get('province'))
+                            ->required(),
+
+                        Select::make('barangay')
+                            ->label('Barangay')
+                            ->options(function (Get $get) {
+                                $municipality = $get('municipality');
+                                if (!$municipality) return [];
+                                return app(PsgcService::class)->barangays($municipality);
+                            })
+                            ->searchable()
+                            ->live()
+                            ->disabled(fn (Get $get) => !$get('municipality'))
+                            ->required(),
+
                         TextInput::make('zip_code')
-                            ->label('Zip Code')
-                            ->required()
-                            ->maxLength(10),
+                            ->label('ZIP Code')
+                            ->numeric()
+                            ->minLength(4)
+                            ->maxLength(4)
+                            ->required(),
                     ]),
                 Select::make('office_id')
                     ->label('Office')
