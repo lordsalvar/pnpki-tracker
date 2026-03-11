@@ -6,7 +6,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class EmployeesTable
@@ -15,96 +14,69 @@ class EmployeesTable
     {
         return $table
             ->columns([
-
-                //Full Name
-                TextColumn::make('fullname')
-                    ->label('Full Name')
-                    ->getStateUsing(fn ($record) => trim(
-                        $record->firstname . ' ' .
-                        (($record->middlename && $record->middlename !== 'N/A')
-                            ? strtoupper(substr($record->middlename, 0, 1)) . '. '
-                            : '') .
-                        $record->lastname .
-                        (($record->suffix && $record->suffix !== 'N/A')
-                            ? ', ' . $record->suffix
-                            : '')
-                    ))
-                    ->searchable(query: function ($query, string $search) {
-                        $query->where('firstname', 'like', "%{$search}%")
-                            ->orWhere('lastname', 'like', "%{$search}%")
-                            ->orWhere('middlename', 'like', "%{$search}%");
-                    }),
-
-                //Office
-                TextColumn::make('office.acronym')
-                    ->label('Office')
-                    ->searchable()
-                    ->tooltip(fn ($record) => $record->office?->name),
-
-                // Email
+                TextColumn::make('firstname')
+                    ->label('First Name')
+                    ->searchable(),
+                TextColumn::make('lastname')
+                    ->label('Last Name')
+                    ->searchable(),
+                TextColumn::make('middlename')
+                    ->label('Middle Name')
+                    ->searchable(),
+                TextColumn::make('suffix')
+                    ->label('Suffix')
+                    ->searchable(),
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
-
-                // Phone
                 TextColumn::make('phone_number')
-                    ->label('Phone')
+                    ->label('Phone Number')
                     ->searchable(),
 
-                    // Hidden by default
-                // Gender
-                TextColumn::make('gender')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    
+                    //address
+                 // Address columns (from addresses migration)
+                TextColumn::make('address.house_no')
+                    ->label('House No.')
+                    ->searchable(),
+                TextColumn::make('address.street')
+                    ->label('Street')
+                    ->searchable(),
+                TextColumn::make('address.barangay')
+                    ->label('Barangay')
+                    ->searchable(),
+                TextColumn::make('address.municipality')
+                    ->label('Municipality')
+                    ->searchable(),
+                TextColumn::make('address.province')
+                    ->label('Province')
+                    ->searchable(),
+                TextColumn::make('address.zip_code')
+                    ->label('Zip Code')
+                    ->searchable(),
 
 
-                
+                    
+                //offices
+                            
+                TextColumn::make('office.name')
+                    ->label('Office')
+                    ->searchable(),
+                TextColumn::make('office.acronym')
+                    ->label('Acronym')
+                    ->searchable(),
+
+
                 TextColumn::make('organizational_unit')
-                    ->label('Org. Unit')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                TextColumn::make('full_address')
-                    ->label('Address')
-                    ->getStateUsing(fn ($record) => implode(', ', array_filter([
-                        $record->address?->house_no,
-                        $record->address?->street,
-                        $record->address?->barangay,
-                        $record->address?->municipality,
-                        $record->address?->province,
-                        $record->address?->zip_code,
-                    ])))
-                    ->searchable(query: function ($query, string $search) {
-                        $query->whereHas('address', fn ($q) => $q
-                            ->where('street', 'like', "%{$search}%")
-                            ->orWhere('barangay', 'like', "%{$search}%")
-                            ->orWhere('municipality', 'like', "%{$search}%")
-                            ->orWhere('province', 'like', "%{$search}%")
-                        );
-                    })
-                    ->wrap()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
+                    ->label('Organizational Unit')
+                    ->searchable(),
+                TextColumn::make('gender')
+                    ->searchable(),
                 TextColumn::make('tin_number')
-                    ->label('TIN')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
+                    ->searchable(),
             ])
             ->filters([
-
-                \Filament\Tables\Filters\SelectFilter::make('gender')
-                    ->label('Gender')
-                    ->options([
-                        'male'   => 'Male',
-                        'female' => 'Female',
-                        'other'  => 'Other',
-                    ]),
-
-                \Filament\Tables\Filters\SelectFilter::make('office_id')
-                    ->label('Office')
-                    ->relationship('office', 'acronym'),
-
+                //
             ])
             ->recordActions([
                 EditAction::make(),

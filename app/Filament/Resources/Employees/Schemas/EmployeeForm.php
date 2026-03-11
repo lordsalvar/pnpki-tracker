@@ -2,15 +2,13 @@
 
 namespace App\Filament\Resources\Employees\Schemas;
 
-use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Group;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use App\Services\PsgcService;
 use Filament\Schemas\Components\Utilities\Get;
-
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Utilities\Set;
 
 class EmployeeForm
 {
@@ -30,29 +28,11 @@ class EmployeeForm
                     ->maxLength(255),
                 TextInput::make('middlename')
                     ->label('Middle Name')
-                    ->required()
-                    ->maxLength(255)
-                    ->suffixAction(
-                        Action::make('set_na')
-                            ->label('N/A')
-                            ->link() 
-                            ->tooltip('Click to set Middle Name as N/A')
-                            ->color('gray')
-                            ->action(fn (Set $set) => $set('middlename', 'N/A'))
-                    ),
+                    ->maxLength(255),
                 TextInput::make('suffix')
                     ->label('Suffix')
                     ->placeholder('Jr., Sr., III')
-                    ->required()
-                    ->maxLength(20)
-                    ->suffixAction(
-                        Action::make('set_na')
-                            ->label('N/A')
-                            ->link() 
-                            ->tooltip('Click to set Suffix as N/A')
-                            ->color('gray') 
-                            ->action(fn (Set $set) => $set('suffix', 'N/A'))
-                    ),
+                    ->maxLength(20),
                 TextInput::make('email')
                     ->label('Email Address')
                     ->email()
@@ -64,19 +44,20 @@ class EmployeeForm
                     ->tel()
                     ->required()
                     ->maxLength(20),
-
-                Group::make()
+                    
+                    
+                    Group::make()
                     ->relationship('address')
                     ->columnSpan(2)
                     ->columns(2)
                     ->schema([
                         TextInput::make('house_no')
-                            ->label('House No.')
-                            ->required()
-                            ->maxLength(255),
+                        ->label('House No.')
+                        ->required()
+                        ->maxLength(255),
                         TextInput::make('street')
-                            ->label('Street')
-                            ->required()
+                        ->label('Street')
+                        ->required()
                             ->maxLength(255),
                         Select::make('province')
                             ->label('Province')
@@ -149,7 +130,6 @@ class EmployeeForm
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(20),
-
             ]);
     }
-}
+    }
