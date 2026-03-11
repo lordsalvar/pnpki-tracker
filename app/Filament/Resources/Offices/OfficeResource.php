@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use App\Filament\Resources\Offices\RelationManagers\EmployeesRelationManager;
 
 class OfficeResource extends Resource
 {
@@ -20,7 +21,7 @@ class OfficeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'acronym';
 
     public static function form(Schema $schema): Schema
     {
@@ -35,7 +36,7 @@ class OfficeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            EmployeesRelationManager::class,
         ];
     }
 
@@ -47,4 +48,6 @@ class OfficeResource extends Resource
             'edit' => EditOffice::route('/{record}/edit'),
         ];
     }
+
+
 }
