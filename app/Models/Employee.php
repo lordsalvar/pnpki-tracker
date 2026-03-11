@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Employee extends Model
 {
@@ -18,4 +20,15 @@ class Employee extends Model
         'office_id',
         'organizational_unit',
     ];
+
+    public function address():HasOne 
+    {
+        return $this->HasOne(Address::class);
+    }
+
+    public function office():BelongsTo
+    {
+        return $this->belongsTo(Office::class);
+    }
+
 } 
