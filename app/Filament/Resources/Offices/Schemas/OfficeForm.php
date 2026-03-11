@@ -12,9 +12,14 @@ class OfficeForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->required(),
+                    ->required()
+                    ->placeholder('Enter Office Name')
+                    ->extraInputAttributes(['oninput' => 'this.value = this.value.toUpperCase()']),
+                    
                 TextInput::make('acronym')
-                    ->required(),
+                    ->required()
+                    ->placeholder('Enter Acronym')
+                    ->extraInputAttributes(['oninput' => 'this.value = this.value.toUpperCase()']),
             ]);
     }
 }
