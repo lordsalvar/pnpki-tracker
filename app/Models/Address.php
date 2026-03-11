@@ -15,6 +15,7 @@ class Address extends Model
         'province',
         'zip_code'
     ];
+    
 
     
 
