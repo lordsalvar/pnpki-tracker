@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
@@ -21,14 +23,22 @@ class Employee extends Model
         'gender',
         'tin_number',
     ];
-
-    public function address(): BelongsTo
+    //added eloquent relationships for address and office
+    
+    public function address():BelongsTo
     {
         return $this->belongsTo(Address::class);
     }
+ 
 
-    public function office(): BelongsTo
+    public function office():BelongsTo
     {
         return $this->belongsTo(Office::class);
     }
-}
+    
+    public function attachment():HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
+} 

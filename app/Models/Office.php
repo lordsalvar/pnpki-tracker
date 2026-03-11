@@ -12,6 +12,7 @@ class Office extends Model
     use HasFactory;
 
     protected $table = 'offices';
+    
 
     protected $fillable = [
         'name',
@@ -22,4 +23,14 @@ class Office extends Model
     {
         return $this->hasMany(Employee::class);
     }
+
+    public function setNameAttribute($value)
+    {
+        $this->attributes['name'] = strtoupper($value);
+    }
+    public function setAcronymAttribute($value)
+    {
+        $this->attributes['acronym'] = strtoupper($value);
+    }
+    //
 }

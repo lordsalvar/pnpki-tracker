@@ -15,8 +15,8 @@ class Attachment extends Model
         'file_path',
         'uploaded_at',
     ];
-
-    public function employeeAttachment(): belongsTo
+        
+    public function employee():BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }

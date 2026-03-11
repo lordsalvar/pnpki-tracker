@@ -17,8 +17,10 @@ class Address extends Model
         'zip_code',
     ];
 
-    public function employee(): HasOne
+    public function Employee(): HasOne
     {
-        return $this->hasOne(Employee::class);
+        return $this->HasOne(Employee::class);
     }
+
+
 }
