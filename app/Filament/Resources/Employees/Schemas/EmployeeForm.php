@@ -9,6 +9,7 @@ use App\Services\PsgcService;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Actions\Action;
 
 class EmployeeForm
 {
@@ -27,12 +28,29 @@ class EmployeeForm
                     ->required()
                     ->maxLength(255),
                 TextInput::make('middlename')
-                    ->label('Middle Name')
-                    ->maxLength(255),
+                    ->required()
+                    ->maxLength(255)
+                    ->suffixAction(
+                        Action::make('set_na')
+                            ->label('N/A')
+                            ->link() 
+                            ->tooltip('Click to set Middle Name as N/A')
+                            ->color('gray')
+                            ->action(fn (Set $set) => $set('middlename', 'N/A'))
+                    ),
                 TextInput::make('suffix')
                     ->label('Suffix')
                     ->placeholder('Jr., Sr., III')
-                    ->maxLength(20),
+                    ->required()
+                    ->maxLength(20)
+                    ->suffixAction(
+                        Action::make('set_na')
+                            ->label('N/A')
+                            ->link() 
+                            ->tooltip('Click to set Suffix as N/A')
+                            ->color('gray') 
+                            ->action(fn (Set $set) => $set('suffix', 'N/A'))
+                    ),
                 TextInput::make('email')
                     ->label('Email Address')
                     ->email()
