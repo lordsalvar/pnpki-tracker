@@ -14,66 +14,73 @@ class EmployeesTable
     {
         return $table
             ->columns([
-                TextColumn::make('firstname')
-                    ->label('First Name')
+
+                //Full Name combined
+                TextColumn::make('fullname')
+                    ->label('Full Name')
+                    ->getStateUsing(fn ($record) => trim(
+                        $record->firstname . ' ' .
+                        (($record->middlename && $record->middlename !== 'N/A') 
+                            ? strtoupper(substr($record->middlename, 0, 1)) . '. ' 
+                            : '') .
+                        $record->lastname .
+                        (($record->suffix && $record->suffix !== 'N/A') 
+                            ? ', ' . $record->suffix 
+                            : '')
+                    ))
+                    ->searchable(query: function ($query, string $search) {
+                        $query->where('firstname', 'like', "%{$search}%")
+                            ->orWhere('lastname', 'like', "%{$search}%")
+                            ->orWhere('middlename', 'like', "%{$search}%");
+                    }),
+
+                //Officeacronym with full name as tooltip
+                TextColumn::make('office.acronym')
+                    ->label('Office')
+                    ->searchable()
+                    ->tooltip(fn ($record) => $record->office?->name),
+
+                TextColumn::make('organizational_unit')
+                    ->label('Org. Unit')
                     ->searchable(),
-                TextColumn::make('lastname')
-                    ->label('Last Name')
-                    ->searchable(),
-                TextColumn::make('middlename')
-                    ->label('Middle Name')
-                    ->searchable(),
-                TextColumn::make('suffix')
-                    ->label('Suffix')
-                    ->searchable(),
+
+                // Full Address combined
+                TextColumn::make('full_address')
+                    ->label('Address')
+                    ->getStateUsing(fn ($record) => implode(', ', array_filter([
+                        $record->address?->house_no,
+                        $record->address?->street,
+                        $record->address?->barangay,
+                        $record->address?->municipality,
+                        $record->address?->province,
+                        $record->address?->zip_code,
+                    ])))
+                    ->searchable(query: function ($query, string $search) {
+                        $query->whereHas('address', fn ($q) => $q
+                            ->where('street', 'like', "%{$search}%")
+                            ->orWhere('barangay', 'like', "%{$search}%")
+                            ->orWhere('municipality', 'like', "%{$search}%")
+                            ->orWhere('province', 'like', "%{$search}%")
+                        );
+                    })
+                    ->wrap(),
+
+                // ✅ Rest
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
+
                 TextColumn::make('phone_number')
-                    ->label('Phone Number')
+                    ->label('Phone')
                     ->searchable(),
 
-                    
-                    //address
-                 // Address columns (from addresses migration)
-                TextColumn::make('address.house_no')
-                    ->label('House No.')
-                    ->searchable(),
-                TextColumn::make('address.street')
-                    ->label('Street')
-                    ->searchable(),
-                TextColumn::make('address.barangay')
-                    ->label('Barangay')
-                    ->searchable(),
-                TextColumn::make('address.municipality')
-                    ->label('Municipality')
-                    ->searchable(),
-                TextColumn::make('address.province')
-                    ->label('Province')
-                    ->searchable(),
-                TextColumn::make('address.zip_code')
-                    ->label('Zip Code')
-                    ->searchable(),
-
-
-                    
-                //offices
-                            
-                TextColumn::make('office.name')
-                    ->label('Office')
-                    ->searchable(),
-                TextColumn::make('office.acronym')
-                    ->label('Acronym')
-                    ->searchable(),
-
-
-                TextColumn::make('organizational_unit')
-                    ->label('Organizational Unit')
-                    ->searchable(),
                 TextColumn::make('gender')
                     ->searchable(),
+
                 TextColumn::make('tin_number')
+                    ->label('TIN')
                     ->searchable(),
+
             ])
             ->filters([
                 //
