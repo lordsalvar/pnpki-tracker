@@ -10,6 +10,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Actions\Action;
+use App\Enums\Gender;
 
 class EmployeeForm
 {
@@ -137,11 +138,7 @@ class EmployeeForm
                     ->maxLength(255),
                 Select::make('gender')
                     ->label('Gender')
-                    ->options([
-                        'male' => 'Male',
-                        'female' => 'Female',
-                        'other' => 'Other',
-                    ])
+                    ->options(Gender::class)  // ✅ Filament reads the enum labels automatically
                     ->required(),
                 TextInput::make('tin_number')
                     ->label('TIN Number')

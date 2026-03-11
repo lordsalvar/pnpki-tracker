@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\Gender;
 
 class Employee extends Model
 {
@@ -22,6 +23,10 @@ class Employee extends Model
         'organizational_unit',
         'gender',
         'tin_number',
+    ];
+
+    protected $casts = [
+        'gender' => Gender::class,
     ];
     //added eloquent relationships for address and office
     
