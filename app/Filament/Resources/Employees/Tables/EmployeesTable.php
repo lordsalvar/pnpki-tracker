@@ -16,7 +16,7 @@ class EmployeesTable
         return $table
             ->columns([
 
-                // ✅ Full Name
+                //Full Name
                 TextColumn::make('fullname')
                     ->label('Full Name')
                     ->getStateUsing(fn ($record) => trim(
@@ -35,7 +35,7 @@ class EmployeesTable
                             ->orWhere('middlename', 'like', "%{$search}%");
                     }),
 
-                // ✅ Office
+                //Office
                 TextColumn::make('office.acronym')
                     ->label('Office')
                     ->searchable()
