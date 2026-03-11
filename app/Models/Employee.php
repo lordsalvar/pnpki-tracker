@@ -20,6 +20,8 @@ class Employee extends Model
         'address_id',
         'office_id',
         'organizational_unit',
+        'gender',
+        'tin_number',
     ];
     //added eloquent relationships for address and office
     
