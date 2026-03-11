@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('organizational_unit');
             $table->string('gender');
             $table->string('tin_number');
+            $table->timestamps();
         });
     }
 
