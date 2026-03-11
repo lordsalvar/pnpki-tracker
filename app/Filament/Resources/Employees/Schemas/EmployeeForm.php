@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Employees\Schemas;
 
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class EmployeeForm
@@ -16,8 +18,22 @@ class EmployeeForm
                     ->required(),
                 TextInput::make('lastname')
                     ->required(),
-                TextInput::make('middlename'),
-                TextInput::make('suffix'),
+                TextInput::make('middlename')
+                    ->hintAction(
+                        Action::make('set-na-middlename')
+                            ->label('N/A')
+                            ->action(function (Set $set) {
+                                $set('middlename', 'N/A');
+                            })
+                    ),
+                TextInput::make('suffix')
+                    ->hintAction(
+                        Action::make('set-na-suffix')
+                            ->label('N/A')
+                            ->action(function (Set $set) {
+                                $set('suffix', 'N/A');
+                            })
+                    ),
                 TextInput::make('email')
                     ->label('Email address')
                     ->email()
