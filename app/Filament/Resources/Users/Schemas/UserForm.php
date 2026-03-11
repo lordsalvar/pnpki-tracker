@@ -24,11 +24,11 @@ class UserForm
                 TextInput::make('password')
                     ->password()
                     ->required()
-                    ->dehydrateStateUsing(fn ($state) => bcrypt($state)), // hash password
+                    ->dehydrateStateUsing(fn ($state) => bcrypt($state)),
 
                 Select::make('role')
                     ->label('User Role')
-                    ->options(UserRole::labels())     // Client / Admin
+                    ->options(UserRole::labels())    
                     ->default(UserRole::CLIENT->value)
                     ->required(),
             ]);
