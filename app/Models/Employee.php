@@ -20,11 +20,13 @@ class Employee extends Model
         'office_id',
         'organizational_unit',
     ];
-
-    public function address():HasOne 
+    //added eloquent relationships for address and office
+    
+    public function address():BelongsTo
     {
-        return $this->HasOne(Address::class);
+        return $this->belongsTo(Address::class);
     }
+ 
 
     public function office():BelongsTo
     {
