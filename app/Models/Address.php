@@ -12,14 +12,10 @@ class Address extends Model
         'house_no',
         'street',
         'barangay',
-        'municapality',
+        'municipality',
         'province',
         'zip_code'
     ];
-    
-
-    
-
 
     public function Employee(): HasOne
     {
