@@ -16,10 +16,6 @@ class Address extends Model
         'province',
         'zip_code'
     ];
-    
-
-    
-
 
     public function Employee(): HasOne
     {
