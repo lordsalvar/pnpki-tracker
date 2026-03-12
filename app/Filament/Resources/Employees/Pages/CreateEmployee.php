@@ -62,7 +62,7 @@ class CreateEmployee extends CreateRecord
             'file_type'   => $fileKey,
             'file_name'   => basename($tempPath),
             'file_path'   => $finalPath,
-            'status'      => 'pending',
+            
         ]);
     }
 }
