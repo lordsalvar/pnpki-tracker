@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('file_type');
             $table->string('file_name');
             $table->string('file_path');
-            $table->timestamp('uploaded_at')->useCurrent();
+            $table->timestamps();
         });
     }
 
