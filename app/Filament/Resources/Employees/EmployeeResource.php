@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Employees;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\Employees\Pages\CreateEmployee;
 use App\Filament\Resources\Employees\Pages\EditEmployee;
 use App\Filament\Resources\Employees\Pages\ListEmployees;
@@ -13,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class EmployeeResource extends Resource
 {
@@ -21,6 +23,23 @@ class EmployeeResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
     protected static ?string $recordTitleAttribute = 'full_name';
+
+    // Admin + Client
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+        if (!$user) return false;
+
+        $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
+
+        return in_array($role, [UserRole::ADMIN, UserRole::CLIENT]);
+    }
+
+    // Always show in sidebar
+    public static function shouldRegisterNavigation(): bool
+    {
+        return true;
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -34,9 +53,7 @@ class EmployeeResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
