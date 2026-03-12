@@ -1,8 +1,6 @@
 <?php
 
 namespace App\Filament\Resources\Users;
-
-use App\Enums\UserRole;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
@@ -14,7 +12,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 
 class UserResource extends Resource
 {
@@ -24,18 +21,6 @@ class UserResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    // Admin only
-    public static function canAccess(): bool
-    {
-        $user = Auth::user();
-        if (!$user) return false;
-
-        return ($user->role instanceof UserRole)
-            ? $user->role === UserRole::ADMIN
-            : $user->role === UserRole::ADMIN->value;
-    }
-
-    // Always show in sidebar (even if client cannot access)
     public static function shouldRegisterNavigation(): bool
     {
         return true;
