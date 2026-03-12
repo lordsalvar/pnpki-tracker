@@ -19,7 +19,6 @@ class EmployeeForm
         return $schema
             ->columns(2)
             ->components([
-
                 TextInput::make('firstname')
                     ->label('First Name')
                     ->required()
@@ -34,7 +33,7 @@ class EmployeeForm
                     ->suffixAction(
                         Action::make('set_na')
                             ->label('N/A')
-                            ->link() 
+                            ->link()
                             ->tooltip('Click to set Middle Name as N/A')
                             ->color('gray')
                             ->action(fn (Set $set) => $set('middlename', 'N/A'))
@@ -47,9 +46,9 @@ class EmployeeForm
                     ->suffixAction(
                         Action::make('set_na')
                             ->label('N/A')
-                            ->link() 
+                            ->link()
                             ->tooltip('Click to set Suffix as N/A')
-                            ->color('gray') 
+                            ->color('gray')
                             ->action(fn (Set $set) => $set('suffix', 'N/A'))
                     ),
                 TextInput::make('email')
@@ -63,8 +62,6 @@ class EmployeeForm
                     ->tel()
                     ->required()
                     ->maxLength(20),
-
-
                     Group::make()
                     ->columnSpan(2)
                     ->columns(2)
