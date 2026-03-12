@@ -20,17 +20,19 @@ class UserForm
                     ->label('Email Address')
                     ->email()
                     ->required(),
+                    
+                Select::make('role')
+                    ->label('User Role')
+                    ->options(UserRole::labels())    
+                    ->default(UserRole::CLIENT->value)
+                    ->required(),
 
                 TextInput::make('password')
                     ->password()
                     ->required()
                     ->dehydrateStateUsing(fn ($state) => bcrypt($state)),
 
-                Select::make('role')
-                    ->label('User Role')
-                    ->options(UserRole::labels())    
-                    ->default(UserRole::CLIENT->value)
-                    ->required(),
+                
             ]);
     }
 }
