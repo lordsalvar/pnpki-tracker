@@ -7,16 +7,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attachment extends Model
 {
-    //
     protected $fillable = [
         'employee_id',
         'file_type',
         'file_name',
         'file_path',
+        'status',
         'uploaded_at',
     ];
-        
-    public function employee():BelongsTo
+
+    protected $casts = [
+        'uploaded_at' => 'datetime',
+    ];
+
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }
