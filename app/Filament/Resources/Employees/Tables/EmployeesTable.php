@@ -54,8 +54,8 @@ class EmployeesTable
                     // Hidden by default
                 // Gender
                 TextColumn::make('gender')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->badge()  // optional but looks nice with enums
+                    ->searchable(),
 
 
                 
