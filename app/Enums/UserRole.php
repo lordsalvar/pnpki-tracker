@@ -10,8 +10,8 @@ enum UserRole: string
     public static function labels(): array
     {
         return [
-            self::CLIENT->value => 'Client',
-            self::ADMIN->value => 'Admin',
+            self::CLIENT->value => 'client',
+            self::ADMIN->value => 'admin',
         ];
     }
 }
