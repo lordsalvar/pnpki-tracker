@@ -21,7 +21,6 @@ class EmployeeForm
         return $schema
             ->columns(2)
             ->components([
-
                 TextInput::make('firstname')
                     ->label('First Name')
                     ->required()
@@ -71,7 +70,7 @@ class EmployeeForm
                     ->required()
                     ->maxLength(20),
 
-                Group::make()
+                    Group::make()
                     ->columnSpan(2)
                     ->columns(2)
                     ->schema([

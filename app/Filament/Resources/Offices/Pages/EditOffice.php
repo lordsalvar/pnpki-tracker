@@ -10,7 +10,7 @@ class EditOffice extends EditRecord
 {
     protected static string $resource = OfficeResource::class;
 
-    
+
 
     public function getTitle(): string
     {
