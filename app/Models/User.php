@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Enums\UserRole;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable
 {
@@ -49,5 +50,12 @@ class User extends Authenticatable
     protected $attributes = [
         'role' => UserRole::CLIENT->value,
     ];
+
+
+     public function office():BelongsTo
+    {
+        return $this->belongsTo(Office::class);
+    }
+    
 }
 
