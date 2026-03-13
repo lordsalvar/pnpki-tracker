@@ -28,6 +28,9 @@ class OfficePolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+        if (UserRole::REPRESENTATIVE->value === $user->role && $user->office_id === $office->id) {
+            return true;
+        }
         return false;
     }
 
