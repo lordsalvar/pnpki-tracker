@@ -24,13 +24,11 @@ class EmployeeForm
                 TextInput::make('firstname')
                     ->label('First Name')
                     ->required()
-                    ->maxLength(255)
-                    ->live(onBlur: true),
+                    ->maxLength(255),
                 TextInput::make('lastname')
                     ->label('Last Name')
                     ->required()
-                    ->maxLength(255)
-                    ->live(onBlur: true),
+                    ->maxLength(255),
                 TextInput::make('middlename')
                     ->required()
                     ->maxLength(255)
