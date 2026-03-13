@@ -51,13 +51,33 @@ class DatabaseSeeder extends Seeder
             'role'=>UserRole::CLIENT->value,
         ]);
 
+
+
+
+        //Representatives - each assigned to different offices
         DB::table('users')->insert([
-            'name'=>'representative',
-            'email'=>'rep@local.dev',
+            'name'=>'PICTO Representative',
+            'email'=>'picto@local.dev',
             'password'=>Hash::make('password'),
             'role'=>UserRole::REPRESENTATIVE->value,
+            'office_id' => 1,
         ]);
 
+        DB::table('users')->insert([
+            'name'=>'PHRMO Representative',
+            'email'=>'phrmo@local.dev',
+            'password'=>Hash::make('password'),
+            'role'=>UserRole::REPRESENTATIVE->value,
+            'office_id' => 2,
+        ]);
+
+         DB::table('users')->insert([
+            'name'=>'PHO Representative',
+            'email'=>'pho@local.dev',
+            'password'=>Hash::make('password'),
+            'role'=>UserRole::REPRESENTATIVE->value,
+            'office_id' => 3,
+        ]);
 
     }
 }
