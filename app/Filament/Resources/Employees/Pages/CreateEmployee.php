@@ -35,35 +35,34 @@ class CreateEmployee extends CreateRecord
 
     protected function afterCreate(): void
 {
+   
     $data = $this->form->getRawState();
     $employee = $this->getRecord();
     $combo = $data['id_combo'];
-
     $fileKeys = match($combo) {
-        'national_id'   => ['pnpki_form', 'national_id'],
-        'passport_umid' => ['pnpki_form', 'passport', 'umid'],
-        'valid_ids'     => ['pnpki_form', 'valid_id_1', 'valid_id_2'],
+        'national_id'   => ['upload_pnpki', 'upload_national_id'],
+        'passport_umid' => ['upload_pnpki', 'upload_passport', 'upload_umid'],
+        'valid_ids'     => ['upload_pnpki', 'upload_id1', 'upload_id2'],
         default         => [],
     };
 
-    foreach ($fileKeys as $fileKey) {
-        if (empty($data[$fileKey])) continue;
+    foreach ($fileKeys as $fieldName) {
+        $fieldValue = $data[$fieldName] ?? [];
+        if (empty($fieldValue)) continue;
 
-        $tempPath = is_array($data[$fileKey])
-            ? array_values($data[$fileKey])[0]
-            : $data[$fileKey];
+        $filePath = array_values($fieldValue)[0];
 
-        $finalPath = "attachments/employees/{$employee->id}/{$fileKey}.pdf";
-
-        Storage::move($tempPath, $finalPath);
+       
 
         Attachment::create([
             'employee_id' => $employee->id,
-            'file_type'   => $fileKey,
-            'file_name'   => basename($tempPath),
-            'file_path'   => $finalPath,
+            'file_type'   => $fieldName,
+            'file_name'   => basename($filePath),
+            'file_path'   => $filePath,
             
         ]);
     }
+
+    
 }
 }
