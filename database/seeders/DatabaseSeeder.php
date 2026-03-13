@@ -8,6 +8,8 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Database\Seeders\OfficeSeeder;
+use Database\Seeders\RepresentativeSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -26,5 +28,36 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => UserRole::ADMIN->value,
         ]);
+
+        DB::table('offices')->insert([
+            'name' => 'Provincial Information and Communications Technology Office',
+            'acronym' => 'PGO-PICTO',
+        ]);
+
+        DB::table('offices')->insert([
+            'name' => 'Provincial Human Resource Management Office',
+            'acronym' => 'PHRMO',
+        ]);
+
+        DB::table('offices')->insert([
+            'name' => 'Provincial Health Office',
+            'acronym' => 'PHO',
+        ]);
+
+        DB::table('users')->insert([
+            'name'=>'client',
+            'email'=>'client@local.dev',
+            'password'=>Hash::make('password'),
+            'role'=>UserRole::CLIENT->value,
+        ]);
+
+        DB::table('users')->insert([
+            'name'=>'representative',
+            'email'=>'rep@local.dev',
+            'password'=>Hash::make('password'),
+            'role'=>UserRole::REPRESENTATIVE->value,
+        ]);
+
+
     }
 }
