@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('role')->default('client');
             $table->string('password');
+            $table->foreignId('office_id')->nullable()->constrained()->onDelete('set null');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -39,7 +40,7 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.  
+     * Reverse the migrations.
      */
     public function down(): void
     {
