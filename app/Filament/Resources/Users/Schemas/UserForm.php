@@ -31,6 +31,11 @@ class UserForm
                     ->password()
                     ->required()
                     ->dehydrateStateUsing(fn ($state) => bcrypt($state)),
+                Select::make('office_id')
+                    ->label('Office')
+                    ->relationship('office', 'name')
+                    ->preload()
+                    ->searchable(),
 
                 
             ]);
