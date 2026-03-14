@@ -13,7 +13,9 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use App\Enums\UserRole;
 use App\Filament\Resources\Offices\RelationManagers\EmployeesRelationManager;
+use Illuminate\Database\Eloquent\Builder;
 
 
 class OfficeResource extends Resource
@@ -39,6 +41,18 @@ class OfficeResource extends Resource
         return [
             EmployeesRelationManager::class,
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user->role === UserRole::REPRESENTATIVE->value) {
+            $query->where('id', $user->office_id);
+        }
+
+        return $query;
     }
 
     public static function getPages(): array

@@ -23,8 +23,7 @@ class UserForm
                     
                 Select::make('role')
                     ->label('User Role')
-                    ->options(UserRole::labels())    
-                    ->default(UserRole::CLIENT->value)
+                    ->options(UserRole::class)    
                     ->required(),
 
                 TextInput::make('password')

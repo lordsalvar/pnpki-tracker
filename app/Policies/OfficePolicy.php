@@ -14,10 +14,10 @@ class OfficePolicy
      */
     public function viewAny(User $user): bool
     {
-        if (UserRole::ADMIN->value === $user->role) {
-            return true;
-        }
-        return false;
+        return in_array($user->role, [
+            UserRole::ADMIN->value,
+            UserRole::REPRESENTATIVE->value,
+        ]);
     }
 
     /**
@@ -28,6 +28,11 @@ class OfficePolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
+        if (UserRole::REPRESENTATIVE->value === $user->role) {
+            return $user->office_id === $office->id;
+        }
+
         return false;
     }
 
@@ -48,6 +53,9 @@ class OfficePolicy
     public function update(User $user, Office $office): bool
     {
         if (UserRole::ADMIN->value === $user->role) {
+            return true;
+        }
+        if (UserRole::REPRESENTATIVE->value === $user->role) {
             return true;
         }
         return false;
