@@ -15,17 +15,14 @@ class UserForm
             ->components([
                 TextInput::make('name')
                     ->required(),
-
                 TextInput::make('email')
                     ->label('Email Address')
                     ->email()
                     ->required(),
-                    
                 Select::make('role')
                     ->label('User Role')
                     ->options(UserRole::class)    
                     ->required(),
-
                 TextInput::make('password')
                     ->password()
                     ->required()

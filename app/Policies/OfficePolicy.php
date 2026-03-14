@@ -55,9 +55,9 @@ class OfficePolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
-        if (UserRole::REPRESENTATIVE->value === $user->role) {
-            return true;
-        }
+        // if (UserRole::REPRESENTATIVE->value === $user->role) {
+        //     return true;
+        // }
         return false;
     }
 

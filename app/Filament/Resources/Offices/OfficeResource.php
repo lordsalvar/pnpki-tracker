@@ -1,22 +1,22 @@
 <?php
 
 namespace App\Filament\Resources\Offices;
+
+use App\Enums\UserRole;
 use App\Filament\Resources\Offices\Pages\CreateOffice;
 use App\Filament\Resources\Offices\Pages\EditOffice;
 use App\Filament\Resources\Offices\Pages\ListOffices;
+use App\Filament\Resources\Offices\Pages\ViewOffice;
+use App\Filament\Resources\Offices\RelationManagers\EmployeesRelationManager;
 use App\Filament\Resources\Offices\Schemas\OfficeForm;
 use App\Filament\Resources\Offices\Tables\OfficesTable;
-use App\Models\Employee;
 use App\Models\Office;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use App\Enums\UserRole;
-use App\Filament\Resources\Offices\RelationManagers\EmployeesRelationManager;
 use Illuminate\Database\Eloquent\Builder;
-
 
 class OfficeResource extends Resource
 {
@@ -60,6 +60,7 @@ class OfficeResource extends Resource
         return [
             'index' => ListOffices::route('/'),
             'create' => CreateOffice::route('/create'),
+            'view' => ViewOffice::route('/{record}'),
             'edit' => EditOffice::route('/{record}/edit'),
         ];
     }
