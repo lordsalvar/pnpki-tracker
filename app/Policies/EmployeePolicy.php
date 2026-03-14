@@ -14,10 +14,10 @@ class EmployeePolicy
      */
     public function viewAny(User $user): bool
     {
-        if (UserRole::ADMIN->value === $user->role) {
-            return true;
-        }
-        return false;   
+        return in_array($user->role, [
+            UserRole::ADMIN->value,
+            UserRole::REPRESENTATIVE->value,
+        ]);
     }
 
     /**

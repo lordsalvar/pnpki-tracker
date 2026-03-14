@@ -19,10 +19,16 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use GuzzleHttp\Promise\Create;
+use Illuminate\Database\Eloquent\Model;
 
     class EmployeesRelationManager extends RelationManager
     {
         protected static string $relationship = 'employees';
+
+        public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
+        {
+            return auth()->user()->can('view', $ownerRecord);
+        }
 
         public function form(Schema $schema): Schema
         {
