@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Office extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'offices';
-    
+
 
     protected $fillable = [
         'name',
@@ -30,6 +30,11 @@ class Office extends Model
     public function setAcronymAttribute($value)
     {
         $this->attributes['acronym'] = strtoupper($value);
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->hasMany(Batch::class, 'office_id', 'id');
     }
     //
 }
