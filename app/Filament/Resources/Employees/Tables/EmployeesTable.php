@@ -58,7 +58,7 @@ class EmployeesTable
                     ->searchable(),
 
 
-                
+
                 TextColumn::make('organizational_unit')
                     ->label('Org. Unit')
                     ->searchable()
@@ -103,8 +103,8 @@ class EmployeesTable
 
                 \Filament\Tables\Filters\SelectFilter::make('office_id')
                     ->label('Office')
-                    ->relationship('office', 'acronym'),
-
+                    ->relationship('office', 'acronym')
+                    ->visible(fn() => \Illuminate\Support\Facades\Auth::user()?->role === 'ADMIN'),
             ])
             ->recordActions([
                 EditAction::make(),
