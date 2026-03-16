@@ -18,6 +18,7 @@ class Employee extends Model
         'suffix',
         'email',
         'phone_number',
+        'batch_id',
         'address_id',
         'office_id',
         'organizational_unit',
@@ -29,21 +30,26 @@ class Employee extends Model
         'gender' => Gender::class,
     ];
     //added eloquent relationships for address and office
-    
+
     public function address():BelongsTo
     {
         return $this->belongsTo(Address::class);
     }
- 
+
 
     public function office():BelongsTo
     {
         return $this->belongsTo(Office::class);
     }
-    
+
+    public function batch():BelongsTo
+    {
+        return $this->belongsTo(Batch::class);
+    }
+
     public function attachment():HasMany
     {
         return $this->hasMany(Attachment::class);
     }
 
-} 
+}

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('suffix')->nullable();
             $table->string('email');
             $table->string('phone_number');
+            $table->foreignId('batch_id')->constrained('batches')->onDelete('cascade');
             $table->foreignId('address_id')->constrained('addresses')->onDelete('cascade');
             $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
             $table->string('organizational_unit');

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('acronym');
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('set null')->after('role');
             $table->timestamps();
         });
     }
