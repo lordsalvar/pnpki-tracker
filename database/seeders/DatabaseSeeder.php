@@ -44,13 +44,7 @@ class DatabaseSeeder extends Seeder
             'acronym' => 'PHO',
         ]);
 
-        DB::table('users')->insert([
-            'name'=>'client',
-            'email'=>'client@local.dev',
-            'password'=>Hash::make('password'),
-            'role'=>UserRole::CLIENT->value,
-        ]);
-
+        
 
 
 

@@ -50,9 +50,6 @@ class User extends Authenticatable
         ];
     }
 
-    protected $attributes = [
-        'role' => UserRole::CLIENT->value,
-    ];
 
     public function office(): BelongsTo
     {
