@@ -133,7 +133,7 @@ class EmployeeForm
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->acronym)
                     ->searchable()
                     ->preload()
-                    ->required(),
+                    ->nullable(),
 
                 TextInput::make('organizational_unit')
                     ->label('Organizational Unit')
