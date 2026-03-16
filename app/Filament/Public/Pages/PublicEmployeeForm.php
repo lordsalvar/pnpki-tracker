@@ -4,11 +4,13 @@ namespace App\Filament\Public\Pages;
 
 use App\Enums\Gender;
 use App\Models\Address;
+use App\Models\Attachment;
 use App\Models\Employee;
 use App\Models\Form;
 use App\Services\PsgcService;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -193,6 +195,125 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->required()
                             ->maxLength(20),
                     ]),
+
+                Section::make('Document Attachments')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('id_combo')
+                            ->label('Select ID Combination')
+                            ->options([
+                                'national_id' => 'PNPKI Form + National ID',
+                                'passport_umid' => 'PNPKI Form + Passport + UMID',
+                                'valid_ids' => 'PNPKI Form + 2 Valid IDs',
+                            ])
+                            ->required()
+                            ->live()
+                            ->columnSpan(2)
+                            ->afterStateUpdated(function (Set $set) {
+                                $set('upload_pnpki', null);
+                                $set('upload_national_id', null);
+                                $set('upload_passport', null);
+                                $set('upload_umid', null);
+                                $set('upload_id1', null);
+                                $set('upload_id2', null);
+                            }),
+
+                        FileUpload::make('upload_pnpki')
+                            ->label('PNPKI Form')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PNPKI'))
+                            ->downloadable()
+                            ->previewable(false)
+                            ->uploadingMessage('Uploading PNPKI Form...')
+                            ->required()
+                            ->columnSpan(2)
+                            ->visible(fn (Get $get) => filled($get('id_combo'))),
+
+                        FileUpload::make('upload_national_id')
+                            ->label('Philippine National ID')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('NationalID'))
+                            ->downloadable()
+                            ->previewable(false)
+                            ->uploadingMessage('Uploading National ID...')
+                            ->required()
+                            ->columnSpan(2)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
+
+                        FileUpload::make('upload_passport')
+                            ->label('Passport (Bio-data page)')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('Passport'))
+                            ->downloadable()
+                            ->previewable(false)
+                            ->uploadingMessage('Uploading Passport...')
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
+
+                        FileUpload::make('upload_umid')
+                            ->label('UMID Card')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('UMID'))
+                            ->downloadable()
+                            ->previewable(false)
+                            ->uploadingMessage('Uploading UMID...')
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
+
+                        FileUpload::make('upload_id1')
+                            ->label('Valid ID #1')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID1'))
+                            ->downloadable()
+                            ->previewable(false)
+                            ->uploadingMessage('Uploading Valid ID #1...')
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'valid_ids'),
+
+                        FileUpload::make('upload_id2')
+                            ->label('Valid ID #2')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID2'))
+                            ->downloadable()
+                            ->previewable(false)
+                            ->uploadingMessage('Uploading Valid ID #2...')
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'valid_ids'),
+                    ]),
             ])
             ->statePath('employeeData');
     }
@@ -212,7 +333,7 @@ class PublicEmployeeForm extends Page implements HasForms
             'zip_code' => $data['zip_code'],
         ]);
 
-        Employee::create([
+        $employee = Employee::create([
             'firstname' => $data['firstname'],
             'lastname' => $data['lastname'],
             'middlename' => $data['middlename'],
@@ -226,8 +347,54 @@ class PublicEmployeeForm extends Page implements HasForms
             'office_id' => $rep->office_id,
         ]);
 
+        $this->saveAttachments($employee, $data);
+
         $this->submitted = true;
         $this->form->fill();
+    }
+
+    private function saveAttachments(Employee $employee, array $data): void
+    {
+        $uploads = [
+            'upload_pnpki' => 'PNPKI',
+            'upload_national_id' => 'NationalID',
+            'upload_passport' => 'Passport',
+            'upload_umid' => 'UMID',
+            'upload_id1' => 'ID1',
+            'upload_id2' => 'ID2',
+        ];
+
+        foreach ($uploads as $field => $type) {
+            if (! empty($data[$field])) {
+                $path = is_array($data[$field]) ? array_values($data[$field])[0] : $data[$field];
+
+                Attachment::create([
+                    'employee_id' => $employee->id,
+                    'file_type' => $type,
+                    'file_name' => basename($path),
+                    'file_path' => $path,
+                ]);
+            }
+        }
+    }
+
+    private function fileNameForStorage(string $type): \Closure
+    {
+        return function (Get $get, $file) use ($type) {
+            $office = $this->formModel?->user?->office;
+            $officeFolder = $office
+                ? str($office->acronym ?? $office->name)->slug()
+                : 'unknown-office';
+
+            $firstname = str($get('firstname') ?? 'Unknown')->slug();
+            $lastname = str($get('lastname') ?? 'Employee')->slug();
+            $employeeFolder = "{$lastname}-{$firstname}";
+
+            $extension = $file->getClientOriginalExtension();
+            $filename = str($lastname)->upper()."_{$type}.{$extension}";
+
+            return "{$officeFolder}/Employees/{$employeeFolder}/{$filename}";
+        };
     }
 
     public static function shouldRegisterNavigation(): bool
