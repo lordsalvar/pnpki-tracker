@@ -24,6 +24,16 @@ class EmployeeResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'full_name';
 
+    public static function getGloballySearchableAttributes(): array
+    {
+        return [
+            'firstname',
+            'lastname',
+            'middlename',
+            'email',
+        ];
+    }
+
 
     public static function form(Schema $schema): Schema
     {
