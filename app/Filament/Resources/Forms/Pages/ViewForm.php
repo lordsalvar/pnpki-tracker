@@ -14,22 +14,23 @@ class ViewForm extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        $baseUrl = url('/p/forms/');
+        $publicUrl = url('/p/forms/' . $this->record->public_id);
 
         return [
             Action::make('copy_link')
                 ->label('Copy Public Link')
                 ->icon('heroicon-o-clipboard-document')
                 ->color('gray')
+                ->extraAttributes([
+                    'data-url'        => $publicUrl,
+                    'x-on:click.stop' => 'window.copyToClipboard($el.dataset.url)',
+                ])
                 ->action(function () {
                     Notification::make()
                         ->title('Link copied to clipboard!')
                         ->success()
                         ->send();
-                })
-                ->extraAttributes([
-                    'x-on:click' => 'navigator.clipboard.writeText('.json_encode($baseUrl).' + $wire.record.public_id)',
-                ]),
+                }),
 
             EditAction::make(),
         ];
