@@ -4,7 +4,7 @@ namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum UserRole: string  implements HasLabel
+enum UserRole: string implements HasLabel
 {
     case ADMIN = 'ADMIN';
     case REPRESENTATIVE = 'REPRESENTATIVE';
@@ -19,7 +19,7 @@ enum UserRole: string  implements HasLabel
 
     public function getLabel(): string
     {
-        return match($this) {
+        return match ($this) {
             UserRole::ADMIN => 'Admin',
             UserRole::REPRESENTATIVE => 'Representative',
         };

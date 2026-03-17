@@ -8,8 +8,6 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Database\Seeders\OfficeSeeder;
-use Database\Seeders\RepresentativeSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -44,32 +42,28 @@ class DatabaseSeeder extends Seeder
             'acronym' => 'PHO',
         ]);
 
-        
-
-
-
-        //Representatives - each assigned to different offices
+        // Representatives - each assigned to different offices
         DB::table('users')->insert([
-            'name'=>'PICTO Representative',
-            'email'=>'picto@local.dev',
-            'password'=>Hash::make('password'),
-            'role'=>UserRole::REPRESENTATIVE->value,
+            'name' => 'PICTO Representative',
+            'email' => 'picto@local.dev',
+            'password' => Hash::make('password'),
+            'role' => UserRole::REPRESENTATIVE->value,
             'office_id' => 1,
         ]);
 
         DB::table('users')->insert([
-            'name'=>'PHRMO Representative',
-            'email'=>'phrmo@local.dev',
-            'password'=>Hash::make('password'),
-            'role'=>UserRole::REPRESENTATIVE->value,
+            'name' => 'PHRMO Representative',
+            'email' => 'phrmo@local.dev',
+            'password' => Hash::make('password'),
+            'role' => UserRole::REPRESENTATIVE->value,
             'office_id' => 2,
         ]);
 
-         DB::table('users')->insert([
-            'name'=>'PHO Representative',
-            'email'=>'pho@local.dev',
-            'password'=>Hash::make('password'),
-            'role'=>UserRole::REPRESENTATIVE->value,
+        DB::table('users')->insert([
+            'name' => 'PHO Representative',
+            'email' => 'pho@local.dev',
+            'password' => Hash::make('password'),
+            'role' => UserRole::REPRESENTATIVE->value,
             'office_id' => 3,
         ]);
 

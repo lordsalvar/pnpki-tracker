@@ -2,17 +2,17 @@
 
 namespace App\Filament\Resources\Employees\Schemas;
 
+use App\Enums\Gender;
+use App\Services\PsgcService;
+use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\FileUpload;
-use Filament\Schemas\Schema;
-use App\Services\PsgcService;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Filament\Actions\Action;
-use App\Enums\Gender;
+use Filament\Schemas\Schema;
 
 class EmployeeForm
 {
@@ -67,17 +67,17 @@ class EmployeeForm
                     ->required()
                     ->maxLength(20),
 
-                    Group::make()
+                Group::make()
                     ->columnSpan(2)
                     ->columns(2)
                     ->schema([
                         TextInput::make('house_no')
-                        ->label('House No.')
-                        ->required()
-                        ->maxLength(255),
+                            ->label('House No.')
+                            ->required()
+                            ->maxLength(255),
                         TextInput::make('street')
-                        ->label('Street')
-                        ->required()
+                            ->label('Street')
+                            ->required()
                             ->maxLength(255),
                         Select::make('province')
                             ->label('Province')
@@ -95,7 +95,10 @@ class EmployeeForm
                             ->label('City / Municipality')
                             ->options(function (Get $get) {
                                 $province = $get('province');
-                                if (!$province) return [];
+                                if (! $province) {
+                                    return [];
+                                }
+
                                 return app(PsgcService::class)->municipalities($province);
                             })
                             ->searchable()
@@ -104,19 +107,22 @@ class EmployeeForm
                             ->afterStateUpdated(function (Set $set) {
                                 $set('barangay', null);
                             })
-                            ->disabled(fn (Get $get) => !$get('province'))
+                            ->disabled(fn (Get $get) => ! $get('province'))
                             ->required(),
 
                         Select::make('barangay')
                             ->label('Barangay')
                             ->options(function (Get $get) {
                                 $municipality = $get('municipality');
-                                if (!$municipality) return [];
+                                if (! $municipality) {
+                                    return [];
+                                }
+
                                 return app(PsgcService::class)->barangays($municipality);
                             })
                             ->searchable()
                             ->live()
-                            ->disabled(fn (Get $get) => !$get('municipality'))
+                            ->disabled(fn (Get $get) => ! $get('municipality'))
                             ->required(),
 
                         TextInput::make('zip_code')
@@ -142,7 +148,7 @@ class EmployeeForm
 
                 Select::make('gender')
                     ->label('Gender')
-                    ->options(Gender::class)  
+                    ->options(Gender::class)
                     ->required(),
 
                 TextInput::make('tin_number')
@@ -151,35 +157,35 @@ class EmployeeForm
                     ->unique(ignoreRecord: true)
                     ->maxLength(20),
 
-                    // DOCUMENT UPLOADS
+                // DOCUMENT UPLOADS
 
                 Section::make('Document Attachments')
                     ->columnSpan(2)
                     ->columns(2)
                     ->schema([
- 
+
                         Select::make('id_combo')
                             ->label('Select ID Combination')
                             ->options([
-                                'national_id'   => 'PNPKI Form + National ID',
+                                'national_id' => 'PNPKI Form + National ID',
                                 'passport_umid' => 'PNPKI Form + Passport + UMID',
-                                'valid_ids'     => 'PNPKI Form + 2 Valid IDs',
+                                'valid_ids' => 'PNPKI Form + 2 Valid IDs',
                             ])
                             ->required()
                             ->live()
                             ->dehydrated(false)
                             ->columnSpan(2)
                             ->afterStateUpdated(function (Set $set) {
-                                $set('upload_pnpki',       null);
+                                $set('upload_pnpki', null);
                                 $set('upload_national_id', null);
-                                $set('upload_passport',    null);
-                                $set('upload_umid',        null);
-                                $set('upload_id1',         null);
-                                $set('upload_id2',         null);
+                                $set('upload_passport', null);
+                                $set('upload_umid', null);
+                                $set('upload_id1', null);
+                                $set('upload_id2', null);
                             }),
- 
+
                         // ── PNPKI Form — shown for every branch ──────────────
-                        
+
                         FileUpload::make('upload_pnpki')
                             ->label('PNPKI Form')
                             ->helperText('PDF only · Max 5 MB')
@@ -196,9 +202,9 @@ class EmployeeForm
                             ->required()
                             ->columnSpan(2)
                             ->visible(fn (Get $get) => filled($get('id_combo'))),
- 
+
                         // ── Branch A: National ID ────────────────────────────
-                       
+
                         FileUpload::make('upload_national_id')
                             ->label('Philippine National ID')
                             ->helperText('PDF only · Max 5 MB')
@@ -215,9 +221,9 @@ class EmployeeForm
                             ->required()
                             ->columnSpan(2)
                             ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
- 
+
                         // ── Branch B: Passport ───────────────────────────────
-                       
+
                         FileUpload::make('upload_passport')
                             ->label('Passport (Bio-data page)')
                             ->helperText('PDF only · Max 5 MB')
@@ -234,9 +240,9 @@ class EmployeeForm
                             ->required()
                             ->columnSpan(1)
                             ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
- 
+
                         // ── Branch B: UMID ───────────────────────────────────
-                        
+
                         FileUpload::make('upload_umid')
                             ->label('UMID Card')
                             ->helperText('PDF only · Max 5 MB')
@@ -253,9 +259,9 @@ class EmployeeForm
                             ->required()
                             ->columnSpan(1)
                             ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
- 
+
                         // ── Branch C: Valid ID #1 ────────────────────────────
-                        
+
                         FileUpload::make('upload_id1')
                             ->label('Valid ID #1')
                             ->helperText('PDF only · Max 5 MB')
@@ -272,7 +278,7 @@ class EmployeeForm
                             ->required()
                             ->columnSpan(1)
                             ->visible(fn (Get $get) => $get('id_combo') === 'valid_ids'),
- 
+
                         // ── Branch C: Valid ID #2 ────────────────────────────
                         // → NORTHRUP_ID2.pdf  (later: NORTHRUP_ID2_DriversLicense.pdf)
                         FileUpload::make('upload_id2')
@@ -295,14 +301,13 @@ class EmployeeForm
             ]);
     }
 
-
     protected static function fileName(string $type): \Closure
     {
         return function (Get $get, $file) use ($type) {
             // 1. Get Office Folder Name
             $officeId = $get('office_id');
             $officeFolder = 'Unknown-Office';
-            
+
             if ($officeId) {
                 $office = \App\Models\Office::find($officeId);
                 // We use the acronym or name slugified for the folder
@@ -313,14 +318,13 @@ class EmployeeForm
             $firstname = str($get('firstname') ?? 'Unknown')->slug();
             $lastname = str($get('lastname') ?? 'Employee')->slug();
             $employeeFolder = "{$lastname}-{$firstname}";
-            
+
             // 3. File details
             $extension = $file->getClientOriginalExtension();
-            $filename = str($lastname)->upper() . "_{$type}.{$extension}";
+            $filename = str($lastname)->upper()."_{$type}.{$extension}";
 
             // Structure: OfficeName/Employees/EmployeeName/Filename
             return "{$officeFolder}/Employees/{$employeeFolder}/{$filename}";
         };
     }
-    
-    }
+}

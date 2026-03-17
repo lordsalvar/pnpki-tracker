@@ -25,18 +25,19 @@ class Employee extends Model
         'gender',
         'tin_number',
     ];
-        /**
-         * Get the employee's full name.
-         */
-        public function getFullNameAttribute(): string
-        {
-            return trim(implode(' ', array_filter([
-                $this->firstname,
-                $this->middlename,
-                $this->lastname,
-                $this->suffix,
-            ])));
-        }
+
+    /**
+     * Get the employee's full name.
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->firstname,
+            $this->middlename,
+            $this->lastname,
+            $this->suffix,
+        ])));
+    }
 
     protected $casts = [
         'gender' => Gender::class,

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('lastname');
             $table->string('middlename')->nullable();
             $table->string('suffix')->nullable();
-            $table->string('email');
+            $table->string('email')->unique();
             $table->string('phone_number');
             $table->foreignId('batch_id')->nullable()->constrained('batches')->onDelete('cascade');
             $table->foreignId('address_id')->constrained('addresses')->onDelete('cascade');

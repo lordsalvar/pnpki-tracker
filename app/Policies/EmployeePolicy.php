@@ -5,7 +5,6 @@ namespace App\Policies;
 use App\Enums\UserRole;
 use App\Models\Employee;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class EmployeePolicy
 {
@@ -28,6 +27,7 @@ class EmployeePolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -36,9 +36,10 @@ class EmployeePolicy
      */
     public function create(User $user): bool
     {
-      if (UserRole::ADMIN->value === $user->role) {
+        if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -47,9 +48,10 @@ class EmployeePolicy
      */
     public function update(User $user, Employee $employee): bool
     {
-       if (UserRole::ADMIN->value === $user->role) {
+        if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -58,9 +60,10 @@ class EmployeePolicy
      */
     public function delete(User $user, Employee $employee): bool
     {
-      if (UserRole::ADMIN->value === $user->role) {
+        if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -72,6 +75,7 @@ class EmployeePolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -79,10 +83,11 @@ class EmployeePolicy
      * Determine whether the user can permanently delete the model.
      */
     public function forceDelete(User $user, Employee $employee): bool
-    {   
+    {
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 }

@@ -14,7 +14,7 @@ class ViewForm extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        $publicUrl = url('/p/forms/' . $this->record->public_id);
+        $publicUrl = url('/p/forms/'.$this->record->public_id);
 
         return [
             Action::make('copy_link')
@@ -22,7 +22,7 @@ class ViewForm extends ViewRecord
                 ->icon('heroicon-o-clipboard-document')
                 ->color('gray')
                 ->extraAttributes([
-                    'data-url'        => $publicUrl,
+                    'data-url' => $publicUrl,
                     'x-on:click.stop' => 'window.copyToClipboard($el.dataset.url)',
                 ])
                 ->action(function () {

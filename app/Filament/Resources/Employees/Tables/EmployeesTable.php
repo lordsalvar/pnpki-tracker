@@ -6,7 +6,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class EmployeesTable
@@ -16,17 +15,17 @@ class EmployeesTable
         return $table
             ->columns([
 
-                //Full Name
+                // Full Name
                 TextColumn::make('fullname')
                     ->label('Full Name')
                     ->getStateUsing(fn ($record) => trim(
-                        $record->firstname . ' ' .
+                        $record->firstname.' '.
                         (($record->middlename && $record->middlename !== 'N/A')
-                            ? strtoupper(substr($record->middlename, 0, 1)) . '. '
-                            : '') .
-                        $record->lastname .
+                            ? strtoupper(substr($record->middlename, 0, 1)).'. '
+                            : '').
+                        $record->lastname.
                         (($record->suffix && $record->suffix !== 'N/A')
-                            ? ', ' . $record->suffix
+                            ? ', '.$record->suffix
                             : '')
                     ))
                     ->searchable(query: function ($query, string $search) {
@@ -35,7 +34,7 @@ class EmployeesTable
                             ->orWhere('middlename', 'like', "%{$search}%");
                     }),
 
-                //Office
+                // Office
                 TextColumn::make('office.acronym')
                     ->label('Office')
                     ->searchable()
@@ -51,13 +50,11 @@ class EmployeesTable
                     ->label('Phone')
                     ->searchable(),
 
-                    // Hidden by default
+                // Hidden by default
                 // Gender
                 TextColumn::make('gender')
                     ->badge()  // optional but looks nice with enums
                     ->searchable(),
-
-
 
                 TextColumn::make('organizational_unit')
                     ->label('Org. Unit')
@@ -96,15 +93,15 @@ class EmployeesTable
                 \Filament\Tables\Filters\SelectFilter::make('gender')
                     ->label('Gender')
                     ->options([
-                        'male'   => 'Male',
+                        'male' => 'Male',
                         'female' => 'Female',
-                        'other'  => 'Other',
+                        'other' => 'Other',
                     ]),
 
                 \Filament\Tables\Filters\SelectFilter::make('office_id')
                     ->label('Office')
                     ->relationship('office', 'acronym')
-                    ->visible(fn() => \Illuminate\Support\Facades\Auth::user()?->role === 'ADMIN'),
+                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()?->role === 'ADMIN'),
             ])
             ->recordActions([
                 EditAction::make(),

@@ -2,13 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Form;
+use App\Policies\FormPolicy;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
-use App\Models\Form;
-use App\Policies\FormPolicy;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +32,4 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(Form::class, FormPolicy::class);
     }
-
-
 }

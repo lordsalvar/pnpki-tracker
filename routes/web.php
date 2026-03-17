@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
     return view('welcome');
@@ -10,8 +9,8 @@ Route::get('/', function () {
 Route::get('/test-psgc', function () {
     $raw = file_get_contents(storage_path('app/psgc/barangays.json'));
     $decoded = json_decode($raw, true);
+
     return response()->json([
         'first' => $decoded[0] ?? 'empty',
     ]);
 });
-

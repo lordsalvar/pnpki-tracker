@@ -14,13 +14,11 @@ class Address extends Model
         'barangay',
         'municipality',
         'province',
-        'zip_code'
+        'zip_code',
     ];
 
     public function Employee(): HasOne
     {
         return $this->HasOne(Employee::class);
     }
-
-
 }

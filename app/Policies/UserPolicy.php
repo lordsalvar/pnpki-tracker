@@ -2,9 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
-use Illuminate\Auth\Access\Response;
 use App\Enums\UserRole;
+use App\Models\User;
 
 class UserPolicy
 {
@@ -16,6 +15,7 @@ class UserPolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -27,6 +27,7 @@ class UserPolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -35,9 +36,10 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-       if (UserRole::ADMIN->value === $user->role) {
+        if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -49,6 +51,7 @@ class UserPolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -57,9 +60,10 @@ class UserPolicy
      */
     public function delete(User $user, User $model): bool
     {
-       if (UserRole::ADMIN->value === $user->role) {
+        if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -68,9 +72,10 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
-    if (UserRole::ADMIN->value === $user->role) {
+        if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -79,9 +84,10 @@ class UserPolicy
      */
     public function forceDelete(User $user, User $model): bool
     {
-       if (UserRole::ADMIN->value === $user->role) {
+        if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 }

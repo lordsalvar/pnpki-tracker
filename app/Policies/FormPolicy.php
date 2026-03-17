@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Form;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
-use App\Enums\UserRole;
 
 class FormPolicy
 {
@@ -28,6 +27,7 @@ class FormPolicy
         if ($user->role === UserRole::REPRESENTATIVE->value) {
             return $form->user->office_id === $user->office_id;
         }
+
         return false;
     }
 
@@ -51,6 +51,7 @@ class FormPolicy
         if ($user->role === UserRole::REPRESENTATIVE->value) {
             return $form->office_id === $user->office_id;
         }
+
         return false;
     }
 
@@ -66,7 +67,6 @@ class FormPolicy
         if ($user->role === UserRole::REPRESENTATIVE->value) {
             return $form->office_id === $user->office_id;
         }
-
 
         return false; // Representatives are not allowed to delete forms
     }

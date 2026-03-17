@@ -15,7 +15,7 @@ class Batch extends Model
         'user_id',
         'batch_name',
         'status',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -36,6 +36,4 @@ class Batch extends Model
     {
         return $this->hasMany(Employee::class);
     }
-
-
 }

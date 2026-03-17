@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Employees;
 
-
 use App\Filament\Resources\Employees\Pages\CreateEmployee;
 use App\Filament\Resources\Employees\Pages\EditEmployee;
 use App\Filament\Resources\Employees\Pages\ListEmployees;
@@ -14,7 +13,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-
 
 class EmployeeResource extends Resource
 {
@@ -33,7 +31,6 @@ class EmployeeResource extends Resource
             'email',
         ];
     }
-
 
     public static function form(Schema $schema): Schema
     {

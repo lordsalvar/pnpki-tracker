@@ -31,11 +31,6 @@ class FormsTable
                     ->searchable()
                     ->sortable(),
 
-                IconColumn::make('is_active')
-                    ->label('Active')
-                    ->boolean()
-                    ->sortable(),
-
                 TextColumn::make('employees_count')
                     ->label('Submissions')
                     ->counts('employees')
@@ -52,11 +47,11 @@ class FormsTable
                     ->copyMessage('Link copied!')
                     ->limit(50),
 
-                TextColumn::make('created_at')
-                    ->label('Created')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(),
+                IconColumn::make('is_active')
+                    ->label('Active')
+                    ->boolean()
+                    ->sortable(),
+
             ])
             ->filters([
                 //

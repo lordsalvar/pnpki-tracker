@@ -23,6 +23,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Http;
 
 class PublicEmployeeForm extends Page implements HasForms
@@ -107,6 +108,10 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->label('Email Address')
                             ->email()
                             ->required()
+                            ->unique(Employee::class, 'email')
+                            ->validationMessages([
+                                'unique' => 'This email address is already registered. Please use your personal email.',
+                            ])
                             ->maxLength(255),
 
                         TextInput::make('phone_number')
@@ -325,6 +330,8 @@ class PublicEmployeeForm extends Page implements HasForms
     public function submit(): void
     {
         if (! $this->verifyCaptcha()) {
+            $this->addError('captchaToken', 'Please complete the CAPTCHA verification before submitting.');
+
             Notification::make()
                 ->title('CAPTCHA verification failed. Please try again.')
                 ->danger()
@@ -348,20 +355,27 @@ class PublicEmployeeForm extends Page implements HasForms
             'zip_code' => $data['zip_code'],
         ]);
 
-        $employee = Employee::create([
-            'firstname' => $data['firstname'],
-            'lastname' => $data['lastname'],
-            'middlename' => $data['middlename'],
-            'suffix' => $data['suffix'],
-            'email' => $data['email'],
-            'phone_number' => $data['phone_number'],
-            'organizational_unit' => $data['organizational_unit'],
-            'gender' => $data['gender'],
-            'tin_number' => $data['tin_number'],
-            'address_id' => $address->id,
-            'office_id' => $rep->office_id,
-            'form_id' => $this->formModel->id,
-        ]);
+        try {
+            $employee = Employee::create([
+                'firstname' => $data['firstname'],
+                'lastname' => $data['lastname'],
+                'middlename' => $data['middlename'],
+                'suffix' => $data['suffix'],
+                'email' => $data['email'],
+                'phone_number' => $data['phone_number'],
+                'organizational_unit' => $data['organizational_unit'],
+                'gender' => $data['gender'],
+                'tin_number' => $data['tin_number'],
+                'address_id' => $address->id,
+                'office_id' => $rep->office_id,
+                'form_id' => $this->formModel->id,
+            ]);
+        } catch (UniqueConstraintViolationException $exception) {
+            $address->delete();
+            $this->addError('employeeData.email', 'This email address is already registered. Please use your personal email.');
+
+            return;
+        }
 
         $this->saveAttachments($employee, $data);
 
