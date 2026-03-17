@@ -30,6 +30,10 @@ class PublicPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Public/Widgets'), for: 'App\Filament\Public\Widgets')
             ->widgets([])
             ->navigation(false)
+            ->renderHook(
+                'panels::body.end',
+                fn () => '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>'
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

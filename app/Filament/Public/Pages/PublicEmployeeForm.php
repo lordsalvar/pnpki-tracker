@@ -15,6 +15,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Schemas\Components\Section;
@@ -22,6 +23,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Http;
 
 class PublicEmployeeForm extends Page implements HasForms
 {
@@ -36,6 +38,8 @@ class PublicEmployeeForm extends Page implements HasForms
     public ?array $employeeData = [];
 
     public bool $submitted = false;
+
+    public ?string $captchaToken = null;
 
     public static function getRoutePath(Panel $panel): string
     {
@@ -320,6 +324,17 @@ class PublicEmployeeForm extends Page implements HasForms
 
     public function submit(): void
     {
+        if (! $this->verifyCaptcha()) {
+            Notification::make()
+                ->title('CAPTCHA verification failed. Please try again.')
+                ->danger()
+                ->send();
+
+            $this->captchaToken = null;
+
+            return;
+        }
+
         $data = $this->form->getState();
 
         $rep = $this->formModel->user;
@@ -345,12 +360,28 @@ class PublicEmployeeForm extends Page implements HasForms
             'tin_number' => $data['tin_number'],
             'address_id' => $address->id,
             'office_id' => $rep->office_id,
+            'form_id' => $this->formModel->id,
         ]);
 
         $this->saveAttachments($employee, $data);
 
         $this->submitted = true;
         $this->form->fill();
+    }
+
+    private function verifyCaptcha(): bool
+    {
+        if (blank($this->captchaToken)) {
+            return false;
+        }
+
+        $response = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+            'secret' => config('services.turnstile.secret'),
+            'response' => $this->captchaToken,
+            'remoteip' => request()->ip(),
+        ]);
+
+        return (bool) $response->json('success');
     }
 
     private function saveAttachments(Employee $employee, array $data): void

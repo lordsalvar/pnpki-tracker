@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('forms', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->uuid('public_id')->unique();
             $table->string('name');
@@ -24,7 +25,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes for performance
-            $table->index(['is_active', 'expires_at']);
+            $table->index(['office_id', 'is_active', 'expires_at']);
             $table->index('public_id');
         });
     }

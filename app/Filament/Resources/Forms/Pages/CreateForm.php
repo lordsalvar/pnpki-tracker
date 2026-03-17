@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Forms\Pages;
 
 use App\Filament\Resources\Forms\FormResource;
+use App\Models\Form;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
 
@@ -13,9 +14,19 @@ class CreateForm extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['user_id'] = auth()->id();
+        $data['office_id'] = auth()->user()->office_id;
         $data['public_id'] = Str::uuid()->toString();
+        $data['name'] = auth()->user()->office->name;
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        Form::query()
+            ->where('office_id', $this->record->office_id)
+            ->where('id', '!=', $this->record->id)
+            ->update(['is_active' => false]);
     }
 
     protected function getRedirectUrl(): string

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->foreignId('batch_id')->nullable()->constrained('batches')->onDelete('cascade');
             $table->foreignId('address_id')->constrained('addresses')->onDelete('cascade');
             $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
+            $table->foreignId('form_id')->nullable()->constrained('forms')->nullOnDelete();
             $table->string('organizational_unit');
             $table->string('gender');
             $table->string('tin_number');
