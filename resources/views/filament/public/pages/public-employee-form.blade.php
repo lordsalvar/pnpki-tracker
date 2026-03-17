@@ -13,11 +13,32 @@
         <form wire:submit="submit">
             {{ $this->form }}
 
-            <div class="mt-6">
+            {{-- Cloudflare Turnstile CAPTCHA --}}
+            <div class="mt-6" wire:ignore>
+                <div
+                    class="cf-turnstile"
+                    data-sitekey="{{ config('services.turnstile.site_key') }}"
+                    data-callback="onTurnstileSolved"
+                    data-expired-callback="onTurnstileExpired"
+                    data-error-callback="onTurnstileExpired"
+                    data-theme="auto"
+                ></div>
+            </div>
+
+            <div class="mt-4">
                 <x-filament::button type="submit" size="lg">
                     Submit
                 </x-filament::button>
             </div>
         </form>
+
+        <script>
+            function onTurnstileSolved(token) {
+                @this.set('captchaToken', token);
+            }
+            function onTurnstileExpired() {
+                @this.set('captchaToken', null);
+            }
+        </script>
     @endif
 </x-filament-panels::page>

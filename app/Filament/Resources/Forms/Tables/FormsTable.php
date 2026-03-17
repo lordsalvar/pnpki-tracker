@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -19,14 +20,28 @@ class FormsTable
                 $user = Auth::user();
 
                 if ($user->role === UserRole::REPRESENTATIVE->value) {
-                    $query->whereHas('user', fn ($q) => $q->where('office_id', $user->office_id));
+                    $query->where('office_id', $user->office_id);
                 }
+
+                $query->withCount('employees');
             })
             ->columns([
                 TextColumn::make('name')
                     ->label('Form Name')
                     ->searchable()
                     ->sortable(),
+
+                IconColumn::make('is_active')
+                    ->label('Active')
+                    ->boolean()
+                    ->sortable(),
+
+                TextColumn::make('employees_count')
+                    ->label('Submissions')
+                    ->counts('employees')
+                    ->sortable()
+                    ->badge()
+                    ->color('success'),
 
                 TextColumn::make('public_id')
                     ->label('Public Link')

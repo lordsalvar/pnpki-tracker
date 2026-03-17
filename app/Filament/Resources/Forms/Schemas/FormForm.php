@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Forms\Schemas;
 
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Illuminate\Support\HtmlString;
 
@@ -15,8 +16,15 @@ class FormForm
             ->components([
                 TextInput::make('name')
                     ->label('Form Name')
-                    ->required()
-                    ->maxLength(255),
+                    ->default(fn () => auth()->user()?->office?->name)
+                    ->disabled()
+                    ->dehydrated(false),
+
+                Toggle::make('is_active')
+                    ->label('Active')
+                    ->helperText('Only one form per office can be active at a time. Activating this will deactivate all others.')
+                    ->default(true)
+                    ->visibleOn('edit'),
 
                 Placeholder::make('public_url')
                     ->label('Public Link')

@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\Gender;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Enums\Gender;
 
 class Employee extends Model
 {
@@ -21,6 +20,7 @@ class Employee extends Model
         'batch_id',
         'address_id',
         'office_id',
+        'form_id',
         'organizational_unit',
         'gender',
         'tin_number',
@@ -29,27 +29,30 @@ class Employee extends Model
     protected $casts = [
         'gender' => Gender::class,
     ];
-    //added eloquent relationships for address and office
+    // added eloquent relationships for address and office
 
-    public function address():BelongsTo
+    public function address(): BelongsTo
     {
         return $this->belongsTo(Address::class);
     }
 
-
-    public function office():BelongsTo
+    public function office(): BelongsTo
     {
         return $this->belongsTo(Office::class);
     }
 
-    public function batch():BelongsTo
+    public function batch(): BelongsTo
     {
         return $this->belongsTo(Batch::class);
     }
 
-    public function attachment():HasMany
+    public function form(): BelongsTo
+    {
+        return $this->belongsTo(Form::class);
+    }
+
+    public function attachment(): HasMany
     {
         return $this->hasMany(Attachment::class);
     }
-
 }
