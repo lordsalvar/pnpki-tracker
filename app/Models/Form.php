@@ -11,10 +11,16 @@ class Form extends Model
         'user_id',
         'public_id',
         'name',
+        'office_id',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function office(): BelongsTo
+    {
+        return $this->belongsTo(Office::class);
     }
 }

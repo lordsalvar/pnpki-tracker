@@ -202,9 +202,9 @@ class PublicEmployeeForm extends Page implements HasForms
                         Select::make('id_combo')
                             ->label('Select ID Combination')
                             ->options([
-                                'national_id' => 'PNPKI Form + National ID',
+                                'national_id'   => 'PNPKI Form + National ID',
                                 'passport_umid' => 'PNPKI Form + Passport + UMID',
-                                'valid_ids' => 'PNPKI Form + 2 Valid IDs',
+                                'valid_ids'     => 'PNPKI Form + 2 Valid IDs',
                             ])
                             ->required()
                             ->live()
@@ -322,29 +322,31 @@ class PublicEmployeeForm extends Page implements HasForms
     {
         $data = $this->form->getState();
 
-        $rep = $this->formModel->user;
+        // Use the office assigned to the form directly
+        // instead of relying on the rep's office_id
+        $officeId = $this->formModel->office_id;
 
         $address = Address::create([
-            'house_no' => $data['house_no'],
-            'street' => $data['street'],
-            'barangay' => $data['barangay'],
+            'house_no'     => $data['house_no'],
+            'street'       => $data['street'],
+            'barangay'     => $data['barangay'],
             'municipality' => $data['municipality'],
-            'province' => $data['province'],
-            'zip_code' => $data['zip_code'],
+            'province'     => $data['province'],
+            'zip_code'     => $data['zip_code'],
         ]);
 
         $employee = Employee::create([
-            'firstname' => $data['firstname'],
-            'lastname' => $data['lastname'],
-            'middlename' => $data['middlename'],
-            'suffix' => $data['suffix'],
-            'email' => $data['email'],
-            'phone_number' => $data['phone_number'],
+            'firstname'           => $data['firstname'],
+            'lastname'            => $data['lastname'],
+            'middlename'          => $data['middlename'],
+            'suffix'              => $data['suffix'],
+            'email'               => $data['email'],
+            'phone_number'        => $data['phone_number'],
             'organizational_unit' => $data['organizational_unit'],
-            'gender' => $data['gender'],
-            'tin_number' => $data['tin_number'],
-            'address_id' => $address->id,
-            'office_id' => $rep->office_id,
+            'gender'              => $data['gender'],
+            'tin_number'          => $data['tin_number'],
+            'address_id'          => $address->id,
+            'office_id'           => $officeId,
         ]);
 
         $this->saveAttachments($employee, $data);
@@ -356,12 +358,12 @@ class PublicEmployeeForm extends Page implements HasForms
     private function saveAttachments(Employee $employee, array $data): void
     {
         $uploads = [
-            'upload_pnpki' => 'PNPKI',
+            'upload_pnpki'      => 'PNPKI',
             'upload_national_id' => 'NationalID',
-            'upload_passport' => 'Passport',
-            'upload_umid' => 'UMID',
-            'upload_id1' => 'ID1',
-            'upload_id2' => 'ID2',
+            'upload_passport'   => 'Passport',
+            'upload_umid'       => 'UMID',
+            'upload_id1'        => 'ID1',
+            'upload_id2'        => 'ID2',
         ];
 
         foreach ($uploads as $field => $type) {
@@ -370,9 +372,9 @@ class PublicEmployeeForm extends Page implements HasForms
 
                 Attachment::create([
                     'employee_id' => $employee->id,
-                    'file_type' => $type,
-                    'file_name' => basename($path),
-                    'file_path' => $path,
+                    'file_type'   => $type,
+                    'file_name'   => basename($path),
+                    'file_path'   => $path,
                 ]);
             }
         }
@@ -381,17 +383,17 @@ class PublicEmployeeForm extends Page implements HasForms
     private function fileNameForStorage(string $type): \Closure
     {
         return function (Get $get, $file) use ($type) {
-            $office = $this->formModel?->user?->office;
+            $office       = $this->formModel?->office;
             $officeFolder = $office
                 ? str($office->acronym ?? $office->name)->slug()
                 : 'unknown-office';
 
-            $firstname = str($get('firstname') ?? 'Unknown')->slug();
-            $lastname = str($get('lastname') ?? 'Employee')->slug();
+            $firstname      = str($get('firstname') ?? 'Unknown')->slug();
+            $lastname       = str($get('lastname') ?? 'Employee')->slug();
             $employeeFolder = "{$lastname}-{$firstname}";
 
             $extension = $file->getClientOriginalExtension();
-            $filename = str($lastname)->upper()."_{$type}.{$extension}";
+            $filename  = str($lastname)->upper() . "_{$type}.{$extension}";
 
             return "{$officeFolder}/Employees/{$employeeFolder}/{$filename}";
         };

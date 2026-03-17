@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Forms\Schemas;
 
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Illuminate\Support\HtmlString;
@@ -17,6 +18,14 @@ class FormForm
                     ->label('Form Name')
                     ->required()
                     ->maxLength(255),
+
+                Select::make('office_id')
+                    ->label('Office')
+                    ->relationship('office', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->acronym . ' — ' . $record->name)
+                    ->searchable()
+                    ->preload()
+                    ->required(),
 
                 Placeholder::make('public_url')
                     ->label('Public Link')
