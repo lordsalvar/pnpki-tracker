@@ -22,14 +22,11 @@ return new class extends Migration
             $table->timestamp('expires_at')->nullable();
             $table->unsignedBigInteger('submission_count')->default(0);
             $table->softDeletes();
-            $table->boolean('is_active')->default(true);
             $table->timestamps();
 
             // Indexes for performance
-            $table->index(['is_active', 'expires_at']);
+            $table->index(['office_id', 'is_active', 'expires_at']);
             $table->index('public_id');
-
-            $table->index(['office_id', 'is_active'], 'forms_office_active_index');
         });
     }
 
