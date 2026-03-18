@@ -19,8 +19,8 @@ class Attachment extends Model
         'uploaded_at' => 'datetime',
     ];
 
-    public function employee(): BelongsTo
+    public function formSubmission(): BelongsTo
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(FormSubmission::class, 'employee_id');
     }
 }

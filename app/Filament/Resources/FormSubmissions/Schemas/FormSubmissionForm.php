@@ -1,134 +1,84 @@
 <?php
 
-namespace App\Filament\Public\Pages;
+namespace App\Filament\Resources\FormSubmissions\Schemas;
 
 use App\Enums\Gender;
-use App\Models\Address;
-use App\Models\Attachment;
-use App\Models\EmployeeForm;
-use App\Models\FormSubmission;
 use App\Services\PsgcService;
-use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Notifications\Notification;
-use Filament\Pages\Page;
-use Filament\Panel;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\Http;
 
-class PublicEmployeeForm extends Page implements HasForms
+class FormSubmissionForm
 {
-    use InteractsWithForms;
-
-    protected static string|BackedEnum|null $navigationIcon = null;
-
-    protected string $view = 'filament.public.pages.public-employee-form';
-
-    public ?EmployeeForm $formModel = null;
-
-    public ?array $employeeData = [];
-
-    public bool $submitted = false;
-
-    public ?string $captchaToken = null;
-
-    public static function getRoutePath(Panel $panel): string
+    public static function configure(Schema $schema): Schema
     {
-        return '/forms/{publicId}';
-    }
-
-    public function getTitle(): string|Htmlable
-    {
-        return $this->formModel?->name ?? 'Employee Registration';
-    }
-
-    public function mount(string $publicId): void
-    {
-        $this->formModel = EmployeeForm::where('public_id', $publicId)->firstOrFail();
-        $this->form->fill();
-    }
-
-    public function form(Schema $form): Schema
-    {
-        return $form
+        return $schema
+            ->columns(2)
             ->components([
-                Section::make('Personal Information')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('firstname')
-                            ->label('First Name')
-                            ->required()
-                            ->maxLength(255),
+                TextInput::make('firstname')
+                    ->label('First Name')
+                    ->required()
+                    ->maxLength(255),
+                TextInput::make('lastname')
+                    ->label('Last Name')
+                    ->required()
+                    ->maxLength(255),
+                TextInput::make('middlename')
+                    ->required()
+                    ->maxLength(255)
+                    ->suffixAction(
+                        Action::make('set_na')
+                            ->label('N/A')
+                            ->link()
+                            ->tooltip('Click to set Middle Name as N/A')
+                            ->color('gray')
+                            ->action(fn (Set $set) => $set('middlename', 'N/A'))
+                    ),
+                TextInput::make('suffix')
+                    ->label('Suffix')
+                    ->placeholder('Jr., Sr., III')
+                    ->required()
+                    ->maxLength(20)
+                    ->suffixAction(
+                        Action::make('set_na')
+                            ->label('N/A')
+                            ->link()
+                            ->tooltip('Click to set Suffix as N/A')
+                            ->color('gray')
+                            ->action(fn (Set $set) => $set('suffix', 'N/A'))
+                    ),
 
-                        TextInput::make('lastname')
-                            ->label('Last Name')
-                            ->required()
-                            ->maxLength(255),
+                TextInput::make('email')
+                    ->label('Email Address')
+                    ->email()
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->maxLength(255),
 
-                        TextInput::make('middlename')
-                            ->label('Middle Name')
-                            ->required()
-                            ->maxLength(255)
-                            ->suffixAction(
-                                Action::make('set_na_mid')
-                                    ->label('N/A')
-                                    ->link()
-                                    ->color('gray')
-                                    ->action(fn (Set $set) => $set('middlename', 'N/A'))
-                            ),
+                TextInput::make('phone_number')
+                    ->label('Phone Number')
+                    ->tel()
+                    ->required()
+                    ->maxLength(20),
 
-                        TextInput::make('suffix')
-                            ->label('Suffix')
-                            ->placeholder('Jr., Sr., III')
-                            ->required()
-                            ->maxLength(20)
-                            ->suffixAction(
-                                Action::make('set_na_suf')
-                                    ->label('N/A')
-                                    ->link()
-                                    ->color('gray')
-                                    ->action(fn (Set $set) => $set('suffix', 'N/A'))
-                            ),
-                    ]),
-
-                Section::make('Contact Information')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('email')
-                            ->label('Email Address')
-                            ->email()
-                            ->required()
-                            ->maxLength(255),
-
-                        TextInput::make('phone_number')
-                            ->label('Phone Number')
-                            ->tel()
-                            ->required()
-                            ->maxLength(20),
-                    ]),
-
-                Section::make('Address')
+                Group::make()
+                    ->columnSpan(2)
                     ->columns(2)
                     ->schema([
                         TextInput::make('house_no')
                             ->label('House No.')
                             ->required()
                             ->maxLength(255),
-
                         TextInput::make('street')
                             ->label('Street')
                             ->required()
                             ->maxLength(255),
-
                         Select::make('province')
                             ->label('Province')
                             ->options(fn () => app(PsgcService::class)->provinces())
@@ -154,7 +104,9 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->searchable()
                             ->preload()
                             ->live()
-                            ->afterStateUpdated(fn (Set $set) => $set('barangay', null))
+                            ->afterStateUpdated(function (Set $set) {
+                                $set('barangay', null);
+                            })
                             ->disabled(fn (Get $get) => ! $get('province'))
                             ->required(),
 
@@ -181,26 +133,32 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->required(),
                     ]),
 
-                Section::make('Employment Details')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('organizational_unit')
-                            ->label('Organizational Unit')
-                            ->required()
-                            ->maxLength(255),
+                Select::make('office_id')
+                    ->label('Office')
+                    ->relationship('office', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->acronym)
+                    ->searchable()
+                    ->preload()
+                    ->required(),
 
-                        Select::make('gender')
-                            ->label('Gender')
-                            ->options(Gender::class)
-                            ->required(),
+                TextInput::make('organizational_unit')
+                    ->label('Organizational Unit')
+                    ->required()
+                    ->maxLength(255),
 
-                        TextInput::make('tin_number')
-                            ->label('TIN Number')
-                            ->required()
-                            ->maxLength(20),
-                    ]),
+                Select::make('gender')
+                    ->label('Gender')
+                    ->options(Gender::class)
+                    ->required(),
+
+                TextInput::make('tin_number')
+                    ->label('TIN Number')
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->maxLength(20),
 
                 Section::make('Document Attachments')
+                    ->columnSpan(2)
                     ->columns(2)
                     ->schema([
                         Select::make('id_combo')
@@ -212,6 +170,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ])
                             ->required()
                             ->live()
+                            ->dehydrated(false)
                             ->columnSpan(2)
                             ->afterStateUpdated(function (Set $set) {
                                 $set('upload_pnpki', null);
@@ -230,10 +189,11 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->disk('local')
                             ->directory('attachments')
                             ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PNPKI'))
+                            ->getUploadedFileNameForStorageUsing(self::fileName('PNPKI'))
                             ->downloadable()
                             ->previewable(false)
                             ->uploadingMessage('Uploading PNPKI Form...')
+                            ->dehydrated(false)
                             ->required()
                             ->columnSpan(2)
                             ->visible(fn (Get $get) => filled($get('id_combo'))),
@@ -246,10 +206,11 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->disk('local')
                             ->directory('attachments')
                             ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('NationalID'))
+                            ->getUploadedFileNameForStorageUsing(self::fileName('NationalID'))
                             ->downloadable()
                             ->previewable(false)
                             ->uploadingMessage('Uploading National ID...')
+                            ->dehydrated(false)
                             ->required()
                             ->columnSpan(2)
                             ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
@@ -262,10 +223,11 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->disk('local')
                             ->directory('attachments')
                             ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('Passport'))
+                            ->getUploadedFileNameForStorageUsing(self::fileName('Passport'))
                             ->downloadable()
                             ->previewable(false)
                             ->uploadingMessage('Uploading Passport...')
+                            ->dehydrated(false)
                             ->required()
                             ->columnSpan(1)
                             ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
@@ -278,10 +240,11 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->disk('local')
                             ->directory('attachments')
                             ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('UMID'))
+                            ->getUploadedFileNameForStorageUsing(self::fileName('UMID'))
                             ->downloadable()
                             ->previewable(false)
                             ->uploadingMessage('Uploading UMID...')
+                            ->dehydrated(false)
                             ->required()
                             ->columnSpan(1)
                             ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
@@ -294,10 +257,11 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->disk('local')
                             ->directory('attachments')
                             ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID1'))
+                            ->getUploadedFileNameForStorageUsing(self::fileName('ID1'))
                             ->downloadable()
                             ->previewable(false)
                             ->uploadingMessage('Uploading Valid ID #1...')
+                            ->dehydrated(false)
                             ->required()
                             ->columnSpan(1)
                             ->visible(fn (Get $get) => $get('id_combo') === 'valid_ids'),
@@ -310,126 +274,37 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->disk('local')
                             ->directory('attachments')
                             ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID2'))
+                            ->getUploadedFileNameForStorageUsing(self::fileName('ID2'))
                             ->downloadable()
                             ->previewable(false)
                             ->uploadingMessage('Uploading Valid ID #2...')
+                            ->dehydrated(false)
                             ->required()
                             ->columnSpan(1)
                             ->visible(fn (Get $get) => $get('id_combo') === 'valid_ids'),
                     ]),
-            ])
-            ->statePath('employeeData');
+            ]);
     }
 
-    public function submit(): void
-    {
-        if (! $this->verifyCaptcha()) {
-            Notification::make()
-                ->title('CAPTCHA verification failed. Please try again.')
-                ->danger()
-                ->send();
-
-            $this->captchaToken = null;
-
-            return;
-        }
-
-        $data = $this->form->getState();
-
-        $rep = $this->formModel->user;
-
-        $address = Address::create([
-            'house_no' => $data['house_no'],
-            'street' => $data['street'],
-            'barangay' => $data['barangay'],
-            'municipality' => $data['municipality'],
-            'province' => $data['province'],
-            'zip_code' => $data['zip_code'],
-        ]);
-
-        $formSubmission = FormSubmission::create([
-            'firstname' => $data['firstname'],
-            'lastname' => $data['lastname'],
-            'middlename' => $data['middlename'],
-            'suffix' => $data['suffix'],
-            'email' => $data['email'],
-            'phone_number' => $data['phone_number'],
-            'organizational_unit' => $data['organizational_unit'],
-            'gender' => $data['gender'],
-            'tin_number' => $data['tin_number'],
-            'address_id' => $address->id,
-            'office_id' => $rep->office_id,
-            'form_id' => $this->formModel->id,
-        ]);
-
-        $this->saveAttachments($formSubmission, $data);
-
-        $this->submitted = true;
-        $this->form->fill();
-    }
-
-    private function verifyCaptcha(): bool
-    {
-        if (blank($this->captchaToken)) {
-            return false;
-        }
-
-        $response = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
-            'secret' => config('services.turnstile.secret'),
-            'response' => $this->captchaToken,
-            'remoteip' => request()->ip(),
-        ]);
-
-        return (bool) $response->json('success');
-    }
-
-    private function saveAttachments(FormSubmission $formSubmission, array $data): void
-    {
-        $uploads = [
-            'upload_pnpki' => 'PNPKI',
-            'upload_national_id' => 'NationalID',
-            'upload_passport' => 'Passport',
-            'upload_umid' => 'UMID',
-            'upload_id1' => 'ID1',
-            'upload_id2' => 'ID2',
-        ];
-
-        foreach ($uploads as $field => $type) {
-            if (! empty($data[$field])) {
-                $path = is_array($data[$field]) ? array_values($data[$field])[0] : $data[$field];
-
-                Attachment::create([
-                    'employee_id' => $formSubmission->id,
-                    'file_type' => $type,
-                    'file_name' => basename($path),
-                    'file_path' => $path,
-                ]);
-            }
-        }
-    }
-
-    private function fileNameForStorage(string $type): \Closure
+    protected static function fileName(string $type): \Closure
     {
         return function (Get $get, $file) use ($type) {
-            $office = $this->formModel?->user?->office;
-            $officeFolder = $office
-                ? str($office->acronym ?? $office->name)->slug()
-                : 'unknown-office';
+            $officeId = $get('office_id');
+            $officeFolder = 'Unknown-Office';
+
+            if ($officeId) {
+                $office = \App\Models\Office::find($officeId);
+                $officeFolder = $office ? str($office->acronym ?? $office->name)->slug() : 'Unknown-Office';
+            }
 
             $firstname = str($get('firstname') ?? 'Unknown')->slug();
-            $lastname = str($get('lastname') ?? 'Employee')->slug();
-            $employeeFolder = "{$lastname}-{$firstname}";
+            $lastname = str($get('lastname') ?? 'Submission')->slug();
+            $submissionFolder = "{$lastname}-{$firstname}";
 
             $extension = $file->getClientOriginalExtension();
             $filename = str($lastname)->upper()."_{$type}.{$extension}";
 
-            return "{$officeFolder}/Employees/{$employeeFolder}/{$filename}";
+            return "{$officeFolder}/FormSubmissions/{$submissionFolder}/{$filename}";
         };
-    }
-
-    public static function shouldRegisterNavigation(): bool
-    {
-        return false;
     }
 }

@@ -6,20 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Batch extends Model
+class EmployeeForm extends Model
 {
-    //
+    protected $table = 'employee_forms';
 
     protected $fillable = [
         'office_id',
         'user_id',
-        'batch_name',
-        'status',
-        'metadata',
+        'public_id',
+        'name',
+        'is_active',
     ];
 
     protected $casts = [
-        'metadata' => 'array',
+        'is_active' => 'boolean',
     ];
 
     public function office(): BelongsTo
@@ -34,6 +34,6 @@ class Batch extends Model
 
     public function formSubmissions(): HasMany
     {
-        return $this->hasMany(FormSubmission::class);
+        return $this->hasMany(FormSubmission::class, 'form_id');
     }
 }
