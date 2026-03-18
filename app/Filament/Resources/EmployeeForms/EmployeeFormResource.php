@@ -7,6 +7,7 @@ use App\Filament\Resources\EmployeeForms\Pages\EditEmployeeForm;
 use App\Filament\Resources\EmployeeForms\Pages\ListEmployeeForms;
 use App\Filament\Resources\EmployeeForms\Pages\ViewEmployeeForm;
 use App\Filament\Resources\EmployeeForms\Schemas\EmployeeFormForm;
+use App\Filament\Resources\EmployeeForms\Schemas\EmployeeFormInfolist;
 use App\Filament\Resources\EmployeeForms\Tables\EmployeeFormsTable;
 use App\Filament\Resources\Offices\RelationManagers\FormSubmissionsRelationManager;
 use App\Models\EmployeeForm;
@@ -29,6 +30,11 @@ class EmployeeFormResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return EmployeeFormForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return EmployeeFormInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
