@@ -8,6 +8,7 @@ use App\Filament\Resources\EmployeeForms\Pages\ListEmployeeForms;
 use App\Filament\Resources\EmployeeForms\Pages\ViewEmployeeForm;
 use App\Filament\Resources\EmployeeForms\Schemas\EmployeeFormForm;
 use App\Filament\Resources\EmployeeForms\Tables\EmployeeFormsTable;
+use App\Filament\Resources\Offices\RelationManagers\FormSubmissionsRelationManager;
 use App\Models\EmployeeForm;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -37,7 +38,9 @@ class EmployeeFormResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            FormSubmissionsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

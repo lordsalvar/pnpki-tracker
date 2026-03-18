@@ -15,7 +15,7 @@ class Batch extends Model
         'user_id',
         'batch_name',
         'status',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -32,10 +32,8 @@ class Batch extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function Employees(): HasMany
+    public function formSubmissions(): HasMany
     {
-        return $this->hasMany(Employee::class);
+        return $this->hasMany(FormSubmission::class);
     }
-
-
 }

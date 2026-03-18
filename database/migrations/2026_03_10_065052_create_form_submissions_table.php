@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('employees', function (Blueprint $table) {
+        Schema::create('form_submissions', function (Blueprint $table) {
             $table->id();
             $table->string('firstname');
             $table->string('lastname');
@@ -22,8 +22,9 @@ return new class extends Migration
             $table->foreignId('batch_id')->nullable()->constrained('batches')->onDelete('cascade');
             $table->foreignId('address_id')->constrained('addresses')->onDelete('cascade');
             $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
-            $table->foreignId('form_id')->nullable()->constrained('forms')->nullOnDelete();
+            $table->foreignId('form_id')->nullable()->constrained('employee_forms')->nullOnDelete();
             $table->string('organizational_unit');
+            $table->string('status');
             $table->string('gender');
             $table->string('tin_number');
             $table->timestamps();
@@ -35,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('employees');
+        Schema::dropIfExists('form_submissions');
     }
 };

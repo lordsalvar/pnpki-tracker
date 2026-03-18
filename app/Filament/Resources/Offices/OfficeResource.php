@@ -7,7 +7,7 @@ use App\Filament\Resources\Offices\Pages\CreateOffice;
 use App\Filament\Resources\Offices\Pages\EditOffice;
 use App\Filament\Resources\Offices\Pages\ListOffices;
 use App\Filament\Resources\Offices\Pages\ViewOffice;
-use App\Filament\Resources\Offices\RelationManagers\EmployeesRelationManager;
+use App\Filament\Resources\Offices\RelationManagers\FormSubmissionsRelationManager;
 use App\Filament\Resources\Offices\Schemas\OfficeForm;
 use App\Filament\Resources\Offices\Tables\OfficesTable;
 use App\Models\Office;
@@ -39,7 +39,7 @@ class OfficeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            EmployeesRelationManager::class,
+            FormSubmissionsRelationManager::class,
         ];
     }
 

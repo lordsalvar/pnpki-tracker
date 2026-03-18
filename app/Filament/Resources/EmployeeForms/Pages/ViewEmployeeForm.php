@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\EmployeeForms\Pages;
 
 use App\Filament\Resources\EmployeeForms\EmployeeFormResource;
+use App\Filament\Resources\Offices\RelationManagers\FormSubmissionsRelationManager;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
@@ -11,6 +12,13 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewEmployeeForm extends ViewRecord
 {
     protected static string $resource = EmployeeFormResource::class;
+
+    public function getRelationManagers(): array
+    {
+        return [
+            FormSubmissionsRelationManager::class,
+        ];
+    }
 
     protected function getHeaderActions(): array
     {

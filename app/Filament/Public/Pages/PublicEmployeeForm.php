@@ -5,8 +5,8 @@ namespace App\Filament\Public\Pages;
 use App\Enums\Gender;
 use App\Models\Address;
 use App\Models\Attachment;
-use App\Models\Employee;
-use App\Models\Form;
+use App\Models\EmployeeForm;
+use App\Models\FormSubmission;
 use App\Services\PsgcService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -33,7 +33,7 @@ class PublicEmployeeForm extends Page implements HasForms
 
     protected string $view = 'filament.public.pages.public-employee-form';
 
-    public ?Form $formModel = null;
+    public ?EmployeeForm $formModel = null;
 
     public ?array $employeeData = [];
 
@@ -53,7 +53,7 @@ class PublicEmployeeForm extends Page implements HasForms
 
     public function mount(string $publicId): void
     {
-        $this->formModel = Form::where('public_id', $publicId)->firstOrFail();
+        $this->formModel = EmployeeForm::where('public_id', $publicId)->firstOrFail();
         $this->form->fill();
     }
 
@@ -348,7 +348,7 @@ class PublicEmployeeForm extends Page implements HasForms
             'zip_code' => $data['zip_code'],
         ]);
 
-        $employee = Employee::create([
+        $formSubmission = FormSubmission::create([
             'firstname' => $data['firstname'],
             'lastname' => $data['lastname'],
             'middlename' => $data['middlename'],
@@ -363,7 +363,7 @@ class PublicEmployeeForm extends Page implements HasForms
             'form_id' => $this->formModel->id,
         ]);
 
-        $this->saveAttachments($employee, $data);
+        $this->saveAttachments($formSubmission, $data);
 
         $this->submitted = true;
         $this->form->fill();
@@ -384,7 +384,7 @@ class PublicEmployeeForm extends Page implements HasForms
         return (bool) $response->json('success');
     }
 
-    private function saveAttachments(Employee $employee, array $data): void
+    private function saveAttachments(FormSubmission $formSubmission, array $data): void
     {
         $uploads = [
             'upload_pnpki' => 'PNPKI',
@@ -400,7 +400,7 @@ class PublicEmployeeForm extends Page implements HasForms
                 $path = is_array($data[$field]) ? array_values($data[$field])[0] : $data[$field];
 
                 Attachment::create([
-                    'employee_id' => $employee->id,
+                    'employee_id' => $formSubmission->id,
                     'file_type' => $type,
                     'file_name' => basename($path),
                     'file_path' => $path,

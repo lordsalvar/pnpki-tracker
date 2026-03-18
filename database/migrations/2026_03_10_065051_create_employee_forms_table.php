@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('forms', function (Blueprint $table) {
+        Schema::create('employee_forms', function (Blueprint $table) {
             $table->id();
             $table->foreignId('office_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->uuid('public_id')->unique();
             $table->string('name');
-            $table->text('description')->nullable(); 
+            $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamp('expires_at')->nullable();
             $table->unsignedBigInteger('submission_count')->default(0);
@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('forms');
+        Schema::dropIfExists('employee_forms');
     }
 };
