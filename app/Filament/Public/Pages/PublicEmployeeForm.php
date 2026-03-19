@@ -361,6 +361,7 @@ class PublicEmployeeForm extends Page implements HasForms
             'address_id' => $address->id,
             'office_id' => $rep->office_id,
             'form_id' => $this->formModel->id,
+            'status' => 'pending',
         ]);
 
         $this->saveAttachments($formSubmission, $data);
@@ -400,7 +401,7 @@ class PublicEmployeeForm extends Page implements HasForms
                 $path = is_array($data[$field]) ? array_values($data[$field])[0] : $data[$field];
 
                 Attachment::create([
-                    'employee_id' => $formSubmission->id,
+                    'form_submission_id' => $formSubmission->id,
                     'file_type' => $type,
                     'file_name' => basename($path),
                     'file_path' => $path,

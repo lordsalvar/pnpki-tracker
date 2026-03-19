@@ -25,6 +25,7 @@ class FormSubmission extends Model
         'organizational_unit',
         'gender',
         'tin_number',
+        'status',
     ];
 
     protected $casts = [
