@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class FormSubmissionResource extends Resource
 {
@@ -30,6 +31,11 @@ class FormSubmissionResource extends Resource
             'middlename',
             'email',
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('office');
     }
 
     public static function form(Schema $schema): Schema

@@ -4,28 +4,19 @@ namespace App\Filament\Resources\FormSubmissions\Pages;
 
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
-use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
-use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Attachment;
+use App\Services\AttachmentPathService;
+use App\Services\AttachmentRuleService;
+use Filament\Actions\DeleteAction;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Storage;
 
 class EditFormSubmission extends EditRecord
 {
-    private const ATTACHMENT_FIELDS_BY_COMBO = [
-        'national_id' => ['upload_pnpki', 'upload_national_id'],
-        'passport_umid' => ['upload_pnpki', 'upload_passport', 'upload_umid'],
-        'valid_ids' => ['upload_pnpki', 'upload_id1', 'upload_id2'],
-    ];
+    private ?string $originalFirstname = null;
 
-    private const ATTACHMENT_TYPES_BY_FIELD = [
-        'upload_pnpki' => ['PNPKI', 'upload_pnpki'],
-        'upload_national_id' => ['NationalID', 'upload_national_id'],
-        'upload_passport' => ['Passport', 'upload_passport'],
-        'upload_umid' => ['UMID', 'upload_umid'],
-        'upload_id1' => ['ID1', 'upload_id1'],
-        'upload_id2' => ['ID2', 'upload_id2'],
-    ];
+    private ?string $originalLastname = null;
 
     protected static string $resource = FormSubmissionResource::class;
 
@@ -52,7 +43,7 @@ class EditFormSubmission extends EditRecord
         $attachmentPaths = $this->getAttachmentPathsByField();
 
         foreach ($attachmentPaths as $field => $path) {
-            $data[$field] = $path;
+            $data[$field] = [$path => $path];
         }
 
         $data['id_combo'] = $this->detectComboFromAttachmentPaths($attachmentPaths);
@@ -62,6 +53,8 @@ class EditFormSubmission extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $this->originalFirstname = $this->record->firstname;
+        $this->originalLastname = $this->record->lastname;
         if ($this->record->address) {
             $this->record->address->update([
                 'house_no' => $data['house_no'],
@@ -80,7 +73,28 @@ class EditFormSubmission extends EditRecord
 
     protected function afterSave(): void
     {
-        $this->syncAttachments($this->form->getRawState());
+        $rawData = $this->form->getRawState();
+
+        if (! $this->validateAttachmentsForCombo($rawData)) {
+            return;
+        }
+
+        try {
+            $this->syncAttachments($rawData);
+            $this->refreshFormWithPersistedState();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title('File sync failed.')
+                ->body('Your record was saved but attachments could not be updated. Please try again or contact support.')
+                ->danger()
+                ->persistent()
+                ->send();
+
+            \Illuminate\Support\Facades\Log::error('EditFormSubmission::syncAttachments failed', [
+                'submission_id' => $this->record->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -88,10 +102,11 @@ class EditFormSubmission extends EditRecord
      */
     private function getAttachmentPathsByField(): array
     {
+        $ruleService = $this->ruleService();
         $paths = [];
 
         foreach ($this->record->attachments as $attachment) {
-            $field = $this->fieldFromFileType((string) $attachment->file_type);
+            $field = $ruleService->fieldFromFileType((string) $attachment->file_type);
 
             if ($field === null) {
                 continue;
@@ -108,15 +123,7 @@ class EditFormSubmission extends EditRecord
      */
     private function detectComboFromAttachmentPaths(array $paths): ?string
     {
-        foreach (self::ATTACHMENT_FIELDS_BY_COMBO as $combo => $requiredFields) {
-            $allFieldsPresent = collect($requiredFields)->every(fn (string $field): bool => ! empty($paths[$field] ?? null));
-
-            if ($allFieldsPresent) {
-                return $combo;
-            }
-        }
-
-        return null;
+        return $this->ruleService()->detectComboFromPaths($paths);
     }
 
     /**
@@ -124,32 +131,37 @@ class EditFormSubmission extends EditRecord
      */
     private function syncAttachments(array $rawData): void
     {
-        $combo = $rawData['id_combo'] ?? null;
-        $activeFields = self::ATTACHMENT_FIELDS_BY_COMBO[$combo] ?? [];
+        $ruleService = $this->ruleService();
+        $pathService = $this->pathService();
+        $activeFields = $ruleService->activeFieldsForCombo($rawData['id_combo'] ?? null);
         $existingByField = $this->existingAttachmentsByField();
         $disk = Storage::disk('local');
         $targetDirectory = $this->attachmentDirectoryFor($rawData);
-        $lastname = str($rawData['lastname'] ?? $this->record->lastname ?? 'Submission')->slug('_');
-        $lastnameToken = (string) str($lastname === '' ? 'submission' : $lastname)->upper();
+        $lastnameToken = $pathService->lastnameToken((string) ($rawData['lastname'] ?? $this->record->lastname ?? 'Submission'), 'submission');
 
-        foreach (array_keys(self::ATTACHMENT_TYPES_BY_FIELD) as $field) {
+        foreach ($ruleService->allFields() as $field) {
             $existingAttachment = $existingByField[$field] ?? null;
 
             if (! in_array($field, $activeFields, true)) {
                 if ($existingAttachment) {
-                    Storage::disk('local')->delete($existingAttachment->file_path);
+                    $disk->delete($existingAttachment->file_path);
                     $existingAttachment->delete();
                 }
 
                 continue;
             }
 
-            $filePath = $this->normalizeFilePath($rawData[$field] ?? null);
-            $canonicalFileType = self::ATTACHMENT_TYPES_BY_FIELD[$field][0];
-            $resolvedFilePath = $this->resolveStoredPath($filePath, $disk);
+            $filePath = $pathService->normalizeFilePath($rawData[$field] ?? null);
+            $canonicalFileType = $ruleService->fileTypeForField($field);
+
+            if ($canonicalFileType === null) {
+                continue;
+            }
+
+            $resolvedFilePath = $pathService->resolveStoredPath($filePath, $disk);
 
             if ($resolvedFilePath === null) {
-                $resolvedFilePath = $this->findCanonicalPathForType($disk, $targetDirectory, $lastnameToken, $canonicalFileType);
+                $resolvedFilePath = $pathService->findCanonicalPathForType($disk, $targetDirectory, $lastnameToken, $canonicalFileType);
             }
 
             if ($existingAttachment) {
@@ -159,11 +171,7 @@ class EditFormSubmission extends EditRecord
                     $pathToCanonicalize = $existingAttachment->file_path;
                 }
 
-                $resolvedPath = $this->moveToCanonicalPath($pathToCanonicalize, $targetDirectory, $lastnameToken, $canonicalFileType);
-
-                if ($existingAttachment->file_path !== $resolvedPath) {
-                    Storage::disk('local')->delete($existingAttachment->file_path);
-                }
+                $resolvedPath = $pathService->moveToCanonicalPath($disk, $pathToCanonicalize, $targetDirectory, $lastnameToken, $canonicalFileType);
 
                 $existingAttachment->update([
                     'file_type' => $canonicalFileType,
@@ -178,7 +186,7 @@ class EditFormSubmission extends EditRecord
                 continue;
             }
 
-            $filePath = $this->moveToCanonicalPath($resolvedFilePath, $targetDirectory, $lastnameToken, $canonicalFileType);
+            $filePath = $pathService->moveToCanonicalPath($disk, $resolvedFilePath, $targetDirectory, $lastnameToken, $canonicalFileType);
 
             Attachment::create([
                 'form_submission_id' => $this->record->id,
@@ -187,6 +195,7 @@ class EditFormSubmission extends EditRecord
                 'file_path' => $filePath,
             ]);
         }
+        $this->cleanupOldDirectory($rawData);
     }
 
     /**
@@ -194,10 +203,11 @@ class EditFormSubmission extends EditRecord
      */
     private function existingAttachmentsByField(): array
     {
+        $ruleService = $this->ruleService();
         $attachmentsByField = [];
 
         foreach ($this->record->attachments as $attachment) {
-            $field = $this->fieldFromFileType((string) $attachment->file_type);
+            $field = $ruleService->fieldFromFileType((string) $attachment->file_type);
 
             if ($field === null) {
                 continue;
@@ -210,112 +220,6 @@ class EditFormSubmission extends EditRecord
     }
 
     /**
-     * Resolve an upload field name from a stored attachment file type.
-     */
-    private function fieldFromFileType(string $fileType): ?string
-    {
-        foreach (self::ATTACHMENT_TYPES_BY_FIELD as $field => $types) {
-            if (in_array($fileType, $types, true)) {
-                return $field;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Normalize FileUpload state into a single stored path string.
-     */
-    private function normalizeFilePath(mixed $value): ?string
-    {
-        if (empty($value)) {
-            return null;
-        }
-
-        if (is_array($value)) {
-            $firstValue = array_values($value)[0] ?? null;
-
-            return is_string($firstValue) ? $firstValue : null;
-        }
-
-        return is_string($value) ? $value : null;
-    }
-
-    /**
-     * Resolve a stored file path, handling values that omit the attachments/ prefix.
-     */
-    private function resolveStoredPath(?string $path, FilesystemAdapter $disk): ?string
-    {
-        if ($path === null) {
-            return null;
-        }
-
-        if ($disk->exists($path)) {
-            return $path;
-        }
-
-        if (! str_starts_with($path, 'attachments/')) {
-            $prefixedPath = "attachments/{$path}";
-
-            if ($disk->exists($prefixedPath)) {
-                return $prefixedPath;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Find a canonical file already placed in target directory for a specific type.
-     */
-    private function findCanonicalPathForType(FilesystemAdapter $disk, string $targetDirectory, string $lastnameToken, string $fileType): ?string
-    {
-        if (! $disk->exists($targetDirectory)) {
-            return null;
-        }
-
-        $expectedPrefix = "{$targetDirectory}/{$lastnameToken}_{$fileType}.";
-
-        foreach ($disk->files($targetDirectory) as $storedFile) {
-            if (str_starts_with($storedFile, $expectedPrefix)) {
-                return $storedFile;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Move a file into its canonical directory and filename pattern.
-     */
-    private function moveToCanonicalPath(string $sourcePath, string $targetDirectory, string $lastnameToken, string $fileType): string
-    {
-        $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-        $extension = $extension !== '' ? $extension : 'pdf';
-        $targetPath = "{$targetDirectory}/{$lastnameToken}_{$fileType}.{$extension}";
-
-        if ($sourcePath === $targetPath) {
-            return $sourcePath;
-        }
-
-        $disk = Storage::disk('local');
-
-        if (! $disk->exists($sourcePath)) {
-            return $sourcePath;
-        }
-
-        $disk->makeDirectory($targetDirectory);
-
-        if ($disk->exists($targetPath)) {
-            $disk->delete($targetPath);
-        }
-
-        $disk->move($sourcePath, $targetPath);
-
-        return $targetPath;
-    }
-
-    /**
      * Build the canonical attachment directory from office and name fields.
      */
     private function attachmentDirectoryFor(array $rawData): string
@@ -324,14 +228,124 @@ class EditFormSubmission extends EditRecord
         $officeFolder = 'unknown-office';
 
         if ($officeId) {
-            $office = \App\Models\Office::find($officeId);
-            $officeFolder = $office ? str($office->acronym ?? $office->name)->slug() : 'unknown-office';
+            // Use already-loaded relationship if available to avoid extra queries.
+            $office = ($this->record->office_id === $officeId)
+                ? $this->record->office
+                : \App\Models\Office::find($officeId);
+
+            $officeFolder = $office
+                ? str($office->acronym ?? $office->name)->slug()
+                : 'unknown-office';
         }
 
-        $firstname = str($rawData['firstname'] ?? $this->record->firstname ?? 'Unknown')->slug();
-        $lastname = str($rawData['lastname'] ?? $this->record->lastname ?? 'Submission')->slug();
-        $submissionFolder = "{$lastname}-{$firstname}";
+        return $this->pathService()->submissionDirectory(
+            $officeFolder,
+            (string) ($rawData['firstname'] ?? $this->record->firstname ?? 'Unknown'),
+            (string) ($rawData['lastname'] ?? $this->record->lastname ?? 'Submission'),
+            $this->record->id,
+        );
+    }
 
-        return "attachments/{$officeFolder}/FormSubmissions/{$submissionFolder}";
+    private function validateAttachmentsForCombo(array $rawData): bool
+    {
+        $ruleService = $this->ruleService();
+        $pathService = $this->pathService();
+        $activeFields = $ruleService->activeFieldsForCombo($rawData['id_combo'] ?? null);
+
+        if (empty($activeFields)) {
+            Notification::make()
+                ->title('No ID combination selected.')
+                ->danger()
+                ->send();
+
+            return false;
+        }
+
+        $disk = Storage::disk('local');
+        $targetDir = $this->attachmentDirectoryFor($rawData);
+        $lastnameToken = $pathService->lastnameToken((string) ($rawData['lastname'] ?? $this->record->lastname ?? 'Submission'), 'submission');
+
+        $missing = [];
+
+        foreach ($activeFields as $field) {
+            $resolved = $pathService->resolveStoredPath(
+                $pathService->normalizeFilePath($rawData[$field] ?? null),
+                $disk
+            );
+
+            if ($resolved === null) {
+                $canonicalType = $ruleService->fileTypeForField($field);
+                $resolved = $canonicalType === null
+                    ? null
+                    : $pathService->findCanonicalPathForType($disk, $targetDir, $lastnameToken, $canonicalType);
+            }
+
+            if ($resolved === null) {
+                $missing[] = $ruleService->humanLabelForField($field);
+            }
+        }
+
+        if (! empty($missing)) {
+            Notification::make()
+                ->title('Missing required attachments.')
+                ->body('Please upload: '.implode(', ', $missing).'.')
+                ->danger()
+                ->persistent()
+                ->send();
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete the old attachment directory if the name changed and it is now empty
+     * or only contains stale files that no longer belong to this record.
+     */
+    private function cleanupOldDirectory(array $rawData): void
+    {
+        $disk = Storage::disk('local');
+        $currentDirectory = $this->attachmentDirectoryFor($rawData);
+
+        // Reconstruct old directory using pre-save name values.
+        $oldDirectory = $this->attachmentDirectoryFor([
+            'office_id' => $rawData['office_id'] ?? $this->record->office_id,
+            'firstname' => $this->originalFirstname ?? $this->record->firstname ?? 'Unknown',
+            'lastname' => $this->originalLastname ?? $this->record->lastname ?? 'Submission',
+        ]);
+
+        if ($oldDirectory === $currentDirectory) {
+            return;
+        }
+
+        if (! $disk->exists($oldDirectory)) {
+            return;
+        }
+
+        foreach ($disk->files($oldDirectory) as $strayFile) {
+            $disk->delete($strayFile);
+        }
+
+        if (empty($disk->files($oldDirectory))) {
+            $disk->deleteDirectory($oldDirectory);
+        }
+    }
+
+    private function refreshFormWithPersistedState(): void
+    {
+        $this->record->refresh();
+        $data = $this->mutateFormDataBeforeFill($this->record->attributesToArray());
+        $this->form->fill($data);
+    }
+
+    private function ruleService(): AttachmentRuleService
+    {
+        return app(AttachmentRuleService::class);
+    }
+
+    private function pathService(): AttachmentPathService
+    {
+        return app(AttachmentPathService::class);
     }
 }
