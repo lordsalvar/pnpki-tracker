@@ -48,7 +48,7 @@ class FormSubmissionPolicy
      */
     public function update(User $user, FormSubmission $formSubmission): bool
     {
-        if (UserRole::ADMIN->value === $user->role) {
+        if (in_array($user->role, [UserRole::ADMIN->value, UserRole::REPRESENTATIVE->value])) {
             return true;
         }
 

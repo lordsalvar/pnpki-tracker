@@ -171,15 +171,7 @@ class FormSubmissionForm
                             ->required()
                             ->live()
                             ->dehydrated(false)
-                            ->columnSpan(2)
-                            ->afterStateUpdated(function (Set $set) {
-                                $set('upload_pnpki', null);
-                                $set('upload_national_id', null);
-                                $set('upload_passport', null);
-                                $set('upload_umid', null);
-                                $set('upload_id1', null);
-                                $set('upload_id2', null);
-                            }),
+                            ->columnSpan(2),
 
                         FileUpload::make('upload_pnpki')
                             ->label('PNPKI Form')
