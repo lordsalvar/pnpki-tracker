@@ -170,6 +170,7 @@ class FormSubmissionForm
                             ])
                             ->required()
                             ->live()
+                            ->disabledOn('edit')
                             ->dehydrated(false)
                             ->columnSpan(2),
 
