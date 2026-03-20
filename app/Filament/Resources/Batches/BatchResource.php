@@ -43,6 +43,7 @@ class BatchResource extends Resource
     {
         return [
             //
+            \App\Filament\Resources\Batches\RelationManagers\FormSubmissionsRelationManager::class,
         ];
     }
 
