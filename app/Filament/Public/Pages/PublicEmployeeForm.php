@@ -7,6 +7,8 @@ use App\Models\Address;
 use App\Models\Attachment;
 use App\Models\EmployeeForm;
 use App\Models\FormSubmission;
+use App\Services\AttachmentPathService;
+use App\Services\AttachmentRuleService;
 use App\Services\PsgcService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -23,7 +25,9 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class PublicEmployeeForm extends Page implements HasForms
 {
@@ -212,15 +216,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ])
                             ->required()
                             ->live()
-                            ->columnSpan(2)
-                            ->afterStateUpdated(function (Set $set) {
-                                $set('upload_pnpki', null);
-                                $set('upload_national_id', null);
-                                $set('upload_passport', null);
-                                $set('upload_umid', null);
-                                $set('upload_id1', null);
-                                $set('upload_id2', null);
-                            }),
+                            ->columnSpan(2),
 
                         FileUpload::make('upload_pnpki')
                             ->label('PNPKI Form')
@@ -336,35 +332,38 @@ class PublicEmployeeForm extends Page implements HasForms
         }
 
         $data = $this->form->getState();
+        $data = $this->normalizeUploadedAttachmentPaths($data);
 
         $rep = $this->formModel->user;
 
-        $address = Address::create([
-            'house_no' => $data['house_no'],
-            'street' => $data['street'],
-            'barangay' => $data['barangay'],
-            'municipality' => $data['municipality'],
-            'province' => $data['province'],
-            'zip_code' => $data['zip_code'],
-        ]);
+        DB::transaction(function () use ($data, $rep) {
+            $address = Address::create([
+                'house_no' => $data['house_no'],
+                'street' => $data['street'],
+                'barangay' => $data['barangay'],
+                'municipality' => $data['municipality'],
+                'province' => $data['province'],
+                'zip_code' => $data['zip_code'],
+            ]);
 
-        $formSubmission = FormSubmission::create([
-            'firstname' => $data['firstname'],
-            'lastname' => $data['lastname'],
-            'middlename' => $data['middlename'],
-            'suffix' => $data['suffix'],
-            'email' => $data['email'],
-            'phone_number' => $data['phone_number'],
-            'organizational_unit' => $data['organizational_unit'],
-            'gender' => $data['gender'],
-            'tin_number' => $data['tin_number'],
-            'address_id' => $address->id,
-            'office_id' => $rep->office_id,
-            'form_id' => $this->formModel->id,
-            'status' => 'pending',
-        ]);
+            $formSubmission = FormSubmission::create([
+                'firstname' => $data['firstname'],
+                'lastname' => $data['lastname'],
+                'middlename' => $data['middlename'],
+                'suffix' => $data['suffix'],
+                'email' => $data['email'],
+                'phone_number' => $data['phone_number'],
+                'organizational_unit' => $data['organizational_unit'],
+                'gender' => $data['gender'],
+                'tin_number' => $data['tin_number'],
+                'address_id' => $address->id,
+                'office_id' => $rep->office_id,
+                'form_id' => $this->formModel->id,
+                'status' => 'pending',
+            ]);
 
-        $this->saveAttachments($formSubmission, $data);
+            $this->saveAttachments($formSubmission, $data);
+        });
 
         $this->submitted = true;
         $this->form->fill();
@@ -387,16 +386,20 @@ class PublicEmployeeForm extends Page implements HasForms
 
     private function saveAttachments(FormSubmission $formSubmission, array $data): void
     {
-        $uploads = [
-            'upload_pnpki' => 'PNPKI',
-            'upload_national_id' => 'NationalID',
-            'upload_passport' => 'Passport',
-            'upload_umid' => 'UMID',
-            'upload_id1' => 'ID1',
-            'upload_id2' => 'ID2',
-        ];
+        $ruleService = $this->ruleService();
+        $fileKeys = $ruleService->activeFieldsForCombo($data['id_combo'] ?? null);
 
-        foreach ($uploads as $field => $type) {
+        foreach ($ruleService->allFields() as $field) {
+            if (! in_array($field, $fileKeys, true)) {
+                continue;
+            }
+
+            $type = $ruleService->fileTypeForField($field);
+
+            if ($type === null) {
+                continue;
+            }
+
             if (! empty($data[$field])) {
                 $path = is_array($data[$field]) ? array_values($data[$field])[0] : $data[$field];
 
@@ -408,6 +411,60 @@ class PublicEmployeeForm extends Page implements HasForms
                 ]);
             }
         }
+    }
+
+    private function normalizeUploadedAttachmentPaths(array $data): array
+    {
+        $ruleService = $this->ruleService();
+        $pathService = $this->pathService();
+        $activeFields = $ruleService->activeFieldsForCombo($data['id_combo'] ?? null);
+
+        if ($activeFields === []) {
+            return $data;
+        }
+
+        $disk = Storage::disk('local');
+        $targetDirectory = $this->attachmentDirectoryFor($data);
+        $lastnameToken = $pathService->lastnameToken((string) ($data['lastname'] ?? 'Employee'), 'employee');
+
+        foreach ($activeFields as $field) {
+            $sourcePath = $pathService->normalizeFilePath($data[$field] ?? null);
+
+            if (! is_string($sourcePath) || $sourcePath === '') {
+                continue;
+            }
+
+            $fileType = $ruleService->fileTypeForField($field) ?? 'FILE';
+            $targetPath = $pathService->canonicalPath($sourcePath, $targetDirectory, $lastnameToken, $fileType);
+
+            if ($sourcePath !== $targetPath && $disk->exists($sourcePath)) {
+                $disk->makeDirectory($targetDirectory);
+
+                if ($disk->exists($targetPath)) {
+                    $disk->delete($targetPath);
+                }
+
+                $disk->move($sourcePath, $targetPath);
+            }
+
+            $data[$field] = is_array($data[$field]) ? [$targetPath] : $targetPath;
+        }
+
+        return $data;
+    }
+
+    private function attachmentDirectoryFor(array $data): string
+    {
+        $office = $this->formModel?->user?->office;
+        $officeFolder = $office
+            ? str($office->acronym ?? $office->name)->slug()
+            : 'unknown-office';
+
+        return $this->pathService()->employeeDirectory(
+            $officeFolder,
+            (string) ($data['firstname'] ?? 'Unknown'),
+            (string) ($data['lastname'] ?? 'Employee')
+        );
     }
 
     private function fileNameForStorage(string $type): \Closure
@@ -427,6 +484,16 @@ class PublicEmployeeForm extends Page implements HasForms
 
             return "{$officeFolder}/Employees/{$employeeFolder}/{$filename}";
         };
+    }
+
+    private function ruleService(): AttachmentRuleService
+    {
+        return app(AttachmentRuleService::class);
+    }
+
+    private function pathService(): AttachmentPathService
+    {
+        return app(AttachmentPathService::class);
     }
 
     public static function shouldRegisterNavigation(): bool
