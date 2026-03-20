@@ -62,8 +62,8 @@ class FormSubmission extends Model
         return $this->belongsTo(EmployeeForm::class, 'form_id');
     }
 
-    public function attachment(): HasMany
+    public function attachments(): HasMany
     {
-        return $this->hasMany(Attachment::class, 'employee_id');
+        return $this->hasMany(Attachment::class, 'form_submission_id');
     }
 }
