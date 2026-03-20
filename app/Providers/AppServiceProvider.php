@@ -9,6 +9,8 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Batch;
+use App\Policies\BatchPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,5 +33,6 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Gate::policy(EmployeeForm::class, EmployeeFormPolicy::class);
+        Gate::policy(Batch::class, BatchPolicy::class);
     }
 }

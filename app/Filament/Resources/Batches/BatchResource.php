@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
+use App\Enums\UserRole;
 
 class BatchResource extends Resource
 {
@@ -55,5 +57,18 @@ class BatchResource extends Resource
             'view' => ViewBatch::route('/{record}'),
             'edit' => EditBatch::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+
+        $user = Auth::user();
+
+        if ($user->role === UserRole::ADMIN->value) {
+        return parent::getEloquentQuery()
+            ->where('status', 'finalized');
+        }
+        return parent::getEloquentQuery()
+            ->where('office_id', Auth::user()->office_id);
     }
 }
