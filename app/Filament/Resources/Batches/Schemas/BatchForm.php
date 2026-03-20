@@ -27,6 +27,14 @@ class BatchForm
                     ->dehydrated()
                     ->required(),
                 TextInput::make('batch_name')
+                    ->default(function() {
+                        $user = Auth::user();
+                        $acronym = $user->office->acronym;
+                        $count = \App\Models\Batch::where('office_id', $user->office_id)->count();
+                        return $acronym . '-' . ($count + 1);
+                    })
+                    ->disabled()
+                    ->dehydrated()
                     ->required(),
                 Select::make('status')
                     ->options(BatchStatus::class)
