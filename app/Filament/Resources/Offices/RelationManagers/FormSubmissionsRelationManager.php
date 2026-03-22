@@ -9,6 +9,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -17,6 +18,11 @@ use Illuminate\Database\Eloquent\Model;
 class FormSubmissionsRelationManager extends RelationManager
 {
     protected static string $relationship = 'formSubmissions';
+
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
 
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
     {
@@ -38,7 +44,11 @@ class FormSubmissionsRelationManager extends RelationManager
             ])
             ->recordActions([
                 EditAction::make()
-                    ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record])),
+                    ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record]))
+                    ->hidden(fn ($record) => $record->status === \App\Enums\FormSubmissionStatus::FINALIZED),
+                ViewAction::make()
+                    ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
+                    ->visible(fn ($record) => $record->status === \App\Enums\FormSubmissionStatus::FINALIZED),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -3,16 +3,13 @@
 namespace App\Filament\Resources\Batches\RelationManagers;
 
 use App\Filament\Resources\Batches\BatchResource;
+use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Form;
-use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-
 
 class FormSubmissionsRelationManager extends RelationManager
 {
@@ -27,17 +24,22 @@ class FormSubmissionsRelationManager extends RelationManager
         return FormSubmissionsTable::configure($table)
             ->recordTitleAttribute('lastname')
             ->recordActions(
-                $isFinalized ? []: [
+                $isFinalized ? [] : [
                     EditAction::make(),
                 ],
             )
             ->toolbarActions(
-                $isFinalized ? []: [
+                $isFinalized ? [] : [
                     BulkActionGroup::make([
                         DeleteBulkAction::make(),
                     ]),
                 ],
             );
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
     }
 
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool

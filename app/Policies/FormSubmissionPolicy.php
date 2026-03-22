@@ -28,6 +28,10 @@ class FormSubmissionPolicy
             return true;
         }
 
+        if (UserRole::REPRESENTATIVE->value === $user->role) {
+            return $formSubmission->office_id === $user->office_id;
+        }
+
         return false;
     }
 
