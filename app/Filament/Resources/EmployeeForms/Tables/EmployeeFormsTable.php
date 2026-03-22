@@ -45,8 +45,8 @@ class EmployeeFormsTable
 
                 TextColumn::make('public_id')
                     ->label('Public Link')
-                    ->formatStateUsing(fn (string $state): string => url('/p/forms/'.$state))
-                    ->url(fn ($record): string => url('/p/forms/'.$record->public_id))
+                    ->formatStateUsing(fn (string $state): string => request()->getSchemeAndHttpHost().'/p/forms/'.$state)
+                    ->url(fn ($record): string => request()->getSchemeAndHttpHost().'/p/forms/'.$record->public_id)
                     ->openUrlInNewTab()
                     ->copyable()
                     ->copyMessage('Link copied!')

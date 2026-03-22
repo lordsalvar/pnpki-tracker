@@ -22,7 +22,7 @@ class ViewEmployeeForm extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        $publicUrl = url('/p/forms/'.$this->record->public_id);
+        $publicUrl = request()->getSchemeAndHttpHost().'/p/forms/'.$this->record->public_id;
 
         return [
             Action::make('copy_link')
