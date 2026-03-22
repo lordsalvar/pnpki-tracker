@@ -2,9 +2,12 @@
 
 namespace App\Filament\Resources\FormSubmissions\Tables;
 
+use App\Enums\FormSubmissionStatus;
+use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -45,8 +48,9 @@ class FormSubmissionsTable
                     ->label('Phone')
                     ->searchable(),
 
-                TextColumn::make('gender')
+                TextColumn::make('status')
                     ->badge()
+                    ->color(fn ($record) => $record->status === FormSubmissionStatus::FINALIZED ? 'success' : 'warning')
                     ->searchable(),
 
                 TextColumn::make('organizational_unit')
@@ -95,7 +99,12 @@ class FormSubmissionsTable
                     ->visible(fn () => \Illuminate\Support\Facades\Auth::user()?->role === 'ADMIN'),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record]))
+                    ->hidden(fn ($record) => $record->status === FormSubmissionStatus::FINALIZED),
+                ViewAction::make()
+                    ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
+                    ->visible(fn ($record) => $record->status === FormSubmissionStatus::FINALIZED),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

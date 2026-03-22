@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\FormSubmissions;
 
-use app\Enums\UserRole;
+use App\Enums\UserRole;
 use App\Filament\Resources\FormSubmissions\Pages\CreateFormSubmission;
 use App\Filament\Resources\FormSubmissions\Pages\EditFormSubmission;
 use App\Filament\Resources\FormSubmissions\Pages\ListFormSubmissions;
+use App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission;
 use App\Filament\Resources\FormSubmissions\Schemas\FormSubmissionForm;
 use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
 use App\Models\FormSubmission;
@@ -20,11 +21,11 @@ use Illuminate\Support\Facades\Auth;
 class FormSubmissionResource extends Resource
 {
     protected static ?string $model = FormSubmission::class;
- 
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
- 
+
     protected static ?string $recordTitleAttribute = 'full_name';
- 
+
     public static function getGloballySearchableAttributes(): array
     {
         return [
@@ -34,7 +35,7 @@ class FormSubmissionResource extends Resource
             'email',
         ];
     }
- 
+
     /**
      * Scope submissions to the representative's own office.
      * Admins see all submissions.
@@ -42,36 +43,37 @@ class FormSubmissionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()->with('office');
-        $user  = Auth::user();
- 
+        $user = Auth::user();
+
         if ($user?->role === UserRole::REPRESENTATIVE->value) {
             $query->where('office_id', $user->office_id);
         }
- 
+
         return $query;
     }
- 
+
     public static function form(Schema $schema): Schema
     {
         return FormSubmissionForm::configure($schema);
     }
- 
+
     public static function table(Table $table): Table
     {
         return FormSubmissionsTable::configure($table);
     }
- 
+
     public static function getRelations(): array
     {
         return [];
     }
- 
+
     public static function getPages(): array
     {
         return [
-            'index'  => ListFormSubmissions::route('/'),
+            'index' => ListFormSubmissions::route('/'),
             'create' => CreateFormSubmission::route('/create'),
-            'edit'   => EditFormSubmission::route('/{record}/edit'),
+            'view' => ViewFormSubmission::route('/{record}'),
+            'edit' => EditFormSubmission::route('/{record}/edit'),
         ];
     }
 }

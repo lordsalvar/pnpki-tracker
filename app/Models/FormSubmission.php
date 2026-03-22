@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\FormSubmissionStatus;
 use App\Enums\Gender;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,7 @@ class FormSubmission extends Model
 
     protected $casts = [
         'gender' => Gender::class,
+        'status' => FormSubmissionStatus::class,
     ];
 
     public function getFullNameAttribute(): string

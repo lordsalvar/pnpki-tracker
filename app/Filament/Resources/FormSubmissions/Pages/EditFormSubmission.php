@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\FormSubmissions\Pages;
 
+use App\Actions\FormSubmission\FinalizeFormSubmissionAction;
+use App\Enums\FormSubmissionStatus;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
 use App\Models\Attachment;
 use App\Services\AttachmentPathService;
 use App\Services\AttachmentRuleService;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -23,6 +26,22 @@ class EditFormSubmission extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('finalize')
+                ->label('Finalize')
+                ->icon('heroicon-o-check-badge')
+                ->color('success')
+                ->requiresConfirmation()
+                ->hidden(fn () => $this->record->status === FormSubmissionStatus::FINALIZED)
+                ->action(function () {
+                    app(FinalizeFormSubmissionAction::class)->execute($this->record);
+
+                    Notification::make()
+                        ->title('Submission finalized.')
+                        ->success()
+                        ->send();
+
+                    $this->refreshFormWithPersistedState();
+                }),
             DeleteAction::make(),
         ];
     }
