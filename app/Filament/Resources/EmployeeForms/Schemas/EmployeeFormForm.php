@@ -33,7 +33,7 @@ class EmployeeFormForm
                             return new HtmlString('<span class="text-gray-400 text-sm">Will be available after saving.</span>');
                         }
 
-                        $url = url('/p/forms/'.$record->public_id);
+                        $url = request()->getSchemeAndHttpHost().'/p/forms/'.$record->public_id;
 
                         return new HtmlString(
                             '<div class="flex items-center gap-2">'

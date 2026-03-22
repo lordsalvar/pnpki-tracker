@@ -2,9 +2,15 @@
 
 namespace App\Filament\Resources\FormSubmissions\Pages;
 
+use App\Actions\Batch\AssignBatchAction;
+use App\Enums\FormSubmissionStatus;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
+use App\Models\Batch;
 use App\Services\AttachmentRuleService;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewFormSubmission extends ViewRecord
@@ -14,6 +20,33 @@ class ViewFormSubmission extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('assign_batch')
+                ->label('Assign to Batch')
+                ->icon('heroicon-o-archive-box-arrow-down')
+                ->color('info')
+                ->visible(fn () => $this->record->status === FormSubmissionStatus::FINALIZED)
+                ->form([
+                    Select::make('batch_id')
+                        ->label('Batch')
+                        ->options(
+                            Batch::query()
+                                ->orderBy('batch_name')
+                                ->pluck('batch_name', 'id')
+                        )
+                        ->required()
+                        ->searchable()
+                        ->default(fn () => $this->record->batch_id),
+                ])
+                ->action(function (array $data) {
+                    $batch = Batch::findOrFail($data['batch_id']);
+
+                    app(AssignBatchAction::class)->execute($this->record, $batch);
+
+                    Notification::make()
+                        ->title('Batch assigned.')
+                        ->success()
+                        ->send();
+                }),
         ];
     }
 
