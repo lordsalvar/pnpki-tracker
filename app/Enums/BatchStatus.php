@@ -3,9 +3,10 @@
 namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
+use Filament\Support\Contracts\HasColor;
 
 
-enum BatchStatus: string implements HasLabel
+enum BatchStatus: string implements HasLabel, HasColor
 {
     //
     case PENDING = 'pending';
@@ -16,6 +17,14 @@ enum BatchStatus: string implements HasLabel
         return match($this) {
             BatchStatus::PENDING => 'Pending',
             BatchStatus::FINALIZED => 'Finalized',
+        };
+    }
+
+     public function getColor(): string|array|null
+    {
+        return match ($this) {
+            BatchStatus::PENDING => 'warning',
+            BatchStatus::FINALIZED => 'success',
         };
     }
 }

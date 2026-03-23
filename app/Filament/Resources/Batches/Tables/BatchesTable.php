@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Batches\Tables;
 
+use App\Enums\BatchStatus;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,13 +16,13 @@ class BatchesTable
     {
         return $table
             ->columns([
-                TextColumn::make('office.name')
-                    ->searchable(),
-                TextColumn::make('user.name')
-                    ->searchable(),
                 TextColumn::make('batch_name')
                     ->searchable(),
+                TextColumn::make('user.name')
+                    ->label('Representative')
+                    ->searchable(),
                 TextColumn::make('status')
+                    ->badge()
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
