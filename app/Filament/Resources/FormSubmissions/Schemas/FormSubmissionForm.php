@@ -39,6 +39,7 @@ class FormSubmissionForm
                             ->tooltip('Click to set Middle Name as N/A')
                             ->color('gray')
                             ->action(fn (Set $set) => $set('middlename', 'N/A'))
+                            ->visible(fn ($livewire) => ! $livewire instanceof \App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission)
                     ),
                 TextInput::make('suffix')
                     ->label('Suffix')
@@ -52,6 +53,7 @@ class FormSubmissionForm
                             ->tooltip('Click to set Suffix as N/A')
                             ->color('gray')
                             ->action(fn (Set $set) => $set('suffix', 'N/A'))
+                            ->visible(fn ($livewire) => ! $livewire instanceof \App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission)
                     ),
 
                 TextInput::make('email')
