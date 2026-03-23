@@ -18,6 +18,22 @@ class ViewFormSubmission extends ViewRecord
 {
     protected static string $resource = FormSubmissionResource::class;
 
+    public function getTitle(): string
+    {
+        $record = $this->record;
+
+        return trim(
+            $record->firstname . ' ' .
+            (($record->middlename && $record->middlename !== 'N/A')
+                ? strtoupper(substr($record->middlename, 0, 1)) . '. '
+                : '') .
+            $record->lastname .
+            (($record->suffix && $record->suffix !== 'N/A')
+                ? ', ' . $record->suffix
+                : '')
+        );
+    }
+
     protected function getHeaderActions(): array
     {
         return [
