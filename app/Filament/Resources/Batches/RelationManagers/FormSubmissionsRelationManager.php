@@ -17,6 +17,8 @@ class FormSubmissionsRelationManager extends RelationManager
 
     protected static ?string $relatedResource = BatchResource::class;
 
+    protected static ?string $title = 'Employees';
+
     public function table(Table $table): Table
     {
         $isFinalized = $this->ownerRecord->status === \App\Enums\BatchStatus::FINALIZED->value;
