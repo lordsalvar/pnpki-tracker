@@ -17,9 +17,6 @@ class BatchInfolist
                     ->label('User'),
                 TextEntry::make('batch_name'),
                 TextEntry::make('status'),
-                TextEntry::make('metadata')
-                    ->placeholder('-')
-                    ->columnSpanFull(),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),
