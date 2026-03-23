@@ -14,6 +14,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\Auth;
 
 class ViewFormSubmission extends ViewRecord
 {
@@ -48,6 +49,7 @@ class ViewFormSubmission extends ViewRecord
                         ->label('Batch')
                         ->options(
                             Batch::query()
+                                ->where('office_id', Auth::user()->office_id)
                                 ->orderBy('batch_name')
                                 ->pluck('batch_name', 'id')
                         )
