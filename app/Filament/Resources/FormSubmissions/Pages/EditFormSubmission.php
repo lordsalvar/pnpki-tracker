@@ -2,15 +2,19 @@
 
 namespace App\Filament\Resources\FormSubmissions\Pages;
 
+use App\Actions\Batch\AssignBatchAction;
+use App\Actions\Batch\UnAssignBatchAction;
 use App\Actions\FormSubmission\FinalizeFormSubmissionAction;
 use App\Enums\FormSubmissionStatus;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
 use App\Models\Attachment;
+use App\Models\Batch;
 use App\Services\AttachmentPathService;
 use App\Services\AttachmentRuleService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Storage;
@@ -28,13 +32,13 @@ class EditFormSubmission extends EditRecord
         $record = $this->record;
 
         return trim(
-            $record->firstname . ' ' .
+            $record->firstname.' '.
             (($record->middlename && $record->middlename !== 'N/A')
-                ? strtoupper(substr($record->middlename, 0, 1)) . '. '
-                : '') .
-            $record->lastname .
+                ? strtoupper(substr($record->middlename, 0, 1)).'. '
+                : '').
+            $record->lastname.
             (($record->suffix && $record->suffix !== 'N/A')
-                ? ', ' . $record->suffix
+                ? ', '.$record->suffix
                 : '')
         );
     }
@@ -53,6 +57,51 @@ class EditFormSubmission extends EditRecord
 
                     Notification::make()
                         ->title('Submission finalized.')
+                        ->success()
+                        ->send();
+
+                    $this->refreshFormWithPersistedState();
+                }),
+            Action::make('assign_batch')
+                ->label('Assign to Batch')
+                ->icon('heroicon-o-archive-box-arrow-down')
+                ->color('info')
+                ->visible(fn () => $this->record->status === FormSubmissionStatus::FINALIZED && $this->record->batch_id === null)
+                ->form([
+                    Select::make('batch_id')
+                        ->label('Batch')
+                        ->options(
+                            Batch::query()
+                                ->orderBy('batch_name')
+                                ->pluck('batch_name', 'id')
+                        )
+                        ->required()
+                        ->searchable()
+                        ->default(fn () => $this->record->batch_id),
+                ])
+                ->action(function (array $data) {
+                    $batch = Batch::findOrFail($data['batch_id']);
+
+                    app(AssignBatchAction::class)->execute($this->record, $batch);
+
+                    Notification::make()
+                        ->title('Batch assigned.')
+                        ->success()
+                        ->send();
+
+                    $this->refreshFormWithPersistedState();
+                }),
+            Action::make('unassign_batch')
+                ->label('Remove from Batch')
+                ->icon('heroicon-o-archive-box-x-mark')
+                ->color('danger')
+                ->visible(fn () => $this->record->batch_id !== null)
+                ->requiresConfirmation()
+                ->action(function () {
+                    app(UnAssignBatchAction::class)->execute($this->record);
+
+                    Notification::make()
+                        ->title('Batch unassigned.')
                         ->success()
                         ->send();
 
