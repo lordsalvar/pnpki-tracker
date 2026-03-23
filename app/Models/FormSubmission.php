@@ -38,9 +38,9 @@ class FormSubmission extends Model
     {
         return trim(implode(' ', array_filter([
             $this->firstname,
-            $this->middlename,
+            $this->middlename !== 'N/A' ? $this->middlename : null,
             $this->lastname,
-            $this->suffix,
+            $this->suffix !== 'N/A' ? $this->suffix : null,
         ])));
     }
 
