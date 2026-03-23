@@ -4,6 +4,7 @@ namespace App\Filament\Resources\FormSubmissions\Pages;
 
 use App\Actions\Batch\AssignBatchAction;
 use App\Actions\Batch\UnAssignBatchAction;
+use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
@@ -68,7 +69,10 @@ class ViewFormSubmission extends ViewRecord
                 ->label('Remove from Batch')
                 ->icon('heroicon-o-archive-box-x-mark')
                 ->color('danger')
-                ->visible(fn () => $this->record->batch_id !== null)
+                ->visible(function () {
+                    return $this->record->batch_id !== null
+                        && $this->record->batch?->status !== BatchStatus::FINALIZED;
+                })
                 ->requiresConfirmation()
                 ->action(function () {
                     app(UnAssignBatchAction::class)->execute($this->record);
