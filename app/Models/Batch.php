@@ -16,12 +16,10 @@ class Batch extends Model
         'user_id',
         'batch_name',
         'status',
-        'metadata',
     ];
 
     protected $casts = [
         'status' => BatchStatus::class,
-        'metadata' => 'array',
     ];
 
     public function office(): BelongsTo
