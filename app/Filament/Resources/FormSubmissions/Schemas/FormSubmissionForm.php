@@ -24,13 +24,16 @@ class FormSubmissionForm
                 TextInput::make('firstname')
                     ->label('First Name')
                     ->required()
+                    ->rule(self::noEmojiRule())
                     ->maxLength(255),
                 TextInput::make('lastname')
                     ->label('Last Name')
                     ->required()
+                    ->rule(self::noEmojiRule())
                     ->maxLength(255),
                 TextInput::make('middlename')
                     ->required()
+                    ->rule(self::noEmojiRule())
                     ->maxLength(255)
                     ->suffixAction(
                         Action::make('set_na')
@@ -45,6 +48,7 @@ class FormSubmissionForm
                     ->label('Suffix')
                     ->placeholder('Jr., Sr., III')
                     ->required()
+                    ->rule(self::noEmojiRule())
                     ->maxLength(20)
                     ->suffixAction(
                         Action::make('set_na')
@@ -61,12 +65,15 @@ class FormSubmissionForm
                     ->email()
                     ->required()
                     ->unique(ignoreRecord: true)
+                    ->rule(self::noEmojiRule())
                     ->maxLength(255),
 
                 TextInput::make('phone_number')
                     ->label('Phone Number')
                     ->tel()
+                    ->placeholder('e.g. 09171234567')
                     ->required()
+                    ->rule(self::noEmojiRule())
                     ->maxLength(20),
 
                 Group::make()
@@ -76,10 +83,12 @@ class FormSubmissionForm
                         TextInput::make('house_no')
                             ->label('House No.')
                             ->required()
+                            ->rule(self::noEmojiRule())
                             ->maxLength(255),
                         TextInput::make('street')
                             ->label('Street')
                             ->required()
+                            ->rule(self::noEmojiRule())
                             ->maxLength(255),
                         Select::make('province')
                             ->label('Province')
@@ -146,6 +155,7 @@ class FormSubmissionForm
                 TextInput::make('organizational_unit')
                     ->label('Organizational Unit')
                     ->required()
+                    ->rule(self::noEmojiRule())
                     ->maxLength(255),
 
                 Select::make('gender')
@@ -157,6 +167,7 @@ class FormSubmissionForm
                     ->label('TIN Number')
                     ->required()
                     ->unique(ignoreRecord: true)
+                    ->rule(self::noEmojiRule())
                     ->maxLength(20),
 
                 Section::make('Document Attachments')
@@ -337,5 +348,10 @@ class FormSubmissionForm
             // ID-prefixed path (e.g. {id}_{lastname}-{firstname}) by syncAttachments after save.
             return "{$officeFolder}/FormSubmissions/{$submissionFolder}/{$filename}";
         };
+    }
+
+    protected static function noEmojiRule(): string
+    {
+        return 'not_regex:/[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{200D}\x{FE0F}]/u';
     }
 }
