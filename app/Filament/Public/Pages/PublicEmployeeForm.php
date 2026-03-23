@@ -210,9 +210,11 @@ class PublicEmployeeForm extends Page implements HasForms
                         Select::make('id_combo')
                             ->label('Select ID Combination')
                             ->options([
-                                'national_id' => 'PNPKI Form + National ID',
-                                'passport_umid' => 'PNPKI Form + Passport + UMID',
-                                'valid_ids' => 'PNPKI Form + 2 Valid IDs',
+                                'national_id' => 'PNPKI form & National ID',
+                                'birth_cert_umid' => 'PNPKI form, Birth Cert & UMID',
+                                'passport_umid' => 'PNPKI form, Passport & UMID',
+                                'birth_cert_valid_ids' => 'PNPKI form, Birth Cert & 2 Valid IDs',
+                                'passport_valid_ids' => 'PNPKI form, Passport & 2 valid IDs',
                             ])
                             ->required()
                             ->live()
@@ -254,6 +256,24 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->columnSpan(2)
                             ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
 
+                        FileUpload::make('upload_birth_cert')
+                            ->label('Birth Certificate')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('BirthCert'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable(false)
+                            ->previewable()
+                            ->uploadingMessage('Uploading Birth Certificate...')
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'birth_cert_valid_ids'])),
+
                         FileUpload::make('upload_passport')
                             ->label('Passport (Bio-data page)')
                             ->helperText('PDF only · Max 5 MB')
@@ -270,7 +290,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->uploadingMessage('Uploading Passport...')
                             ->required()
                             ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_umid', 'passport_valid_ids'])),
 
                         FileUpload::make('upload_umid')
                             ->label('UMID Card')
@@ -288,7 +308,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->uploadingMessage('Uploading UMID...')
                             ->required()
                             ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'passport_umid'])),
 
                         FileUpload::make('upload_id1')
                             ->label('Valid ID #1')
@@ -306,7 +326,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->uploadingMessage('Uploading Valid ID #1...')
                             ->required()
                             ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'valid_ids'),
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
 
                         FileUpload::make('upload_id2')
                             ->label('Valid ID #2')
@@ -324,7 +344,8 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->uploadingMessage('Uploading Valid ID #2...')
                             ->required()
                             ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'valid_ids'),
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
+
                     ]),
             ])
             ->statePath('employeeData');

@@ -6,13 +6,16 @@ class AttachmentRuleService
 {
     private const ATTACHMENT_FIELDS_BY_COMBO = [
         'national_id' => ['upload_pnpki', 'upload_national_id'],
+        'birth_cert_umid' => ['upload_pnpki', 'upload_birth_cert', 'upload_umid'],
         'passport_umid' => ['upload_pnpki', 'upload_passport', 'upload_umid'],
-        'valid_ids' => ['upload_pnpki', 'upload_id1', 'upload_id2'],
+        'birth_cert_valid_ids' => ['upload_pnpki', 'upload_birth_cert', 'upload_id1', 'upload_id2'],
+        'passport_valid_ids' => ['upload_pnpki', 'upload_passport', 'upload_id1', 'upload_id2'],
     ];
 
     private const ATTACHMENT_TYPES_BY_FIELD = [
         'upload_pnpki' => 'PNPKI',
         'upload_national_id' => 'NationalID',
+        'upload_birth_cert' => 'BirthCert',
         'upload_passport' => 'Passport',
         'upload_umid' => 'UMID',
         'upload_id1' => 'ID1',
@@ -63,6 +66,7 @@ class AttachmentRuleService
         return match ($field) {
             'upload_pnpki' => 'PNPKI Form',
             'upload_national_id' => 'National ID',
+            'upload_birth_cert' => 'Birth Certificate',
             'upload_passport' => 'Passport',
             'upload_umid' => 'UMID',
             'upload_id1' => 'Valid ID #1',

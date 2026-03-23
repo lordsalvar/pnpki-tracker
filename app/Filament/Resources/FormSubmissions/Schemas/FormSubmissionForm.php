@@ -164,9 +164,11 @@ class FormSubmissionForm
                         Select::make('id_combo')
                             ->label('Select ID Combination')
                             ->options([
-                                'national_id' => 'PNPKI Form + National ID',
-                                'passport_umid' => 'PNPKI Form + Passport + UMID',
-                                'valid_ids' => 'PNPKI Form + 2 Valid IDs',
+                                'national_id' => 'PNPKI form & National ID',
+                                'birth_cert_umid' => 'PNPKI form, Birth Cert & UMID',
+                                'passport_umid' => 'PNPKI form, Passport & UMID',
+                                'birth_cert_valid_ids' => 'PNPKI form, Birth Cert & 2 Valid IDs',
+                                'passport_valid_ids' => 'PNPKI form, Passport & 2 valid IDs',
                             ])
                             ->required()
                             ->live()
@@ -212,6 +214,25 @@ class FormSubmissionForm
                             ->columnSpan(2)
                             ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
 
+                        FileUpload::make('upload_birth_cert')
+                            ->label('Birth Certificate')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('BirthCert'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable(false)
+                            ->previewable()
+                            ->uploadingMessage('Uploading Birth Certificate...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'birth_cert_valid_ids'])),
+
                         FileUpload::make('upload_passport')
                             ->label('Passport (Bio-data page)')
                             ->helperText('PDF only · Max 5 MB')
@@ -229,7 +250,7 @@ class FormSubmissionForm
                             ->dehydrated(false)
                             ->required()
                             ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_umid', 'passport_valid_ids'])),
 
                         FileUpload::make('upload_umid')
                             ->label('UMID Card')
@@ -248,7 +269,7 @@ class FormSubmissionForm
                             ->dehydrated(false)
                             ->required()
                             ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'passport_umid'),
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'passport_umid'])),
 
                         FileUpload::make('upload_id1')
                             ->label('Valid ID #1')
@@ -267,7 +288,7 @@ class FormSubmissionForm
                             ->dehydrated(false)
                             ->required()
                             ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'valid_ids'),
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
 
                         FileUpload::make('upload_id2')
                             ->label('Valid ID #2')
@@ -286,7 +307,7 @@ class FormSubmissionForm
                             ->dehydrated(false)
                             ->required()
                             ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'valid_ids'),
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
                     ]),
             ]);
     }
@@ -295,11 +316,11 @@ class FormSubmissionForm
     {
         return function (Get $get, $file) use ($type) {
             $officeId = $get('office_id');
-            $officeFolder = 'Unknown-Office';
+            $officeFolder = 'unknown-office';
 
             if ($officeId) {
                 $office = \App\Models\Office::find($officeId);
-                $officeFolder = $office ? str($office->acronym ?? $office->name)->slug() : 'Unknown-Office';
+                $officeFolder = $office ? str($office->acronym ?? $office->name)->slug() : 'unknown-office';
             }
 
             $firstname = str($get('firstname') ?? 'Unknown')->slug();
@@ -309,6 +330,9 @@ class FormSubmissionForm
             $extension = $file->getClientOriginalExtension();
             $filename = str($lastname)->upper()."_{$type}.{$extension}";
 
+            // Note: this path intentionally omits the record ID prefix.
+            // The file is staged here during upload, then moved to its canonical
+            // ID-prefixed path (e.g. {id}_{lastname}-{firstname}) by syncAttachments after save.
             return "{$officeFolder}/FormSubmissions/{$submissionFolder}/{$filename}";
         };
     }
