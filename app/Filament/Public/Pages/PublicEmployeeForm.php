@@ -71,16 +71,19 @@ class PublicEmployeeForm extends Page implements HasForms
                         TextInput::make('firstname')
                             ->label('First Name')
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(255),
 
                         TextInput::make('lastname')
                             ->label('Last Name')
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(255),
 
                         TextInput::make('middlename')
                             ->label('Middle Name')
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(255)
                             ->suffixAction(
                                 Action::make('set_na_mid')
@@ -94,6 +97,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->label('Suffix')
                             ->placeholder('Jr., Sr., III')
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(20)
                             ->suffixAction(
                                 Action::make('set_na_suf')
@@ -111,12 +115,14 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->label('Email Address')
                             ->email()
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(255),
 
                         TextInput::make('phone_number')
                             ->label('Phone Number')
                             ->tel()
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(20),
                     ]),
 
@@ -126,11 +132,13 @@ class PublicEmployeeForm extends Page implements HasForms
                         TextInput::make('house_no')
                             ->label('House No.')
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(255),
 
                         TextInput::make('street')
                             ->label('Street')
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(255),
 
                         Select::make('province')
@@ -191,6 +199,7 @@ class PublicEmployeeForm extends Page implements HasForms
                         TextInput::make('organizational_unit')
                             ->label('Organizational Unit')
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(255),
 
                         Select::make('gender')
@@ -201,6 +210,7 @@ class PublicEmployeeForm extends Page implements HasForms
                         TextInput::make('tin_number')
                             ->label('TIN Number')
                             ->required()
+                            ->rule($this->noEmojiRule())
                             ->maxLength(20),
                     ]),
 
@@ -527,6 +537,11 @@ class PublicEmployeeForm extends Page implements HasForms
     private function pathService(): AttachmentPathService
     {
         return app(AttachmentPathService::class);
+    }
+
+    private function noEmojiRule(): string
+    {
+        return 'not_regex:/[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{200D}\x{FE0F}]/u';
     }
 
     public static function shouldRegisterNavigation(): bool
