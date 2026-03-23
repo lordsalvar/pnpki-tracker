@@ -7,9 +7,11 @@ use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 
 class FormSubmissionsRelationManager extends RelationManager
 {
@@ -27,7 +29,9 @@ class FormSubmissionsRelationManager extends RelationManager
             ->recordTitleAttribute('lastname')
             ->recordActions(
                 $isFinalized ? [] : [
-                    EditAction::make(),
+                    ViewAction::make()
+                    ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
+                    ->visible(fn ($record) => $record->status === \App\Enums\FormSubmissionStatus::FINALIZED),
                 ],
             )
             ->toolbarActions(
