@@ -9,11 +9,18 @@ use App\Filament\Resources\Batches\BatchResource;
 use App\Models\FormSubmission;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Contracts\Support\Htmlable;
 use Maatwebsite\Excel\Facades\Excel;
+
 
 class ViewBatch extends ViewRecord
 {
     protected static string $resource = BatchResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        return $this->record->batch_name;
+    }
 
     protected function getHeaderActions(): array
     {
