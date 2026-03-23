@@ -85,12 +85,11 @@ class FormSubmissionsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                \Filament\Tables\Filters\SelectFilter::make('gender')
-                    ->label('Gender')
+                \Filament\Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
                     ->options([
-                        'male' => 'Male',
-                        'female' => 'Female',
-                        'other' => 'Other',
+                        'pending' => 'Pending',
+                        'finalized' => 'Finalized',
                     ]),
 
                 \Filament\Tables\Filters\SelectFilter::make('office_id')
