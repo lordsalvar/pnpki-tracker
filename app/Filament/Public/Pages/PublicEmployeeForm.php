@@ -57,7 +57,10 @@ class PublicEmployeeForm extends Page implements HasForms
 
     public function mount(string $publicId): void
     {
-        $this->formModel = EmployeeForm::where('public_id', $publicId)->firstOrFail();
+        $this->formModel = EmployeeForm::query()
+            ->where('public_id', $publicId)
+            ->where('is_active', true)
+            ->firstOrFail();
         $this->form->fill();
     }
 
