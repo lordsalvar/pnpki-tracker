@@ -25,15 +25,18 @@ class FormSubmissionForm
                     ->label('First Name')
                     ->required()
                     ->rule(self::noEmojiRule())
+                    ->rule(self::noSymbolRule())
                     ->maxLength(255),
                 TextInput::make('lastname')
                     ->label('Last Name')
                     ->required()
                     ->rule(self::noEmojiRule())
+                    ->rule(self::noSymbolRule())
                     ->maxLength(255),
                 TextInput::make('middlename')
                     ->required()
                     ->rule(self::noEmojiRule())
+                    ->rule(self::noSymbolRule())
                     ->maxLength(255)
                     ->suffixAction(
                         Action::make('set_na')
@@ -49,6 +52,7 @@ class FormSubmissionForm
                     ->placeholder('Jr., Sr., III')
                     ->required()
                     ->rule(self::noEmojiRule())
+                    ->rule(self::noSymbolRule())
                     ->maxLength(20)
                     ->suffixAction(
                         Action::make('set_na')
@@ -84,11 +88,13 @@ class FormSubmissionForm
                             ->label('House No.')
                             ->required()
                             ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
                             ->maxLength(255),
                         TextInput::make('street')
                             ->label('Street')
                             ->required()
                             ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
                             ->maxLength(255),
                         Select::make('province')
                             ->label('Province')
@@ -156,6 +162,7 @@ class FormSubmissionForm
                     ->label('Organizational Unit')
                     ->required()
                     ->rule(self::noEmojiRule())
+                    ->rule(self::noSymbolRule())
                     ->maxLength(255),
 
                 Select::make('gender')
@@ -168,6 +175,7 @@ class FormSubmissionForm
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->rule(self::noEmojiRule())
+                    ->rule(self::noSymbolRule())
                     ->maxLength(20),
 
                 Section::make('Document Attachments')
@@ -353,5 +361,10 @@ class FormSubmissionForm
     protected static function noEmojiRule(): string
     {
         return 'not_regex:/[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{200D}\x{FE0F}]/u';
+    }
+
+    protected static function noSymbolRule(): string
+    {
+        return 'regex:/^[\pL\pN\s.,\/-]+$/u';
     }
 }
