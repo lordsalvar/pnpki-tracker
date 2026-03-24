@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApplicationStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -21,6 +22,7 @@ class Batch extends Model
 
     protected $casts = [
         'status' => BatchStatus::class,
+        'application_status' => ApplicationStatus::class,
     ];
 
     public function office(): BelongsTo
