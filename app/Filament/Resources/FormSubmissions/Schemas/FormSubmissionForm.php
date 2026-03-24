@@ -78,7 +78,16 @@ class FormSubmissionForm
                     ->placeholder('e.g. 09171234567')
                     ->required()
                     ->rule(self::noEmojiRule())
-                    ->maxLength(20),
+                    ->minLength(11)
+                    ->maxLength(11)
+                    ->rule('regex:/^09\d{9}$/')
+                    ->validationMessages([
+                        'regex' => 'numbers should start with 09',
+                    ])
+                    ->extraInputAttributes([
+                        'inputmode' => 'numeric',
+                        'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 11)",
+                    ]),
 
                 Group::make()
                     ->columnSpan(2)
