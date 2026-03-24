@@ -128,9 +128,19 @@ class PublicEmployeeForm extends Page implements HasForms
                         TextInput::make('phone_number')
                             ->label('Phone Number')
                             ->tel()
+                            ->placeholder('e.g. 09171234567')
                             ->required()
                             ->rule($this->noEmojiRule())
-                            ->maxLength(20),
+                            ->minLength(11)
+                            ->maxLength(11)
+                            ->rule('regex:/^09\d{9}$/')
+                            ->validationMessages([
+                                'regex' => 'numbers should start with 09',
+                            ])
+                            ->extraInputAttributes([
+                                'inputmode' => 'numeric',
+                                'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 11)",
+                            ]),
                     ]),
 
                 Section::make('Address')
