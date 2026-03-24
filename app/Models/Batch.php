@@ -16,6 +16,7 @@ class Batch extends Model
         'user_id',
         'batch_name',
         'status',
+        'application_status',
     ];
 
     protected $casts = [
