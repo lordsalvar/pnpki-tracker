@@ -31,6 +31,7 @@ class FormSubmission extends Model
         'gender',
         'tin_number',
         'status',
+        'flagged_by_representative',
     ];
 
     protected $casts = [
