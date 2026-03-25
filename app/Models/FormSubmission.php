@@ -27,13 +27,11 @@ class FormSubmission extends Model
         'gender',
         'tin_number',
         'status',
-        'flagged_by_representative',
     ];
 
     protected $casts = [
         'gender' => Gender::class,
         'status' => FormSubmissionStatus::class,
-        'flagged_by_representative' => 'boolean',
     ];
 
     public function getFullNameAttribute(): string
