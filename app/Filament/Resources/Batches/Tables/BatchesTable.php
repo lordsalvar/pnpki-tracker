@@ -24,6 +24,9 @@ class BatchesTable
                 TextColumn::make('status')
                     ->badge()
                     ->searchable(),
+                TextColumn::make('application_status')
+                    ->badge()
+                    ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
