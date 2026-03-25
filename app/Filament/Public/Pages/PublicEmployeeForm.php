@@ -28,7 +28,7 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-
+use Illuminate\Support\Facades\URL;
 class PublicEmployeeForm extends Page implements HasForms
 {
     use InteractsWithForms;
@@ -383,55 +383,78 @@ class PublicEmployeeForm extends Page implements HasForms
     }
 
     public function submit(): void
-    {
-        if (! $this->verifyCaptcha()) {
-            Notification::make()
-                ->title('CAPTCHA verification failed. Please try again.')
-                ->danger()
-                ->send();
+{
+    if (! $this->verifyCaptcha()) {
+        Notification::make()
+            ->title('CAPTCHA verification failed. Please try again.')
+            ->danger()
+            ->send();
 
-            $this->captchaToken = null;
+        $this->captchaToken = null;
 
-            return;
-        }
-
-        $data = $this->form->getState();
-        $data = $this->normalizeUploadedAttachmentPaths($data);
-
-        $rep = $this->formModel->user;
-
-        DB::transaction(function () use ($data, $rep) {
-            $address = Address::create([
-                'house_no' => $data['house_no'],
-                'street' => $data['street'],
-                'barangay' => $data['barangay'],
-                'municipality' => $data['municipality'],
-                'province' => $data['province'],
-                'zip_code' => $data['zip_code'],
-            ]);
-
-            $formSubmission = FormSubmission::create([
-                'firstname' => $data['firstname'],
-                'lastname' => $data['lastname'],
-                'middlename' => $data['middlename'],
-                'suffix' => $data['suffix'],
-                'email' => $data['email'],
-                'phone_number' => $data['phone_number'],
-                'organizational_unit' => $data['organizational_unit'],
-                'gender' => $data['gender'],
-                'tin_number' => $data['tin_number'],
-                'address_id' => $address->id,
-                'office_id' => $rep->office_id,
-                'form_id' => $this->formModel->id,
-                'status' => 'pending',
-            ]);
-
-            $this->saveAttachments($formSubmission, $data);
-        });
-
-        $this->submitted = true;
-        $this->form->fill();
+        return;
     }
+
+    $data = $this->form->getState();
+    $data = $this->normalizeUploadedAttachmentPaths($data);
+
+    $rep = $this->formModel->user;
+
+    $formSubmission = null; // ADD
+
+    DB::transaction(function () use ($data, $rep, &$formSubmission) { // CHANGE: capture $formSubmission
+        $address = Address::create([
+            'house_no'     => $data['house_no'],
+            'street'       => $data['street'],
+            'barangay'     => $data['barangay'],
+            'municipality' => $data['municipality'],
+            'province'     => $data['province'],
+            'zip_code'     => $data['zip_code'],
+        ]);
+
+        $formSubmission = FormSubmission::create([
+            'firstname'           => $data['firstname'],
+            'lastname'            => $data['lastname'],
+            'middlename'          => $data['middlename'],
+            'suffix'              => $data['suffix'],
+            'email'               => $data['email'],
+            'phone_number'        => $data['phone_number'],
+            'organizational_unit' => $data['organizational_unit'],
+            'gender'              => $data['gender'],
+            'tin_number'          => $data['tin_number'],
+            'address_id'          => $address->id,
+            'office_id'           => $rep->office_id,
+            'form_id'             => $this->formModel->id,
+            'status'              => 'pending',
+        ]);
+
+        $this->saveAttachments($formSubmission, $data);
+    });
+     // end of DB::transaction
+
+    // Guard against transaction failure
+    if ($formSubmission === null) {
+        Notification::make()
+            ->title('Something went wrong. Please try again.')
+            ->danger()
+            ->send();
+        return;
+    }
+
+    // Generate a signed URL (expires in 5 minutes)
+   $downloadUrl = URL::temporarySignedRoute(
+        'submission.download-pdf',
+        now()->addMinutes(5),
+        ['submission_id' => $formSubmission->id]
+    );
+
+    $this->submitted = true;
+    $this->form->fill();
+
+    // Dispatch the URL to the frontend to trigger download
+    $this->dispatch('trigger-pdf-download', url: $downloadUrl);
+}
+    
 
     private function verifyCaptcha(): bool
     {

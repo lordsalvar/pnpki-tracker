@@ -6,14 +6,13 @@
             </div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Thank You!</h2>
             <p class="mt-2 max-w-md text-gray-500 dark:text-gray-400">
-                Your information has been submitted successfully. You may now close this page.
+                Your information has been submitted successfully. Your receipt is downloading automatically.
             </p>
         </div>
     @else
         <form wire:submit="submit">
             {{ $this->form }}
 
-            {{-- Cloudflare Turnstile CAPTCHA --}}
             <div class="mt-6" wire:ignore>
                 <div
                     class="cf-turnstile"
@@ -39,6 +38,10 @@
             function onTurnstileExpired() {
                 @this.set('captchaToken', null);
             }
+
+            window.addEventListener('trigger-pdf-download', (event) => {
+    window.open(event.detail.url, '_blank');
+});
         </script>
     @endif
 </x-filament-panels::page>

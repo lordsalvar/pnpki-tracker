@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\SubmissionPdfController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -15,3 +16,6 @@ Route::get('/test-psgc', function () {
     ]);
 });
 
+Route::get('/submission/download-pdf', [SubmissionPdfController::class, 'download'])
+    ->name('submission.download-pdf')
+    ->middleware('signed');
