@@ -11,12 +11,14 @@ enum BatchStatus: string implements HasLabel, HasColor
     //
     case PENDING = 'pending';
     case FINALIZED = 'finalized';
+    case NEEDS_REVISION = 'needs_revision';
 
     public function getLabel(): string
     {
         return match($this) {
             BatchStatus::PENDING => 'Pending',
             BatchStatus::FINALIZED => 'Finalized',
+            BatchStatus::NEEDS_REVISION => 'Needs Revision',
         };
     }
 
@@ -25,6 +27,7 @@ enum BatchStatus: string implements HasLabel, HasColor
         return match ($this) {
             BatchStatus::PENDING => 'warning',
             BatchStatus::FINALIZED => 'success',
+            BatchStatus::NEEDS_REVISION => 'danger',
         };
     }
 }
