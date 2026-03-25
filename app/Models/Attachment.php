@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attachment extends Model
 {
+    use HasUlids;
+
+    protected $primaryKey = 'id';
+
     protected $fillable = [
         'form_submission_id',
         'file_type',

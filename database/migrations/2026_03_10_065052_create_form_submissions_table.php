@@ -12,21 +12,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('form_submissions', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
             $table->string('firstname');
             $table->string('lastname');
             $table->string('middlename')->nullable();
             $table->string('suffix')->nullable();
             $table->string('email');
             $table->string('phone_number');
-            $table->foreignId('batch_id')->nullable()->constrained('batches')->onDelete('cascade');
-            $table->foreignId('address_id')->constrained('addresses')->onDelete('cascade');
-            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
-            $table->foreignId('form_id')->nullable()->constrained('employee_forms')->nullOnDelete();
+            $table->foreignUlid('batch_id')->nullable()->constrained('batches')->onDelete('cascade');
+            $table->foreignUlid('address_id')->nullable()->constrained('addresses')->onDelete('cascade');
+            $table->foreignUlid('office_id')->nullable()->constrained('offices')->onDelete('cascade');
+            $table->foreignUlid('form_id')->nullable()->constrained('employee_forms')->nullOnDelete();
             $table->string('organizational_unit');
             $table->string('status');
             $table->string('gender');
             $table->string('tin_number');
+            $table->boolean('flagged_by_representative')->default(false);
             $table->timestamps();
         });
     }

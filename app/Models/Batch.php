@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use App\Enums\ApplicationStatus;
+use App\Enums\BatchStatus;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Enums\BatchStatus;
 
 class Batch extends Model
 {
-    //
+    use HasUlids;
+
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'office_id',

@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('batches', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->ulid('id')->primary();
+            $table->foreignUlid('office_id')->nullable()->constrained('offices')->onDelete('set null');
+            $table->foreignUlid('user_id')->constrained('users')->onDelete('cascade');
             $table->string('batch_name');
             $table->string('status')->default('pending');
             $table->string('application_status')->nullable();
