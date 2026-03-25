@@ -14,9 +14,15 @@ class Office extends Model
 
     protected $table = 'offices';
 
+
     protected $fillable = [
         'name',
         'acronym',
+        'number_of_employees',
+    ];
+
+    protected $casts = [
+        'number_of_employees' => 'integer',
     ];
 
     public function formSubmissions(): HasMany
