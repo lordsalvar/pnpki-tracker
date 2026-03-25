@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Batches\Pages;
 use App\Actions\FinalizeBatchAction;
 use App\Enums\ApplicationStatus;
 use App\Enums\BatchStatus;
+use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\Batches\BatchResource;
 use Filament\Actions\Action;
@@ -12,7 +13,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\FormSubmissionStatus;
 
 class ViewBatch extends ViewRecord
 {
@@ -48,6 +48,7 @@ class ViewBatch extends ViewRecord
                 ->modalDescription('This will mark the application as Modification Requested.')
                 ->visible(fn () => Auth::user()?->role === UserRole::REPRESENTATIVE->value
                     && $this->record->status === BatchStatus::FINALIZED
+                    && $this->record->formSubmissions()->where('flagged_by_representative', true)->exists()
                     && $this->record->application_status !== ApplicationStatus::MODIFICATION_REQUESTED)
                 ->action(function () {
                     $this->record->update([
@@ -61,23 +62,32 @@ class ViewBatch extends ViewRecord
                         ->success()
                         ->send();
                 }),
-            Action::make('approve_modification_request')
-                ->label('Approve Modification Request')
+            Action::make('accept_modification_request')
+                ->label('Accept Modification Request')
                 ->icon('heroicon-o-check-circle')
                 ->color('danger')
                 ->requiresConfirmation()
-                ->modalHeading('Approve Modification Request')
-                ->modalDescription('This will return the batch to the representative for modification.')
+                ->modalHeading('Accept Modification Request')
+                ->modalDescription('This will move this batch to Needs Revision and update flagged submissions.')
                 ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
                     && $this->record->application_status === ApplicationStatus::MODIFICATION_REQUESTED)
                 ->action(function () {
                     $this->record->update([
-                        'application_status' => ApplicationStatus::NEEDS_REVISION->value,
+                        'application_status' => null,
                         'status' => BatchStatus::NEEDS_REVISION->value,
                     ]);
+
+                    $this->record->formSubmissions()
+                        ->where('flagged_by_representative', true)
+                        ->update([
+                            'status' => FormSubmissionStatus::NEEDS_REVISION->value,
+                            'flagged_by_representative' => false,
+                        ]);
+
                     $this->refreshFormData(['application_status', 'status']);
+
                     Notification::make()
-                        ->title('Batch returned to representative for modification.')
+                        ->title('Modification request accepted. Batch moved to Needs Revision.')
                         ->success()
                         ->send();
                 }),
@@ -88,17 +98,24 @@ class ViewBatch extends ViewRecord
                 ->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading('Return Batch for Revision')
-                ->modalDescription('This will set the application status to Needs Revision and notify the representative.')
+                ->modalDescription('This will set the application status to Needs Revision and move flagged submissions to Needs Revision.')
                 ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
                     && $this->record->status === BatchStatus::FINALIZED
                     && $this->record->formSubmissions()
-                        ->where('status', FormSubmissionStatus::NEEDS_REVISION->value)
+                        ->where('flagged_by_representative', true)
                         ->exists())
                 ->action(function () {
                     $this->record->update([
                         'status' => BatchStatus::NEEDS_REVISION->value,
                         'application_status' => ApplicationStatus::NEEDS_REVISION->value,
                     ]);
+
+                    $this->record->formSubmissions()
+                        ->where('flagged_by_representative', true)
+                        ->update([
+                            'status' => FormSubmissionStatus::NEEDS_REVISION->value,
+                            'flagged_by_representative' => false,
+                        ]);
 
                     Notification::make()
                         ->title('Batch returned to representative for revision.')

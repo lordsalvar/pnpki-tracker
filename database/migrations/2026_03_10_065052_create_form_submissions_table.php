@@ -25,6 +25,7 @@ return new class extends Migration
             $table->foreignId('form_id')->nullable()->constrained('employee_forms')->nullOnDelete();
             $table->string('organizational_unit');
             $table->string('status');
+            $table->boolean('flagged_by_representative')->default(false);
             $table->string('gender');
             $table->string('tin_number');
             $table->timestamps();

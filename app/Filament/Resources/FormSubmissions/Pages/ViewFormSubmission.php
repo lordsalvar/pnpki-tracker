@@ -4,6 +4,7 @@ namespace App\Filament\Resources\FormSubmissions\Pages;
 
 use App\Actions\Batch\AssignBatchAction;
 use App\Actions\Batch\UnAssignBatchAction;
+use App\Enums\ApplicationStatus;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
@@ -46,21 +47,61 @@ class ViewFormSubmission extends ViewRecord
                 ->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading('Flag Needs Revision')
-                ->modalDescription('This will mark this submission as Needs Revision.')
-               ->visible(fn () => in_array(Auth::user()?->role, [UserRole::ADMIN->value, UserRole::REPRESENTATIVE->value])
+                ->modalDescription('This will flag this submission for revision.')
+                ->visible(fn () => in_array(Auth::user()?->role, [UserRole::REPRESENTATIVE->value, UserRole::ADMIN->value])
                     && $this->record->status === FormSubmissionStatus::FINALIZED
-                    && $this->record->batch?->status === BatchStatus::FINALIZED)
+                    && $this->record->batch?->status === BatchStatus::FINALIZED
+                    && ! $this->record->flagged_by_representative)
                 ->action(function () {
                     $this->record->update([
-                        'status' => FormSubmissionStatus::NEEDS_REVISION->value,
+                        'flagged_by_representative' => true,
                     ]);
 
                     Notification::make()
-                        ->title('Submission flagged as Needs Revision.')
+                        ->title('Submission flagged for revision.')
                         ->success()
                         ->send();
 
-                    $this->refreshFormData(['status']);
+                    $this->refreshFormData(['flagged_by_representative']);
+                }),
+            Action::make('unflag_needs_revision')
+                ->label('Unflag Needs Revision')
+                ->icon('heroicon-o-flag')
+                ->color('gray')
+                ->requiresConfirmation()
+                ->modalHeading('Unflag Needs Revision')
+                ->modalDescription('This will remove the revision flag from this submission.')
+                ->visible(function () {
+                    $role = Auth::user()?->role;
+
+                    if (! in_array($role, [UserRole::REPRESENTATIVE->value, UserRole::ADMIN->value], true)) {
+                        return false;
+                    }
+
+                    if ($this->record->status !== FormSubmissionStatus::FINALIZED
+                        || $this->record->batch?->status !== BatchStatus::FINALIZED
+                        || ! $this->record->flagged_by_representative) {
+                        return false;
+                    }
+
+                    if ($role === UserRole::REPRESENTATIVE->value
+                        && $this->record->batch?->application_status === ApplicationStatus::MODIFICATION_REQUESTED) {
+                        return false;
+                    }
+
+                    return true;
+                })
+                ->action(function () {
+                    $this->record->update([
+                        'flagged_by_representative' => false,
+                    ]);
+
+                    Notification::make()
+                        ->title('Submission unflagged.')
+                        ->success()
+                        ->send();
+
+                    $this->refreshFormData(['flagged_by_representative']);
                 }),
             Action::make('assign_batch')
                 ->label('Assign to Batch')
