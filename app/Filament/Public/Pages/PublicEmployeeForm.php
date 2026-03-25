@@ -99,21 +99,21 @@ class PublicEmployeeForm extends Page implements HasForms
                                     ->action(fn (Set $set) => $set('middlename', 'N/A'))
                             ),
 
-                        TextInput::make('suffix')
+                            Select::make('suffix')
                             ->label('Suffix')
-                            ->placeholder('Jr., Sr., III')
+                            ->options([
+                                'N/A' => 'N/A',
+                                'Jr.' => 'Jr.',
+                                'Sr.' => 'Sr.',
+                                'I'   => 'I',
+                                'II'  => 'II',
+                                'III' => 'III',
+                                'IV'  => 'IV',
+                                'V'   => 'V',
+                            ])
                             ->required()
-                            ->rule($this->noEmojiRule())
-                            ->rule($this->noSymbolRule())
-                            ->maxLength(20)
-                            ->suffixAction(
-                                Action::make('set_na_suf')
-                                    ->label('N/A')
-                                    ->link()
-                                    ->color('gray')
-                                    ->action(fn (Set $set) => $set('suffix', 'N/A'))
-                            ),
-                    ]),
+                            ->native(false),
+                        ]),
 
                 Section::make('Contact Information')
                     ->columns(2)
