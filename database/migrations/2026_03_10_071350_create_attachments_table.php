@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('attachments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('form_submission_id')->constrained()->onDelete('cascade');
+            $table->ulid('id')->primary();
+            $table->foreignUlid('form_submission_id')->constrained('form_submissions')->onDelete('cascade');
             $table->string('file_type');
             $table->string('file_name');
             $table->string('file_path');

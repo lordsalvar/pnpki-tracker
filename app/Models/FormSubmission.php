@@ -7,9 +7,13 @@ use App\Enums\Gender;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 class FormSubmission extends Model
 {
+    use HasUlids;
+
+    protected $primaryKey = 'id';
+
     protected $table = 'form_submissions';
 
     protected $fillable = [
@@ -32,6 +36,7 @@ class FormSubmission extends Model
     protected $casts = [
         'gender' => Gender::class,
         'status' => FormSubmissionStatus::class,
+        'flagged_by_representative' => 'boolean',
     ];
 
     public function getFullNameAttribute(): string

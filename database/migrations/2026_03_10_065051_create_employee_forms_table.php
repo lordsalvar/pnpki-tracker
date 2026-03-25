@@ -12,21 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('employee_forms', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('office_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->uuid('public_id')->unique();
+            $table->ulid('id')->primary();
+            $table->foreignUlid('office_id')->nullable()->constrained('offices')->onDelete('set null');
+            $table->foreignUlid('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('public_id')->unique();
             $table->string('name');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamp('expires_at')->nullable();
-            $table->unsignedBigInteger('submission_count')->default(0);
+            $table->integer('submission_count')->default(0);
             $table->softDeletes();
             $table->timestamps();
 
             // Indexes for performance
             $table->index(['office_id', 'is_active', 'expires_at']);
-            $table->index('public_id');
+            $table->index(['public_id']);
         });
     }
 
