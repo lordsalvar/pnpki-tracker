@@ -22,6 +22,9 @@ class FormSubmissionsTable
             ->columns([
                 TextColumn::make('fullname')
                     ->label('Full Name')
+                    ->description(fn ($state, $record): ?string => $record->flagged_by_representative
+                        ? '⚠️ Flagged for revision'
+                        : null)
                     ->getStateUsing(fn ($record) => trim(
                         $record->firstname.' '.
                         (($record->middlename && $record->middlename !== 'N/A')
