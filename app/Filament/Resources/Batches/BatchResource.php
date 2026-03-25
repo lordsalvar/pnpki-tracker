@@ -71,4 +71,5 @@ class BatchResource extends Resource
         return parent::getEloquentQuery()
             ->where('office_id', Auth::user()->office_id);
     }
+
 }

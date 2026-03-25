@@ -32,7 +32,8 @@ class ViewBatch extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Finalize Batch')
                 ->modalDescription('Once finalized, this batch can no longer be edited. Are you sure?')
-                ->hidden(fn () => $this->record->status === BatchStatus::FINALIZED)
+                ->hidden(fn () => $this->record->status === BatchStatus::FINALIZED
+                        || Auth::user()?->role !== UserRole::REPRESENTATIVE->value)
                 ->action(function () {
                     app(FinalizeBatchAction::class)->execute($this->record);
                     $this->refreshFormData(['status']);
@@ -56,6 +57,26 @@ class ViewBatch extends ViewRecord
 
                     Notification::make()
                         ->title('Application status updated to Modification Requested.')
+                        ->success()
+                        ->send();
+                }),
+            Action::make('approve_modification_request')
+                ->label('Approve Modification Request')
+                ->icon('heroicon-o-check-circle')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Approve Modification Request')
+                ->modalDescription('This will return the batch to the representative for modification.')
+                ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
+                    && $this->record->application_status === ApplicationStatus::MODIFICATION_REQUESTED)
+                ->action(function () {
+                    $this->record->update([
+                        'application_status' => ApplicationStatus::NEEDS_REVISION->value,
+                        'status' => BatchStatus::NEEDS_REVISION->value,
+                    ]);
+                    $this->refreshFormData(['application_status', 'status']);
+                    Notification::make()
+                        ->title('Batch returned to representative for modification.')
                         ->success()
                         ->send();
                 }),
