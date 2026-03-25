@@ -21,8 +21,8 @@ class BatchPolicy
      */
     public function view(User $user, Batch $batch): bool
     {
-        if ($user === UserRole::ADMIN) {
-            return $batch->status === 'finalized';
+        if ($user->role === UserRole::ADMIN->value) {
+            return true;
         }
         return $user->office_id === $batch->office_id;
     }
@@ -40,7 +40,7 @@ class BatchPolicy
      */
     public function update(User $user, Batch $batch): bool
     {
-        return true;
+        return $user->role === UserRole::REPRESENTATIVE->value;
     }
 
     /**
