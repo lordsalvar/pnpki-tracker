@@ -209,7 +209,15 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->numeric()
                             ->minLength(4)
                             ->maxLength(4)
-                            ->required(),
+                            ->required()
+                            ->rule('regex:/^09\d{9}$/')
+                            ->validationMessages([
+                                'regex' => 'numbers should only contain 4 digits',
+                            ])
+                            ->extraInputAttributes([
+                                'inputmode' => 'numeric',
+                                'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 4)",
+                            ]),
                     ]),
 
                 Section::make('Employment Details')
