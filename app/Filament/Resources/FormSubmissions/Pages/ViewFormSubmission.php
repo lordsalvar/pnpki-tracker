@@ -47,7 +47,7 @@ class ViewFormSubmission extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Flag Needs Revision')
                 ->modalDescription('This will mark this submission as Needs Revision.')
-                ->visible(fn () => Auth::user()?->role === UserRole::REPRESENTATIVE->value
+               ->visible(fn () => in_array(Auth::user()?->role, [UserRole::ADMIN->value, UserRole::REPRESENTATIVE->value])
                     && $this->record->status === FormSubmissionStatus::FINALIZED
                     && $this->record->batch?->status === BatchStatus::FINALIZED)
                 ->action(function () {
