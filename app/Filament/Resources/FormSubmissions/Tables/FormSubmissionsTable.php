@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\FormSubmissions\Tables;
 
+use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
+use App\Enums\UserRole;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -10,6 +12,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class FormSubmissionsTable
 {
@@ -50,7 +53,11 @@ class FormSubmissionsTable
 
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn ($record) => $record->status === FormSubmissionStatus::FINALIZED ? 'success' : 'warning')
+                    ->color(fn ($record) => match ($record->status) {
+                        FormSubmissionStatus::FINALIZED => 'success',
+                        FormSubmissionStatus::NEEDS_REVISION => 'danger',
+                        default => 'warning',
+                    })
                     ->searchable(),
 
                 TextColumn::make('organizational_unit')
@@ -90,6 +97,7 @@ class FormSubmissionsTable
                     ->options([
                         'pending' => 'Pending',
                         'finalized' => 'Finalized',
+                        'needs_revision' => 'Needs Revision',
                     ]),
 
                 \Filament\Tables\Filters\SelectFilter::make('office_id')
@@ -100,10 +108,28 @@ class FormSubmissionsTable
             ->recordActions([
                 EditAction::make()
                     ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record]))
-                    ->hidden(fn ($record) => $record->status === FormSubmissionStatus::FINALIZED),
+                    ->hidden(function ($record) {
+                        $user = Auth::user();
+
+                        if (! $user) {
+                            return true;
+                        }
+
+                        if ($record->status === FormSubmissionStatus::FINALIZED) {
+                            return true;
+                        }
+
+                        if ($user->role === UserRole::REPRESENTATIVE->value
+                            && $record->status === FormSubmissionStatus::NEEDS_REVISION
+                            && $record->batch?->status !== BatchStatus::NEEDS_REVISION) {
+                            return true;
+                        }
+
+                        return false;
+                    }),
                 ViewAction::make()
                     ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
-                    ->visible(fn ($record) => $record->status === FormSubmissionStatus::FINALIZED),
+                    ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION])),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
