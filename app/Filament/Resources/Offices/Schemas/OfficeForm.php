@@ -20,6 +20,13 @@ class OfficeForm
                     ->required()
                     ->placeholder('Enter Acronym')
                     ->extraInputAttributes(['oninput' => 'this.value = this.value.toUpperCase()']),
+
+                TextInput::make('number_of_employees')
+                    ->required()
+                    ->placeholder('Enter Number of Employees')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(1000000),
             ]);
     }
 }
