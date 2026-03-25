@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Enums\BatchStatus;
+use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
 use App\Models\FormSubmission;
 use App\Models\User;
@@ -52,7 +54,23 @@ class FormSubmissionPolicy
      */
     public function update(User $user, FormSubmission $formSubmission): bool
     {
-        if (in_array($user->role, [UserRole::ADMIN->value, UserRole::REPRESENTATIVE->value])) {
+        if ($user->role === UserRole::ADMIN->value) {
+            return true;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value) {
+            if ($formSubmission->office_id !== $user->office_id) {
+                return false;
+            }
+
+            if ($formSubmission->status === FormSubmissionStatus::FINALIZED) {
+                return false;
+            }
+
+            if ($formSubmission->status === FormSubmissionStatus::NEEDS_REVISION) {
+                return $formSubmission->batch?->status === BatchStatus::NEEDS_REVISION;
+            }
+
             return true;
         }
 

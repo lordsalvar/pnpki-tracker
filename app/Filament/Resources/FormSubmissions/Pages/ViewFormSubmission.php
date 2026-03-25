@@ -6,6 +6,7 @@ use App\Actions\Batch\AssignBatchAction;
 use App\Actions\Batch\UnAssignBatchAction;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
+use App\Enums\UserRole;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
 use App\Models\Batch;
@@ -25,13 +26,13 @@ class ViewFormSubmission extends ViewRecord
         $record = $this->record;
 
         return trim(
-            $record->firstname . ' ' .
+            $record->firstname.' '.
             (($record->middlename && $record->middlename !== 'N/A')
-                ? strtoupper(substr($record->middlename, 0, 1)) . '. '
-                : '') .
-            $record->lastname .
+                ? strtoupper(substr($record->middlename, 0, 1)).'. '
+                : '').
+            $record->lastname.
             (($record->suffix && $record->suffix !== 'N/A')
-                ? ', ' . $record->suffix
+                ? ', '.$record->suffix
                 : '')
         );
     }
@@ -39,6 +40,28 @@ class ViewFormSubmission extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('flag_needs_revision')
+                ->label('Flag Needs Revision')
+                ->icon('heroicon-o-flag')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Flag Needs Revision')
+                ->modalDescription('This will mark this submission as Needs Revision.')
+                ->visible(fn () => Auth::user()?->role === UserRole::REPRESENTATIVE->value
+                    && $this->record->status === FormSubmissionStatus::FINALIZED
+                    && $this->record->batch?->status === BatchStatus::FINALIZED)
+                ->action(function () {
+                    $this->record->update([
+                        'status' => FormSubmissionStatus::NEEDS_REVISION->value,
+                    ]);
+
+                    Notification::make()
+                        ->title('Submission flagged as Needs Revision.')
+                        ->success()
+                        ->send();
+
+                    $this->refreshFormData(['status']);
+                }),
             Action::make('assign_batch')
                 ->label('Assign to Batch')
                 ->icon('heroicon-o-archive-box-arrow-down')
@@ -73,6 +96,7 @@ class ViewFormSubmission extends ViewRecord
                 ->color('danger')
                 ->visible(function () {
                     return $this->record->batch_id !== null
+                        && $this->record->status !== FormSubmissionStatus::FINALIZED
                         && $this->record->batch?->status !== BatchStatus::FINALIZED;
                 })
                 ->requiresConfirmation()
