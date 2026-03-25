@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Batch;
 use App\Policies\BatchPolicy;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,5 +35,10 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(EmployeeForm::class, EmployeeFormPolicy::class);
         Gate::policy(Batch::class, BatchPolicy::class);
+    
+        if (config('app.env') !== 'local') {
+            URL::forceScheme('https');
+        }
     }
+    
 }
