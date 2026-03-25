@@ -12,6 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\FormSubmissionStatus;
 
 class ViewBatch extends ViewRecord
 {
@@ -79,6 +80,32 @@ class ViewBatch extends ViewRecord
                         ->title('Batch returned to representative for modification.')
                         ->success()
                         ->send();
+                }),
+
+            Action::make('return_for_revision')
+                ->label('Return Batch for Revision')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Return Batch for Revision')
+                ->modalDescription('This will set the application status to Needs Revision and notify the representative.')
+                ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
+                    && $this->record->status === BatchStatus::FINALIZED
+                    && $this->record->formSubmissions()
+                        ->where('status', FormSubmissionStatus::NEEDS_REVISION->value)
+                        ->exists())
+                ->action(function () {
+                    $this->record->update([
+                        'status' => BatchStatus::NEEDS_REVISION->value,
+                        'application_status' => ApplicationStatus::NEEDS_REVISION->value,
+                    ]);
+
+                    Notification::make()
+                        ->title('Batch returned to representative for revision.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(BatchResource::getUrl('index'));
                 }),
         ];
     }
