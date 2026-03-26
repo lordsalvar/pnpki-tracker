@@ -18,6 +18,7 @@ use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Storage;
+use App\Enums\BatchStatus;
 
 class EditFormSubmission extends EditRecord
 {
@@ -67,11 +68,12 @@ class EditFormSubmission extends EditRecord
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->color('info')
                 ->visible(fn () => $this->record->status === FormSubmissionStatus::FINALIZED && $this->record->batch_id === null)
-                ->form([
+                ->schema([
                     Select::make('batch_id')
                         ->label('Batch')
                         ->options(
                             Batch::query()
+                                ->where('status', '!=', BatchStatus::FINALIZED)
                                 ->orderBy('batch_name')
                                 ->pluck('batch_name', 'id')
                         )
@@ -82,6 +84,15 @@ class EditFormSubmission extends EditRecord
                 ->action(function (array $data) {
                     $batch = Batch::findOrFail($data['batch_id']);
 
+                    if ($batch->status === BatchStatus::FINALIZED) {
+                        Notification::make()
+                            ->title('Cannot assign to a finalized batch.')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
                     app(AssignBatchAction::class)->execute($this->record, $batch);
 
                     Notification::make()
@@ -91,6 +102,7 @@ class EditFormSubmission extends EditRecord
 
                     $this->refreshFormWithPersistedState();
                 }),
+
             Action::make('unassign_batch')
                 ->label('Remove from Batch')
                 ->icon('heroicon-o-archive-box-x-mark')

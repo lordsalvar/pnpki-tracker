@@ -210,7 +210,6 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->minLength(4)
                             ->maxLength(4)
                             ->required()
-                            ->rule('regex:/^09\d{9}$/')
                             ->validationMessages([
                                 'regex' => 'numbers should only contain 4 digits',
                             ])
@@ -462,7 +461,7 @@ class PublicEmployeeForm extends Page implements HasForms
     // Dispatch the URL to the frontend to trigger download
     $this->dispatch('trigger-pdf-download', url: $downloadUrl);
 }
-    
+
 
     private function verifyCaptcha(): bool
     {
