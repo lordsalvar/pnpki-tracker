@@ -37,7 +37,14 @@ class BatchesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                \Filament\Tables\Filters\SelectFilter::make('office_id')
+                    
+                    ->label('Office')
+                    ->relationship('office', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->role === \App\Enums\UserRole::ADMIN->value),
+
             ])
             ->recordActions([
                 ViewAction::make(),
