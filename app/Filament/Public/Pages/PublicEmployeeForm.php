@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Js;
 
 class PublicEmployeeForm extends Page implements HasForms
 {
@@ -43,6 +44,8 @@ class PublicEmployeeForm extends Page implements HasForms
     public ?array $employeeData = [];
 
     public bool $submitted = false;
+
+    public ?string $receiptPdfUrl = null;
 
     public ?string $captchaToken = null;
 
@@ -457,11 +460,18 @@ class PublicEmployeeForm extends Page implements HasForms
             ['submission_id' => $formSubmission->id]
         );
 
+        $this->receiptPdfUrl = $downloadUrl;
         $this->submitted = true;
         $this->form->fill();
+    }
 
-        // Dispatch the URL to the frontend to trigger download
-        $this->dispatch('trigger-pdf-download', url: $downloadUrl);
+    public function downloadReceiptCopy(): void
+    {
+        if (blank($this->receiptPdfUrl)) {
+            return;
+        }
+
+        $this->js('window.open('.Js::from($this->receiptPdfUrl).', "_blank")');
     }
 
     private function verifyCaptcha(): bool

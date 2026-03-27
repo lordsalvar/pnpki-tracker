@@ -8,7 +8,7 @@ use Filament\Support\Icons\Heroicon;
 
 class FormsCluster extends Cluster
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedNewspaper;
 
     protected static ?string $navigationLabel = 'Forms';
 }

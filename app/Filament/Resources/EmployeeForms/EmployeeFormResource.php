@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\EmployeeForms;
 
-use App\Filament\Resources\EmployeeForms\Pages\CreateEmployeeForm;
+use App\Filament\Clusters\Forms\FormsCluster;
 use App\Filament\Resources\EmployeeForms\Pages\EditEmployeeForm;
 use App\Filament\Resources\EmployeeForms\Pages\ListEmployeeForms;
 use App\Filament\Resources\EmployeeForms\Pages\ViewEmployeeForm;
@@ -16,18 +16,18 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use App\Filament\Clusters\Forms\FormsCluster;
 
 class EmployeeFormResource extends Resource
 {
     protected static ?string $cluster = FormsCluster::class;
+
     protected static ?string $model = EmployeeForm::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShare;
 
     protected static ?string $navigationLabel = 'Shareable Forms';
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'record_label';
 
     public static function form(Schema $schema): Schema
     {

@@ -16,7 +16,9 @@ class ViewEmployeeForm extends ViewRecord
 
     public function getTitle(): string|Htmlable
     {
-        return $this->record->office->name;
+        $acronym = $this->record->office?->acronym;
+
+        return filled($acronym) ? $acronym : $this->record->name;
     }
 
     public function getRelationManagers(): array

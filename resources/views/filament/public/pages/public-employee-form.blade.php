@@ -28,12 +28,19 @@
                         </div>
                     </div>
 
-                    {{-- Info Notice --}}
-                    <div class="mb-10 flex items-start gap-4 rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 dark:border-blue-900/40 dark:bg-blue-950/30">
-                        <x-heroicon-o-arrow-down-tray class="mt-0.5 h-6 w-6 shrink-0 text-blue-500 dark:text-blue-400" />
-                        <p class="text-base leading-relaxed text-blue-700 dark:text-blue-300">
-                            Your receipt is downloading automatically. Please keep it for your records.
-                        </p>
+                    {{-- Receipt copy prompt --}}
+                    <div class="mb-10 flex flex-col gap-4 rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 dark:border-blue-900/40 dark:bg-blue-950/30 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex items-start gap-4">
+                            <x-heroicon-o-document-text class="mt-0.5 h-6 w-6 shrink-0 text-blue-500 dark:text-blue-400" />
+                            <p class="text-base leading-relaxed text-blue-700 dark:text-blue-300">
+                                Would you like a PDF copy of your responses for your records? Use the button to open or save it.
+                            </p>
+                        </div>
+                        <div class="shrink-0 sm:ml-4">
+                            <x-filament::button wire:click="downloadReceiptCopy" color="primary">
+                                Download copy
+                            </x-filament::button>
+                        </div>
                     </div>
 
                     {{-- Divider with label --}}
@@ -72,6 +79,16 @@
                             </div>
                             <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
                                 Scan the QR code to open the feedback form. Your input helps us serve you better.
+                            </p>
+                            <p class="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+                                Can't scan the code?
+                                <br>
+                                <a
+                                    href="https://tinyurl.com/pictoform"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="break-all font-semibold text-primary-600 underline decoration-primary-600/40 underline-offset-2 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                                >https://tinyurl.com/pictoform</a>
                             </p>
                         </div>
 
@@ -120,10 +137,6 @@
             function onTurnstileExpired() {
                 @this.set('captchaToken', null);
             }
-
-            window.addEventListener('trigger-pdf-download', (event) => {
-                window.open(event.detail.url, '_blank');
-            });
         </script>
     @endif
 </x-filament-panels::page>
