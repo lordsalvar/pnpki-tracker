@@ -9,6 +9,7 @@ use App\Filament\Resources\FormSubmissions\Pages\ListFormSubmissions;
 use App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission;
 use App\Filament\Resources\FormSubmissions\Schemas\FormSubmissionForm;
 use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
+use App\Filament\Clusters\Forms\FormsCluster;
 use App\Models\FormSubmission;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Auth;
 
 class FormSubmissionResource extends Resource
 {
+    protected static ?string $cluster = FormsCluster::class;
     protected static ?string $model = FormSubmission::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;

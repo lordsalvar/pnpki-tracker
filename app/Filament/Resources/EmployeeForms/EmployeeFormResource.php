@@ -16,9 +16,11 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use App\Filament\Clusters\Forms\FormsCluster;
 
 class EmployeeFormResource extends Resource
 {
+    protected static ?string $cluster = FormsCluster::class;
     protected static ?string $model = EmployeeForm::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShare;
@@ -53,7 +55,6 @@ class EmployeeFormResource extends Resource
     {
         return [
             'index' => ListEmployeeForms::route('/'),
-            'create' => CreateEmployeeForm::route('/create'),
             'view' => ViewEmployeeForm::route('/{record}'),
             'edit' => EditEmployeeForm::route('/{record}/edit'),
         ];

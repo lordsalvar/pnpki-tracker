@@ -33,11 +33,13 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
+            ->maxContentWidth('full')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
             ])
+            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\Filament\Clusters')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
