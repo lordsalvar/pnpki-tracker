@@ -5,7 +5,7 @@ namespace App\Enums;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum ApplicationStatus: string implements HasLabel, HasColor
+enum ApplicationStatus: string implements HasColor, HasLabel
 {
     //
     case PENDING_FOR_REVIEW = 'pending_for_review';
@@ -15,7 +15,7 @@ enum ApplicationStatus: string implements HasLabel, HasColor
 
     public function getLabel(): string
     {
-        return match($this) {
+        return match ($this) {
             ApplicationStatus::PENDING_FOR_REVIEW => 'Pending for Review',
             ApplicationStatus::MODIFICATION_REQUESTED => 'Modification Requested',
             ApplicationStatus::NEEDS_REVISION => 'Needs Revision',
@@ -23,7 +23,7 @@ enum ApplicationStatus: string implements HasLabel, HasColor
         };
     }
 
-     public function getColor(): string|array|null
+    public function getColor(): string|array|null
     {
         return match ($this) {
             ApplicationStatus::PENDING_FOR_REVIEW => 'warning',

@@ -39,7 +39,7 @@ class BatchesTable
             ])
             ->filters([
                 \Filament\Tables\Filters\SelectFilter::make('office_id')
-                    
+
                     ->label('Office')
                     ->relationship('office', 'name')
                     ->searchable()

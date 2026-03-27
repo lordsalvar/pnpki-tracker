@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
-use Filament\Schemas\Schema;
 use App\Enums\UserRole;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Schema;
 
 class UserForm
 {
@@ -21,7 +21,7 @@ class UserForm
                     ->required(),
                 Select::make('role')
                     ->label('User Role')
-                    ->options(UserRole::class)    
+                    ->options(UserRole::class)
                     ->required(),
                 TextInput::make('password')
                     ->password()
@@ -33,7 +33,6 @@ class UserForm
                     ->preload()
                     ->searchable(),
 
-                
             ]);
     }
 }

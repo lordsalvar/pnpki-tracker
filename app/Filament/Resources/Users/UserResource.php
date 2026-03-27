@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Filament\Resources\Users;
+
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
@@ -41,11 +42,16 @@ class UserResource extends Resource
         return [];
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        return User::count();
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => ListUsers::route('/'),
-            'create' => CreateUser::route('/create'),
+            // 'create' => CreateUser::route('/create'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
     }
