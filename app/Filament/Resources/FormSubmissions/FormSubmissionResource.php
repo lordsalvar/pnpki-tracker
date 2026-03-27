@@ -57,6 +57,11 @@ class FormSubmissionResource extends Resource
         return FormSubmissionForm::configure($schema);
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        return FormSubmission::count();
+    }
+
     public static function table(Table $table): Table
     {
         return FormSubmissionsTable::configure($table);

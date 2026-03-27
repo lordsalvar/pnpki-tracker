@@ -2,9 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Batch;
 use App\Models\User;
-use App\Enums\UserRole;
 
 class BatchPolicy
 {
@@ -24,6 +24,7 @@ class BatchPolicy
         if ($user->role === UserRole::ADMIN->value) {
             return true;
         }
+
         return $user->office_id === $batch->office_id;
     }
 

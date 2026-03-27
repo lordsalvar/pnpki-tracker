@@ -9,6 +9,7 @@ class PsgcService
     protected function load(string $file): Collection
     {
         $path = storage_path("app/psgc/{$file}.json");
+
         return collect(json_decode(file_get_contents($path), true));
     }
 

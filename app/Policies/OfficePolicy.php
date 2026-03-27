@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\UserRole;
 use App\Models\Office;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
-use App\Enums\UserRole;
 
 class OfficePolicy
 {
@@ -44,6 +43,7 @@ class OfficePolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 
@@ -55,6 +55,7 @@ class OfficePolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         // if (UserRole::REPRESENTATIVE->value === $user->role) {
         //     return true;
         // }
@@ -69,6 +70,7 @@ class OfficePolicy
         if (UserRole::ADMIN->value === $user->role) {
             return true;
         }
+
         return false;
     }
 

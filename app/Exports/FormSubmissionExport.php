@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\FormSubmission;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -11,12 +10,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class FormSubmissionExport implements
-    FromCollection,
-    WithHeadings,
-    WithMapping,
-    WithStyles,
-    ShouldAutoSize
+class FormSubmissionExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     protected Collection $submissions;
 
@@ -53,13 +47,13 @@ class FormSubmissionExport implements
     public function map($submission): array
     {
         $fullName = trim(
-            $submission->firstname . ' ' .
+            $submission->firstname.' '.
             (($submission->middlename && $submission->middlename !== 'N/A')
-                ? strtoupper(substr($submission->middlename, 0, 1)) . '. '
-                : '') .
-            $submission->lastname .
+                ? strtoupper(substr($submission->middlename, 0, 1)).'. '
+                : '').
+            $submission->lastname.
             (($submission->suffix && $submission->suffix !== 'N/A')
-                ? ', ' . $submission->suffix
+                ? ', '.$submission->suffix
                 : '')
         );
 
@@ -87,7 +81,7 @@ class FormSubmissionExport implements
             1 => [
                 'font' => ['bold' => true],
                 'fill' => [
-                    'fillType'   => 'solid',
+                    'fillType' => 'solid',
                     'startColor' => ['rgb' => 'D9E1F2'],
                 ],
             ],

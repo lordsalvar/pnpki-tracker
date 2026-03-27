@@ -21,20 +21,20 @@ class SubmissionPdfController extends Controller
 
         // Resolve PSGC names from codes
         $psgc = app(PsgcService::class);
-        $provinceName   = $psgc->provinces()[$submission->address->province]   ?? $submission->address->province;
+        $provinceName = $psgc->provinces()[$submission->address->province] ?? $submission->address->province;
         $municipalityName = $psgc->municipalities($submission->address->province)[$submission->address->municipality] ?? $submission->address->municipality;
-        $barangayName   = $psgc->barangays($submission->address->municipality)[$submission->address->barangay]     ?? $submission->address->barangay;
+        $barangayName = $psgc->barangays($submission->address->municipality)[$submission->address->barangay] ?? $submission->address->barangay;
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.submission-receipt', [
-            'submission'       => $submission,
-            'provinceName'     => $provinceName,
+            'submission' => $submission,
+            'provinceName' => $provinceName,
             'municipalityName' => $municipalityName,
-            'barangayName'     => $barangayName,
-            'genderLabel'      => $genderLabel,
+            'barangayName' => $barangayName,
+            'genderLabel' => $genderLabel,
 
         ]);
 
-        $filename = 'Submission_' . strtoupper($submission->lastname) . '_' . $submission->firstname . '.pdf';
+        $filename = 'Submission_'.strtoupper($submission->lastname).'_'.$submission->firstname.'.pdf';
 
         return $pdf->download($filename);
     }

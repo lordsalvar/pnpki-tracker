@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Batches;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\Batches\Pages\CreateBatch;
 use App\Filament\Resources\Batches\Pages\EditBatch;
 use App\Filament\Resources\Batches\Pages\ListBatches;
@@ -16,7 +17,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\UserRole;
 
 class BatchResource extends Resource
 {
@@ -65,11 +65,11 @@ class BatchResource extends Resource
         $user = Auth::user();
 
         if ($user->role === UserRole::ADMIN->value) {
-        return parent::getEloquentQuery()
-            ->where('status', 'finalized');
+            return parent::getEloquentQuery()
+                ->where('status', 'finalized');
         }
+
         return parent::getEloquentQuery()
             ->where('office_id', Auth::user()->office_id);
     }
-
 }

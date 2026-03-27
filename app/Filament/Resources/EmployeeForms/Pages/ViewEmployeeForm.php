@@ -14,9 +14,9 @@ class ViewEmployeeForm extends ViewRecord
 {
     protected static string $resource = EmployeeFormResource::class;
 
-    public function getTitle(): string | Htmlable
+    public function getTitle(): string|Htmlable
     {
-        return  $this->record->office->name;
+        return $this->record->office->name;
     }
 
     public function getRelationManagers(): array

@@ -60,5 +60,4 @@ class CreateFormSubmission extends CreateRecord
             ]);
         }
     }
-    
 }

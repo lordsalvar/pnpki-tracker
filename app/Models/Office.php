@@ -14,7 +14,6 @@ class Office extends Model
 
     protected $table = 'offices';
 
-
     protected $fillable = [
         'name',
         'acronym',
