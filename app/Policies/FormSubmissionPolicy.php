@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ApplicationStatus;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
@@ -54,6 +55,10 @@ class FormSubmissionPolicy
      */
     public function update(User $user, FormSubmission $formSubmission): bool
     {
+        if ($formSubmission->batch?->application_status === ApplicationStatus::FOR_SUBMISSION) {
+            return false;
+        }
+
         if ($user->role === UserRole::ADMIN->value) {
             return true;
         }

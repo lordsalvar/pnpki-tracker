@@ -45,6 +45,14 @@ class BatchPolicy
     }
 
     /**
+     * Determine whether the user can mark a batch for submission.
+     */
+    public function markForSubmission(User $user, Batch $batch): bool
+    {
+        return $user->role === UserRole::ADMIN->value;
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, Batch $batch): bool

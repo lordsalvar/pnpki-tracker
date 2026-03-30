@@ -39,6 +39,66 @@ class ViewBatch extends ViewRecord
                     app(FinalizeBatchAction::class)->execute($this->record);
                     $this->refreshFormData(['status']);
                 }),
+            Action::make('mark_for_submission')
+                ->label('Mark as For Submission')
+                ->icon('heroicon-o-paper-airplane')
+                ->color('success')
+                ->requiresConfirmation()
+                ->modalHeading('Mark as For Submission')
+                ->modalDescription('This will mark the finalized batch as ready for submission.')
+                ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
+                    && $this->isBatchFinalized()
+                    && ! $this->isForSubmission())
+                ->disabled(fn () => $this->hasNotFinalizedSubmissions() || $this->hasFlaggedSubmissions())
+                ->tooltip(function (): ?string {
+                    if ($this->hasNotFinalizedSubmissions()) {
+                        return 'Some submissions are not yet finalized';
+                    }
+
+                    if ($this->hasFlaggedSubmissions()) {
+                        return 'Some submissions are still flagged for revision';
+                    }
+
+                    return null;
+                })
+                ->action(function () {
+                    $notFinalized = $this->record->formSubmissions()
+                        ->where('status', '!=', FormSubmissionStatus::FINALIZED->value)
+                        ->exists();
+
+                    if ($notFinalized) {
+                        Notification::make()
+                            ->title('All submissions must be finalized before marking for submission')
+                            ->warning()
+                            ->send();
+
+                        return;
+                    }
+
+                    $hasFlagged = $this->record->formSubmissions()
+                        ->where('flagged_by_representative', true)
+                        ->exists();
+
+                    if ($hasFlagged) {
+                        Notification::make()
+                            ->title('All flagged submissions must be resolved before marking for submission')
+                            ->warning()
+                            ->send();
+
+                        return;
+                    }
+
+                    $this->record->update([
+                        'application_status' => ApplicationStatus::FOR_SUBMISSION->value,
+                    ]);
+
+                    $this->refreshFormData(['application_status']);
+
+                    Notification::make()
+                        ->title('Batch marked as For Submission.')
+                        ->success()
+                        ->send();
+                }),
             Action::make('request_modification')
                 ->label('Request Modification')
                 ->icon('heroicon-o-pencil-square')
@@ -49,7 +109,8 @@ class ViewBatch extends ViewRecord
                 ->visible(fn () => Auth::user()?->role === UserRole::REPRESENTATIVE->value
                     && $this->record->status === BatchStatus::FINALIZED
                     && $this->record->formSubmissions()->where('flagged_by_representative', true)->exists()
-                    && $this->record->application_status !== ApplicationStatus::MODIFICATION_REQUESTED)
+                    && $this->record->application_status !== ApplicationStatus::MODIFICATION_REQUESTED
+                    && $this->record->application_status !== ApplicationStatus::FOR_SUBMISSION)
                 ->action(function () {
                     $this->record->update([
                         'application_status' => ApplicationStatus::MODIFICATION_REQUESTED->value,
@@ -70,7 +131,8 @@ class ViewBatch extends ViewRecord
                 ->modalHeading('Accept Modification Request')
                 ->modalDescription('This will move this batch to Needs Revision and update flagged submissions.')
                 ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
-                    && $this->record->application_status === ApplicationStatus::MODIFICATION_REQUESTED)
+                    && $this->record->application_status === ApplicationStatus::MODIFICATION_REQUESTED
+                    && $this->record->application_status !== ApplicationStatus::FOR_SUBMISSION)
                 ->action(function () {
                     $this->record->update([
                         'application_status' => null,
@@ -125,5 +187,29 @@ class ViewBatch extends ViewRecord
                     $this->redirect(BatchResource::getUrl('index'));
                 }),
         ];
+    }
+
+    private function hasNotFinalizedSubmissions(): bool
+    {
+        return $this->record->formSubmissions()
+            ->where('status', '!=', FormSubmissionStatus::FINALIZED->value)
+            ->exists();
+    }
+
+    private function hasFlaggedSubmissions(): bool
+    {
+        return $this->record->formSubmissions()
+            ->where('flagged_by_representative', true)
+            ->exists();
+    }
+
+    private function isBatchFinalized(): bool
+    {
+        return in_array($this->record->status, [BatchStatus::FINALIZED, BatchStatus::FINALIZED->value], true);
+    }
+
+    private function isForSubmission(): bool
+    {
+        return in_array($this->record->application_status, [ApplicationStatus::FOR_SUBMISSION, ApplicationStatus::FOR_SUBMISSION->value], true);
     }
 }
