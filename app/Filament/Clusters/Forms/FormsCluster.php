@@ -6,6 +6,8 @@ use App\Models\FormSubmission;
 use BackedEnum;
 use Filament\Clusters\Cluster;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Auth;
+use App\Enums\UserRole;
 
 class FormsCluster extends Cluster
 {
@@ -15,11 +17,12 @@ class FormsCluster extends Cluster
 
     public static function getNavigationBadge(): ?string
     {
+        $user = Auth::user();
 
-        if (FormSubmission::count() > 0) {
-            return FormSubmission::count();
-        }
+        $count = $user?->role === UserRole::REPRESENTATIVE->value
+            ? FormSubmission::where('office_id', $user->office_id)->count()
+            : FormSubmission::count();
 
-        return null;
+        return $count > 0 ? (string) $count : null;
     }
 }

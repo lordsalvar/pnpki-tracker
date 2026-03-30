@@ -61,11 +61,13 @@ class FormSubmissionResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        if (FormSubmission::count() > 0) {
-            return FormSubmission::count();
-        }
+        $user = Auth::user();
 
-        return null;
+        $count = $user?->role === UserRole::REPRESENTATIVE->value
+            ? FormSubmission::where('office_id', $user->office_id)->count()
+            : FormSubmission::count();
+
+        return $count > 0 ? (string) $count : null;
     }
 
     public static function table(Table $table): Table
