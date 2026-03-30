@@ -8,6 +8,7 @@ use Filament\Clusters\Cluster;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\UserRole;
+use App\Enums\FormSubmissionStatus;
 
 class FormsCluster extends Cluster
 {
@@ -20,7 +21,7 @@ class FormsCluster extends Cluster
         $user = Auth::user();
 
         $count = $user?->role === UserRole::REPRESENTATIVE->value
-            ? FormSubmission::where('office_id', $user->office_id)->count()
+            ? FormSubmission::where('office_id', $user->office_id)->where('status', FormSubmissionStatus::PENDING->value)->count()
             : FormSubmission::count();
 
         return $count > 0 ? (string) $count : null;
