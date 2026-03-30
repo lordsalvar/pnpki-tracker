@@ -56,9 +56,10 @@ class OfficePolicy
             return true;
         }
 
-        // if (UserRole::REPRESENTATIVE->value === $user->role) {
-        //     return true;
-        // }
+        if (UserRole::REPRESENTATIVE->value === $user->role) {
+            return $user->office_id === $office->id;
+        }
+
         return false;
     }
 

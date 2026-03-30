@@ -15,8 +15,8 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->string('name');
             $table->string('acronym');
-            $table->integer('number_of_employees')->default(0);
-            $table->foreignUlid('office_id')->nullable()->constrained('offices')->onDelete('set null')->after('role');
+            $table->integer('number_of_employees')->nullable();
+            $table->foreignUlid('office_id')->nullable()->constrained('offices')->onDelete('set null')->after('number_of_employees');
             $table->timestamps();
         });
     }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Offices\Pages;
 
 use App\Filament\Resources\Offices\OfficeResource;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
 
 class EditOffice extends EditRecord
@@ -24,8 +25,16 @@ class EditOffice extends EditRecord
         return [
             $this->getSaveFormAction(),
             $this->getCancelFormAction(),
-
         ];
+    }
+
+    protected function getSaveFormAction(): Action
+    {
+        $action = parent::getSaveFormAction();
+
+        return $this->hasFormWrapper()
+            ? $action->formId('form')
+            : $action;
     }
 
     protected function getFormActions(): array

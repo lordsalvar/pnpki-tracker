@@ -22,11 +22,9 @@ class OfficeForm
                     ->extraInputAttributes(['oninput' => 'this.value = this.value.toUpperCase()']),
 
                 TextInput::make('number_of_employees')
+                    ->label('Number of employees')
                     ->required()
-                    ->placeholder('Enter Number of Employees')
-                    ->numeric()
-                    ->minValue(0)
-                    ->maxValue(1000000),
+                    ->placeholder('Enter number of employees'),
             ]);
     }
 }
