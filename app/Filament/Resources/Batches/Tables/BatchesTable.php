@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Batches\Tables;
 
+use App\Enums\ApplicationStatus;
 use App\Enums\UserRole;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -46,6 +47,9 @@ class BatchesTable
                     ->preload()
                     ->visible(fn () => \Illuminate\Support\Facades\Auth::user()->role === \App\Enums\UserRole::ADMIN->value),
 
+                \Filament\Tables\Filters\SelectFilter::make('application_status')
+                    ->label('Application Status')
+                    ->options(ApplicationStatus::class),
             ])
             ->recordActions([
                 ViewAction::make(),
