@@ -22,7 +22,7 @@ class FormSubmissionsRelationManager extends RelationManager
 
     protected static ?string $relatedResource = BatchResource::class;
 
-    protected static ?string $title = 'Employees';
+    protected static ?string $title = 'Form Submissions';
 
     public function table(Table $table): Table
     {
