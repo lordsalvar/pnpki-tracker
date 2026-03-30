@@ -53,7 +53,6 @@ class BatchResource extends Resource
     {
         return [
             'index' => ListBatches::route('/'),
-            'create' => CreateBatch::route('/create'),
             'view' => ViewBatch::route('/{record}'),
             'edit' => EditBatch::route('/{record}/edit'),
         ];
