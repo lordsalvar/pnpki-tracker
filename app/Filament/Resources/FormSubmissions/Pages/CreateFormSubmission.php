@@ -59,5 +59,16 @@ class CreateFormSubmission extends CreateRecord
                 'file_path' => $filePath,
             ]);
         }
+
+        $formSubmission = $this->getRecord();
+
+        $recipients = \App\Models\User::query()
+            ->where('role', \App\Enums\UserRole::REPRESENTATIVE->value)
+            ->where('office_id', $formSubmission->office_id)
+            ->get();
+
+        foreach ($recipients as $recipient) {
+            $recipient->notify(new \App\Notifications\NewFormSubmissionNotification($formSubmission));
+        }
     }
 }
