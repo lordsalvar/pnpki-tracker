@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\BatchNeedsRevisionNotification;
 
 class ViewBatch extends ViewRecord
 {
@@ -33,10 +34,31 @@ class ViewBatch extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Finalize Batch')
                 ->modalDescription('Once finalized, this batch can no longer be edited. Are you sure?')
+                ->disabled(fn () => $this->hasNeedsRevisionSubmissions())
+                ->tooltip(function (): ?string {
+                    if ($this->hasNeedsRevisionSubmissions()) {
+                        return 'Resolve all submissions marked as Needs Revision before finalizing this batch.';
+                    }
+
+                    return null;
+                })
                 ->hidden(fn () => $this->record->status === BatchStatus::FINALIZED
                         || Auth::user()?->role !== UserRole::REPRESENTATIVE->value)
                 ->action(function () {
+                    if ($this->hasNeedsRevisionSubmissions()) {
+                        Notification::make()
+                            ->title('You cannot finalize while there are submissions that need revision')
+                            ->warning()
+                            ->send();
+
+                        return;
+                    }
+
                     app(FinalizeBatchAction::class)->execute($this->record);
+                    $admins = \App\Models\User::where('role', UserRole::ADMIN->value)->get();
+                        foreach ($admins as $admin) {
+                            $admin->notify(new \App\Notifications\BatchFinalizedNotification($this->record));
+                        }
                     $this->refreshFormData(['status']);
                 }),
             Action::make('mark_for_submission')
@@ -115,6 +137,11 @@ class ViewBatch extends ViewRecord
                     $this->record->update([
                         'application_status' => ApplicationStatus::MODIFICATION_REQUESTED->value,
                     ]);
+                    
+                    $admins = \App\Models\User::where('role', UserRole::ADMIN->value)->get();
+                        foreach ($admins as $admin) {
+                            $admin->notify(new \App\Notifications\ModificationRequestedNotification($this->record));
+                        }
 
                     $this->refreshFormData(['application_status']);
 
@@ -138,6 +165,8 @@ class ViewBatch extends ViewRecord
                         'application_status' => null,
                         'status' => BatchStatus::NEEDS_REVISION->value,
                     ]);
+
+                    $this->record->user?->notify(new BatchNeedsRevisionNotification($this->record));
 
                     $this->record->formSubmissions()
                         ->where('flagged_by_representative', true)
@@ -172,6 +201,8 @@ class ViewBatch extends ViewRecord
                         'application_status' => ApplicationStatus::NEEDS_REVISION->value,
                     ]);
 
+                    $this->record->user?->notify(new BatchNeedsRevisionNotification($this->record));
+
                     $this->record->formSubmissions()
                         ->where('flagged_by_representative', true)
                         ->update([
@@ -193,6 +224,13 @@ class ViewBatch extends ViewRecord
     {
         return $this->record->formSubmissions()
             ->where('status', '!=', FormSubmissionStatus::FINALIZED->value)
+            ->exists();
+    }
+
+    private function hasNeedsRevisionSubmissions(): bool
+    {
+        return $this->record->formSubmissions()
+            ->where('status', FormSubmissionStatus::NEEDS_REVISION->value)
             ->exists();
     }
 
