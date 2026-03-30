@@ -69,6 +69,21 @@ class AdminPanelProvider extends PanelProvider
                     };
                 </script>'
             )
+            ->renderHook(
+                'panels::head.end',
+                fn () => '
+                <style>
+                    .fi-main {
+                        padding-left: 12rem !important;
+                        padding-right: 12rem !important;
+                    }
+            
+                    .fi-body {
+                        padding-inline: 1rem !important;
+                    }
+                </style>
+                '
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
