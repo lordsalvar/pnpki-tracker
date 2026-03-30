@@ -27,6 +27,10 @@ class EmployeeFormResource extends Resource
 
     protected static ?string $navigationLabel = 'Shareable Forms';
 
+    protected static ?string $breadcrumb = 'Shareable Forms';
+
+    protected static ?string $modelLabel = 'Shareable Form';
+
     protected static ?string $recordTitleAttribute = 'record_label';
 
     public static function form(Schema $schema): Schema
