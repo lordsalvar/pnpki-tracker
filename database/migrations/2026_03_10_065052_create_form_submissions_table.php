@@ -29,6 +29,8 @@ return new class extends Migration
             $table->string('tin_number');
             $table->boolean('flagged_by_representative')->default(false);
             $table->timestamps();
+
+            $table->unique(['office_id', 'firstname', 'phone_number'], 'unique_submission_per_office');
         });
     }
 

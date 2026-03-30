@@ -411,39 +411,63 @@ class PublicEmployeeForm extends Page implements HasForms
 
         $rep = $this->formModel->user;
 
-        $formSubmission = null; // ADD
+        // Duplicate check BEFORE transaction (prevents orphaned address rows)
+        $alreadySubmitted = FormSubmission::where('office_id', $rep->office_id)
+            ->where('phone_number', $data['phone_number'])
+            ->exists();
 
-        DB::transaction(function () use ($data, $rep, &$formSubmission) { // CHANGE: capture $formSubmission
-            $address = Address::create([
-                'house_no' => $data['house_no'],
-                'street' => $data['street'],
-                'barangay' => $data['barangay'],
-                'municipality' => $data['municipality'],
-                'province' => $data['province'],
-                'zip_code' => $data['zip_code'],
-            ]);
+        if ($alreadySubmitted) {
+            Notification::make()
+                ->title('Duplicate Submission')
+                ->body('A submission with this details already exists for this office.')
+                ->warning()
+                ->send();
 
-            $formSubmission = FormSubmission::create([
-                'firstname' => $data['firstname'],
-                'lastname' => $data['lastname'],
-                'middlename' => $data['middlename'],
-                'suffix' => $data['suffix'],
-                'email' => $data['email'],
-                'phone_number' => $data['phone_number'],
-                'organizational_unit' => $data['organizational_unit'],
-                'gender' => $data['gender'],
-                'tin_number' => $data['tin_number'],
-                'address_id' => $address->id,
-                'office_id' => $rep->office_id,
-                'form_id' => $this->formModel->id,
-                'status' => 'pending',
-            ]);
+            return;
+        }
 
-            $this->saveAttachments($formSubmission, $data);
-        });
-        // end of DB::transaction
+        $formSubmission = null;
 
-        // Guard against transaction failure
+        try {
+            DB::transaction(function () use ($data, $rep, &$formSubmission) {
+                $address = Address::create([
+                    'house_no' => $data['house_no'],
+                    'street' => $data['street'],
+                    'barangay' => $data['barangay'],
+                    'municipality' => $data['municipality'],
+                    'province' => $data['province'],
+                    'zip_code' => $data['zip_code'],
+                ]);
+
+                $formSubmission = FormSubmission::create([
+                    'firstname' => $data['firstname'],
+                    'lastname' => $data['lastname'],
+                    'middlename' => $data['middlename'],
+                    'suffix' => $data['suffix'],
+                    'email' => $data['email'],
+                    'phone_number' => $data['phone_number'],
+                    'organizational_unit' => $data['organizational_unit'],
+                    'gender' => $data['gender'],
+                    'tin_number' => $data['tin_number'],
+                    'address_id' => $address->id,
+                    'office_id' => $rep->office_id,
+                    'form_id' => $this->formModel->id,
+                    'status' => 'pending',
+                ]);
+
+                $this->saveAttachments($formSubmission, $data);
+            });
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            // Safety net for race conditions
+            Notification::make()
+                ->title('Duplicate Submission')
+                ->body('A submission with this phone number already exists for this office.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
         if ($formSubmission === null) {
             Notification::make()
                 ->title('Something went wrong. Please try again.')
@@ -452,7 +476,6 @@ class PublicEmployeeForm extends Page implements HasForms
 
             return;
         }
-
         // Generate a signed URL (expires in 5 minutes)
         $downloadUrl = URL::temporarySignedRoute(
             'submission.download-pdf',

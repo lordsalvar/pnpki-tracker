@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    @if (true)
+    @if ($this->submitted)
 
     <div class="flex items-start justify-center px-4 pb-16 pt-10">
         <div class="w-full max-w-2xl">
