@@ -11,14 +11,18 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Filament\Actions\ActionGroup;
 
 class FormSubmissionsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->deferFilters(false)
             ->columns([
                 TextColumn::make('fullname')
                     ->label('Full Name')
@@ -95,7 +99,10 @@ class FormSubmissionsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                \Filament\Tables\Filters\SelectFilter::make('status')
+
+                TrashedFilter::make(),
+
+                SelectFilter::make('status')
                     ->label('Status')
                     ->options([
                         'pending' => 'Pending',
@@ -103,13 +110,14 @@ class FormSubmissionsTable
                         'needs_revision' => 'Needs Revision',
                     ]),
 
-                \Filament\Tables\Filters\SelectFilter::make('office_id')
+                SelectFilter::make('office_id')
                     ->label('Office')
                     ->relationship('office', 'acronym')
-                    ->visible(fn () => \Illuminate\Support\Facades\Auth::user()?->role === 'ADMIN'),
+                    ->visible(fn () => Auth::user()?->role === 'ADMIN'),
             ])
             ->recordActions([
-                EditAction::make()
+                ActionGroup::make([
+                    EditAction::make()
                     ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record]))
                     ->hidden(function ($record) {
                         $user = Auth::user();
@@ -130,9 +138,11 @@ class FormSubmissionsTable
 
                         return false;
                     }),
-                ViewAction::make()
+                    ViewAction::make()
                     ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
                     ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION])),
+                ]),
+                
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
