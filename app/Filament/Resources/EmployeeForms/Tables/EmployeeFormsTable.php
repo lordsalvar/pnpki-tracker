@@ -26,11 +26,6 @@ class EmployeeFormsTable
                 $query->withCount('formSubmissions');
             })
             ->columns([
-                TextColumn::make('name')
-                    ->label('Form Name')
-                    ->searchable()
-                    ->sortable(),
-
                 IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean()
