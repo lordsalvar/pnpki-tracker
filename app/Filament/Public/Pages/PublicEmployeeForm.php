@@ -273,7 +273,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PNPKI'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable(fn () => ! $this->submitted)
                             ->previewable()
                             ->uploadingMessage('Uploading PNPKI Form...')
                             ->required()
@@ -291,7 +291,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('NationalID'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable(fn () => ! $this->submitted)
                             ->previewable()
                             ->uploadingMessage('Uploading National ID...')
                             ->required()
@@ -309,7 +309,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('BirthCert'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable(fn () => ! $this->submitted)
                             ->previewable()
                             ->uploadingMessage('Uploading Birth Certificate...')
                             ->required()
@@ -327,7 +327,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('Passport'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable(fn () => ! $this->submitted)
                             ->previewable()
                             ->uploadingMessage('Uploading Passport...')
                             ->required()
@@ -345,7 +345,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('UMID'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable(fn () => ! $this->submitted)
                             ->previewable()
                             ->uploadingMessage('Uploading UMID...')
                             ->required()
@@ -363,7 +363,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID1'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable(fn () => ! $this->submitted)
                             ->previewable()
                             ->uploadingMessage('Uploading Valid ID #1...')
                             ->required()
@@ -381,7 +381,7 @@ class PublicEmployeeForm extends Page implements HasForms
                             ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID2'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable(fn () => ! $this->submitted)
                             ->previewable()
                             ->uploadingMessage('Uploading Valid ID #2...')
                             ->required()
@@ -407,7 +407,6 @@ class PublicEmployeeForm extends Page implements HasForms
         }
 
         $data = $this->form->getState();
-        $data = $this->normalizeUploadedAttachmentPaths($data);
 
         $rep = $this->formModel->user;
 
@@ -418,13 +417,16 @@ class PublicEmployeeForm extends Page implements HasForms
 
         if ($alreadySubmitted) {
             Notification::make()
-                ->title('Duplicate Submission')
+                ->title('Duplicated Submission')
                 ->body('A submission with this details already exists for this office.')
                 ->warning()
                 ->send();
 
             return;
         }
+
+        // Re-normalize attachment paths inside transaction to prevent race conditions where two submissions with the same phone number are processed at the same time, bypassing the initial duplicate check
+        $data = $this->normalizeUploadedAttachmentPaths($data);
 
         $formSubmission = null;
 
