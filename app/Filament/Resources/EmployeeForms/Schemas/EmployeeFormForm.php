@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\EmployeeForms\Schemas;
 
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 use Illuminate\Support\HtmlString;
 
@@ -26,9 +26,9 @@ class EmployeeFormForm
                     ->default(true)
                     ->visibleOn('edit'),
 
-                Placeholder::make('public_url')
+                TextEntry::make('public_id')
                     ->label('Public Link')
-                    ->content(function ($record): HtmlString {
+                    ->state(function ($record): HtmlString {
                         if (! $record?->public_id) {
                             return new HtmlString('<span class="text-gray-400 text-sm">Will be available after saving.</span>');
                         }

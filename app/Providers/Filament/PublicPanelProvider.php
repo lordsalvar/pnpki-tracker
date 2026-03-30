@@ -12,6 +12,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class PublicPanelProvider extends PanelProvider
@@ -34,6 +35,12 @@ class PublicPanelProvider extends PanelProvider
                 'panels::body.end',
                 fn () => '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>'
             )
+            ->brandLogo(fn (): HtmlString => new HtmlString(
+                '<span class="block mx-auto text-xl font-black tracking-tight text-transparent w-fit bg-clip-text bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 dark:from-sky-300 dark:via-blue-400 dark:to-indigo-400">'
+                .e(config('app.name'))
+                .'</span>'
+            ))
+            ->brandLogoHeight('1.5rem')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
