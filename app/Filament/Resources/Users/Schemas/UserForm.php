@@ -30,12 +30,28 @@ class UserForm
                     ])
                     ->columnSpanFull(),
                 TextInput::make('name')
-                    ->required(),
+                    ->required()
+                    ->unique(
+                        table: 'users',
+                        column: 'name',
+                        ignoreRecord: true,
+                    )
+                    ->validationMessages([
+                        'unique' => 'This name is already taken.',
+                    ]),
 
                 TextInput::make('email')
                     ->label('Email Address')
                     ->email()
-                    ->required(),
+                    ->required()
+                    ->unique(
+                        table: 'users',
+                        column: 'email',
+                        ignoreRecord: true,
+                    )
+                    ->validationMessages([
+                        'unique' => 'This email address is already taken.',
+                    ]),
                 Select::make('role')
                     ->label('User Role')
                     ->options(UserRole::class)
