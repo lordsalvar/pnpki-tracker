@@ -52,6 +52,10 @@ class FormSubmissionResource extends Resource
             $query->where('office_id', $user->office_id);
         }
 
+        if ($user?->role === UserRole::ADMIN->value) {
+            $query->where('status', FormSubmissionStatus::FINALIZED->value);
+        }
+
         return $query;
     }
 
@@ -66,7 +70,7 @@ class FormSubmissionResource extends Resource
 
         $count = $user?->role === UserRole::REPRESENTATIVE->value
             ? FormSubmission::where('office_id', $user->office_id)->where('status', FormSubmissionStatus::PENDING->value)->count()
-            : FormSubmission::count();
+            : FormSubmission::where('status', FormSubmissionStatus::FINALIZED->value)->count();
 
         return $count > 0 ? (string) $count : null;
     }
