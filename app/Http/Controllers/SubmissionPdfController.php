@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FormSubmission;
 use App\Services\PsgcService;
 use Illuminate\Http\Request;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class SubmissionPdfController extends Controller
 {
@@ -25,17 +26,17 @@ class SubmissionPdfController extends Controller
         $municipalityName = $psgc->municipalities($submission->address->province)[$submission->address->municipality] ?? $submission->address->municipality;
         $barangayName = $psgc->barangays($submission->address->municipality)[$submission->address->barangay] ?? $submission->address->barangay;
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.submission-receipt', [
+        $filename = 'Submission_'.strtoupper($submission->lastname).'_'.$submission->firstname.'.pdf';
+
+        return Pdf::view('pdf.submission-receipt', [
             'submission' => $submission,
             'provinceName' => $provinceName,
             'municipalityName' => $municipalityName,
             'barangayName' => $barangayName,
             'genderLabel' => $genderLabel,
-
-        ]);
-
-        $filename = 'Submission_'.strtoupper($submission->lastname).'_'.$submission->firstname.'.pdf';
-
-        return $pdf->download($filename);
+        ])
+            ->format('a4')
+            ->name($filename)
+            ->download();
     }
 }
