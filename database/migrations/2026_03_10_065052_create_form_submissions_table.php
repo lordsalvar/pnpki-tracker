@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('status');
             $table->string('gender');
             $table->string('tin_number');
-            $table->boolean('flagged_by_representative')->default(false);
+            $table->string('flagged_by')->nullable();
             $table->softDeletes();
             $table->timestamps();
 

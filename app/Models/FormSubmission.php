@@ -14,6 +14,7 @@ class FormSubmission extends Model
 {
     use HasUlids;
     use SoftDeletes;
+
     protected $primaryKey = 'id';
 
     protected $table = 'form_submissions';
@@ -33,13 +34,13 @@ class FormSubmission extends Model
         'gender',
         'tin_number',
         'status',
-        'flagged_by_representative',
+        'flagged_by',
     ];
 
     protected $casts = [
         'gender' => Gender::class,
         'status' => FormSubmissionStatus::class,
-        'flagged_by_representative' => 'boolean',
+        'flagged_by' => 'string',
     ];
 
     public function getFullNameAttribute(): string

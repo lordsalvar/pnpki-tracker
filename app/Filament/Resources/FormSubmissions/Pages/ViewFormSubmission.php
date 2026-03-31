@@ -51,10 +51,11 @@ class ViewFormSubmission extends ViewRecord
                 ->visible(fn () => in_array(Auth::user()?->role, [UserRole::REPRESENTATIVE->value, UserRole::ADMIN->value])
                     && $this->record->status === FormSubmissionStatus::FINALIZED
                     && $this->record->batch?->status === BatchStatus::FINALIZED
-                    && ! $this->record->flagged_by_representative)
+                    && $this->record->batch?->application_status !== ApplicationStatus::FOR_SUBMISSION
+                    && $this->record->flagged_by === null)
                 ->action(function () {
                     $this->record->update([
-                        'flagged_by_representative' => true,
+                        'flagged_by' => Auth::user()?->role,
                     ]);
 
                     Notification::make()
@@ -62,7 +63,7 @@ class ViewFormSubmission extends ViewRecord
                         ->success()
                         ->send();
 
-                    $this->refreshFormData(['flagged_by_representative']);
+                    $this->refreshFormData(['flagged_by']);
                 }),
             Action::make('unflag_needs_revision')
                 ->label('Unflag Needs Revision')
@@ -78,9 +79,15 @@ class ViewFormSubmission extends ViewRecord
                         return false;
                     }
 
+                    // Only allow unflagging if the current user's role matches the flagged_by value
+                    if ($this->record->flagged_by !== $role) {
+                        return false;
+                    }
+
                     if ($this->record->status !== FormSubmissionStatus::FINALIZED
                         || $this->record->batch?->status !== BatchStatus::FINALIZED
-                        || ! $this->record->flagged_by_representative) {
+                        || $this->record->batch?->application_status === ApplicationStatus::FOR_SUBMISSION
+                        || $this->record->flagged_by === null) {
                         return false;
                     }
 
@@ -93,7 +100,7 @@ class ViewFormSubmission extends ViewRecord
                 })
                 ->action(function () {
                     $this->record->update([
-                        'flagged_by_representative' => false,
+                        'flagged_by' => null,
                     ]);
 
                     Notification::make()
@@ -101,7 +108,7 @@ class ViewFormSubmission extends ViewRecord
                         ->success()
                         ->send();
 
-                    $this->refreshFormData(['flagged_by_representative']);
+                    $this->refreshFormData(['flagged_by']);
                 }),
             Action::make('assign_batch')
                 ->label('Assign to Batch')

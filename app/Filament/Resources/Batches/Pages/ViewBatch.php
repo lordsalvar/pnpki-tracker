@@ -8,12 +8,12 @@ use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\Batches\BatchResource;
+use App\Notifications\BatchNeedsRevisionNotification;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
-use App\Notifications\BatchNeedsRevisionNotification;
 
 class ViewBatch extends ViewRecord
 {
@@ -56,9 +56,9 @@ class ViewBatch extends ViewRecord
 
                     app(FinalizeBatchAction::class)->execute($this->record);
                     $admins = \App\Models\User::where('role', UserRole::ADMIN->value)->get();
-                        foreach ($admins as $admin) {
-                            $admin->notify(new \App\Notifications\BatchFinalizedNotification($this->record));
-                        }
+                    foreach ($admins as $admin) {
+                        $admin->notify(new \App\Notifications\BatchFinalizedNotification($this->record));
+                    }
                     $this->refreshFormData(['status']);
                 }),
             Action::make('mark_for_submission')
@@ -98,7 +98,7 @@ class ViewBatch extends ViewRecord
                     }
 
                     $hasFlagged = $this->record->formSubmissions()
-                        ->where('flagged_by_representative', true)
+                        ->whereNotNull('flagged_by')
                         ->exists();
 
                     if ($hasFlagged) {
@@ -130,18 +130,18 @@ class ViewBatch extends ViewRecord
                 ->modalDescription('This will mark the application as Modification Requested.')
                 ->visible(fn () => Auth::user()?->role === UserRole::REPRESENTATIVE->value
                     && $this->record->status === BatchStatus::FINALIZED
-                    && $this->record->formSubmissions()->where('flagged_by_representative', true)->exists()
+                    && $this->record->formSubmissions()->whereNotNull('flagged_by')->exists()
                     && $this->record->application_status !== ApplicationStatus::MODIFICATION_REQUESTED
                     && $this->record->application_status !== ApplicationStatus::FOR_SUBMISSION)
                 ->action(function () {
                     $this->record->update([
                         'application_status' => ApplicationStatus::MODIFICATION_REQUESTED->value,
                     ]);
-                    
+
                     $admins = \App\Models\User::where('role', UserRole::ADMIN->value)->get();
-                        foreach ($admins as $admin) {
-                            $admin->notify(new \App\Notifications\ModificationRequestedNotification($this->record));
-                        }
+                    foreach ($admins as $admin) {
+                        $admin->notify(new \App\Notifications\ModificationRequestedNotification($this->record));
+                    }
 
                     $this->refreshFormData(['application_status']);
 
@@ -169,10 +169,10 @@ class ViewBatch extends ViewRecord
                     $this->record->user?->notify(new BatchNeedsRevisionNotification($this->record));
 
                     $this->record->formSubmissions()
-                        ->where('flagged_by_representative', true)
+                        ->where('flagged_by', UserRole::REPRESENTATIVE->value)
                         ->update([
                             'status' => FormSubmissionStatus::NEEDS_REVISION->value,
-                            'flagged_by_representative' => false,
+                            'flagged_by' => null,
                         ]);
 
                     $this->refreshFormData(['application_status', 'status']);
@@ -193,7 +193,7 @@ class ViewBatch extends ViewRecord
                 ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
                     && $this->record->status === BatchStatus::FINALIZED
                     && $this->record->formSubmissions()
-                        ->where('flagged_by_representative', true)
+                        ->where('flagged_by', UserRole::ADMIN->value)
                         ->exists())
                 ->action(function () {
                     $this->record->update([
@@ -204,10 +204,10 @@ class ViewBatch extends ViewRecord
                     $this->record->user?->notify(new BatchNeedsRevisionNotification($this->record));
 
                     $this->record->formSubmissions()
-                        ->where('flagged_by_representative', true)
+                        ->where('flagged_by', UserRole::ADMIN->value)
                         ->update([
                             'status' => FormSubmissionStatus::NEEDS_REVISION->value,
-                            'flagged_by_representative' => false,
+                            'flagged_by' => null,
                         ]);
 
                     Notification::make()
@@ -237,7 +237,7 @@ class ViewBatch extends ViewRecord
     private function hasFlaggedSubmissions(): bool
     {
         return $this->record->formSubmissions()
-            ->where('flagged_by_representative', true)
+            ->whereNotNull('flagged_by')
             ->exists();
     }
 
