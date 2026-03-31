@@ -77,10 +77,6 @@ class AdminPanelProvider extends PanelProvider
                         padding-left: 12rem !important;
                         padding-right: 12rem !important;
                     }
-            
-                    .fi-body {
-                        padding-inline: 1rem !important;
-                    }
                 </style>
                 '
             )

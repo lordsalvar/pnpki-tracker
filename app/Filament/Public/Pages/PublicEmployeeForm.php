@@ -2,13 +2,10 @@
 
 namespace App\Filament\Public\Pages;
 
+use App\Actions\FormSubmission\StorePublicFormSubmissionAction;
 use App\Enums\Gender;
-use App\Models\Address;
-use App\Models\Attachment;
 use App\Models\EmployeeForm;
 use App\Models\FormSubmission;
-use App\Services\AttachmentPathService;
-use App\Services\AttachmentRuleService;
 use App\Services\PsgcService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -31,9 +28,8 @@ use Filament\Support\Enums\IconPosition;
 use Filament\Support\Enums\Size;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Js;
@@ -485,42 +481,13 @@ class PublicEmployeeForm extends Page implements HasForms
             return;
         }
 
-        // Re-normalize attachment paths inside transaction to prevent race conditions where two submissions with the same phone number are processed at the same time, bypassing the initial duplicate check
-        $data = $this->normalizeUploadedAttachmentPaths($data);
-
-        $formSubmission = null;
-
         try {
-            DB::transaction(function () use ($data, $rep, &$formSubmission) {
-                $address = Address::create([
-                    'house_no' => $data['house_no'],
-                    'street' => $data['street'],
-                    'barangay' => $data['barangay'],
-                    'municipality' => $data['municipality'],
-                    'province' => $data['province'],
-                    'zip_code' => $data['zip_code'],
-                ]);
-
-                $formSubmission = FormSubmission::create([
-                    'firstname' => $data['firstname'],
-                    'lastname' => $data['lastname'],
-                    'middlename' => $data['middlename'],
-                    'suffix' => $data['suffix'],
-                    'email' => $data['email'],
-                    'phone_number' => $data['phone_number'],
-                    'organizational_unit' => $data['organizational_unit'],
-                    'gender' => $data['gender'],
-                    'tin_number' => $data['tin_number'],
-                    'address_id' => $address->id,
-                    'office_id' => $rep->office_id,
-                    'form_id' => $this->formModel->id,
-                    'status' => 'pending',
-                ]);
-
-                $this->saveAttachments($formSubmission, $data);
-            });
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-            // Safety net for race conditions
+            $formSubmission = app(StorePublicFormSubmissionAction::class)->execute(
+                $this->formModel,
+                $rep,
+                $data
+            );
+        } catch (UniqueConstraintViolationException) {
             Notification::make()
                 ->title('Duplicate Submission')
                 ->body('A submission with this phone number already exists for this office.')
@@ -578,89 +545,6 @@ class PublicEmployeeForm extends Page implements HasForms
         return (bool) $response->json('success');
     }
 
-    private function saveAttachments(FormSubmission $formSubmission, array $data): void
-    {
-        $ruleService = $this->ruleService();
-        $fileKeys = $ruleService->activeFieldsForCombo($data['id_combo'] ?? null);
-
-        foreach ($ruleService->allFields() as $field) {
-            if (! in_array($field, $fileKeys, true)) {
-                continue;
-            }
-
-            $type = $ruleService->fileTypeForField($field);
-
-            if ($type === null) {
-                continue;
-            }
-
-            if (! empty($data[$field])) {
-                $path = is_array($data[$field]) ? array_values($data[$field])[0] : $data[$field];
-
-                Attachment::create([
-                    'form_submission_id' => $formSubmission->id,
-                    'file_type' => $type,
-                    'file_name' => basename($path),
-                    'file_path' => $path,
-                ]);
-            }
-        }
-    }
-
-    private function normalizeUploadedAttachmentPaths(array $data): array
-    {
-        $ruleService = $this->ruleService();
-        $pathService = $this->pathService();
-        $activeFields = $ruleService->activeFieldsForCombo($data['id_combo'] ?? null);
-
-        if ($activeFields === []) {
-            return $data;
-        }
-
-        $disk = Storage::disk('local');
-        $targetDirectory = $this->attachmentDirectoryFor($data);
-        $lastnameToken = $pathService->lastnameToken((string) ($data['lastname'] ?? 'Employee'), 'employee');
-
-        foreach ($activeFields as $field) {
-            $sourcePath = $pathService->normalizeFilePath($data[$field] ?? null);
-
-            if (! is_string($sourcePath) || $sourcePath === '') {
-                continue;
-            }
-
-            $fileType = $ruleService->fileTypeForField($field) ?? 'FILE';
-            $targetPath = $pathService->canonicalPath($sourcePath, $targetDirectory, $lastnameToken, $fileType);
-
-            if ($sourcePath !== $targetPath && $disk->exists($sourcePath)) {
-                $disk->makeDirectory($targetDirectory);
-
-                if ($disk->exists($targetPath)) {
-                    $disk->delete($targetPath);
-                }
-
-                $disk->move($sourcePath, $targetPath);
-            }
-
-            $data[$field] = is_array($data[$field]) ? [$targetPath] : $targetPath;
-        }
-
-        return $data;
-    }
-
-    private function attachmentDirectoryFor(array $data): string
-    {
-        $office = $this->formModel?->user?->office;
-        $officeFolder = $office
-            ? str($office->acronym ?? $office->name)->slug()
-            : 'unknown-office';
-
-        return $this->pathService()->employeeDirectory(
-            $officeFolder,
-            (string) ($data['firstname'] ?? 'Unknown'),
-            (string) ($data['lastname'] ?? 'Employee')
-        );
-    }
-
     private function fileNameForStorage(string $type): \Closure
     {
         return function (Get $get, $file) use ($type) {
@@ -678,16 +562,6 @@ class PublicEmployeeForm extends Page implements HasForms
 
             return "{$officeFolder}/Employees/{$employeeFolder}/{$filename}";
         };
-    }
-
-    private function ruleService(): AttachmentRuleService
-    {
-        return app(AttachmentRuleService::class);
-    }
-
-    private function pathService(): AttachmentPathService
-    {
-        return app(AttachmentPathService::class);
     }
 
     private function noEmojiRule(): string
