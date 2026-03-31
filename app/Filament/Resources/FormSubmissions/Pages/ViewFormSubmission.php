@@ -114,13 +114,14 @@ class ViewFormSubmission extends ViewRecord
                 ->label('Assign to Batch')
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->color('info')
-                ->visible(fn () => $this->record->status === FormSubmissionStatus::FINALIZED && $this->record->batch_id === null)
+                ->visible(fn () => $this->record->status === FormSubmissionStatus::FINALIZED && $this->record->batch_id === null && $this->record->batch?->status !== BatchStatus::FINALIZED)
                 ->form([
                     Select::make('batch_id')
                         ->label('Batch')
                         ->options(
                             Batch::query()
                                 ->where('office_id', Auth::user()->office_id)
+                                ->where('status', '!=', BatchStatus::FINALIZED->value)
                                 ->orderBy('batch_name')
                                 ->pluck('batch_name', 'id')
                         )
