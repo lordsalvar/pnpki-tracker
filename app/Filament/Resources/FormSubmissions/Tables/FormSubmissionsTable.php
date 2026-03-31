@@ -6,6 +6,7 @@ use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,7 +16,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use Filament\Actions\ActionGroup;
 
 class FormSubmissionsTable
 {
@@ -26,8 +26,8 @@ class FormSubmissionsTable
             ->columns([
                 TextColumn::make('fullname')
                     ->label('Full Name')
-                    ->description(fn ($state, $record): ?string => $record->flagged_by_representative
-                        ? '⚠️ Flagged for revision'
+                    ->description(fn ($state, $record): ?string => $record->flagged_by === Auth::user()?->role
+                        ? '⚠️ Flagged for revision by '.ucfirst($record->flagged_by)
                         : null)
                     ->getStateUsing(fn ($record) => trim(
                         $record->firstname.' '.
@@ -118,31 +118,31 @@ class FormSubmissionsTable
             ->recordActions([
                 ActionGroup::make([
                     EditAction::make()
-                    ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record]))
-                    ->hidden(function ($record) {
-                        $user = Auth::user();
+                        ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record]))
+                        ->hidden(function ($record) {
+                            $user = Auth::user();
 
-                        if (! $user) {
-                            return true;
-                        }
+                            if (! $user) {
+                                return true;
+                            }
 
-                        if ($record->status === FormSubmissionStatus::FINALIZED) {
-                            return true;
-                        }
+                            if ($record->status === FormSubmissionStatus::FINALIZED) {
+                                return true;
+                            }
 
-                        if ($user->role === UserRole::REPRESENTATIVE->value
-                            && $record->status === FormSubmissionStatus::NEEDS_REVISION
-                            && $record->batch?->status !== BatchStatus::NEEDS_REVISION) {
-                            return true;
-                        }
+                            if ($user->role === UserRole::REPRESENTATIVE->value
+                                && $record->status === FormSubmissionStatus::NEEDS_REVISION
+                                && $record->batch?->status !== BatchStatus::NEEDS_REVISION) {
+                                return true;
+                            }
 
-                        return false;
-                    }),
+                            return false;
+                        }),
                     ViewAction::make()
-                    ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
-                    ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION])),
+                        ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
+                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION])),
                 ]),
-                
+
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
