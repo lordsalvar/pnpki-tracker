@@ -18,15 +18,15 @@ class UserForm
                 Section::make('User Information')
                     ->schema([
                     FileUpload::make('avatar')
-                    ->label('Avatar')
-                    ->alignCenter()
-                    ->image()
-                    ->avatar()
-                    ->maxSize(5120)// 5MB
-                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg'])
-                    ->disk('local')
-                    ->directory('users')
-                    ->visibility('private'),
+                        ->label('Avatar')
+                        ->alignCenter()
+                        ->image()
+                        ->avatar()
+                        ->maxSize(5120) // 5MB
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg'])
+                        ->disk('public')
+                        ->directory('users')
+                        ->visibility('public'),
                     ])
                     ->columnSpanFull(),
                 TextInput::make('name')
