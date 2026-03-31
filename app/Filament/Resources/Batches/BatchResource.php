@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Batches;
 
 use App\Enums\UserRole;
-use App\Filament\Resources\Batches\Pages\CreateBatch;
 use App\Filament\Resources\Batches\Pages\EditBatch;
 use App\Filament\Resources\Batches\Pages\ListBatches;
 use App\Filament\Resources\Batches\Pages\ViewBatch;

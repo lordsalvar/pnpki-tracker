@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources\FormSubmissions;
 
+use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
+use App\Filament\Clusters\Forms\FormsCluster;
 use App\Filament\Resources\FormSubmissions\Pages\CreateFormSubmission;
 use App\Filament\Resources\FormSubmissions\Pages\EditFormSubmission;
 use App\Filament\Resources\FormSubmissions\Pages\ListFormSubmissions;
 use App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission;
 use App\Filament\Resources\FormSubmissions\Schemas\FormSubmissionForm;
 use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
-use App\Filament\Clusters\Forms\FormsCluster;
 use App\Models\FormSubmission;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -18,11 +19,11 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\FormSubmissionStatus;
 
 class FormSubmissionResource extends Resource
 {
     protected static ?string $cluster = FormsCluster::class;
+
     protected static ?string $model = FormSubmission::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;

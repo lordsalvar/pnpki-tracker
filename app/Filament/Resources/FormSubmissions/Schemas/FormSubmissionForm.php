@@ -93,18 +93,6 @@ class FormSubmissionForm
                     ->columnSpan(2)
                     ->columns(2)
                     ->schema([
-                        TextInput::make('house_no')
-                            ->label('House No.')
-                            ->required()
-                            ->rule(self::noEmojiRule())
-                            ->rule(self::noSymbolRule())
-                            ->maxLength(255),
-                        TextInput::make('street')
-                            ->label('Street')
-                            ->required()
-                            ->rule(self::noEmojiRule())
-                            ->rule(self::noSymbolRule())
-                            ->maxLength(255),
                         Select::make('province')
                             ->label('Province')
                             ->options(fn () => app(PsgcService::class)->provinces())
@@ -136,6 +124,13 @@ class FormSubmissionForm
                             ->disabled(fn (Get $get) => ! $get('province'))
                             ->required(),
 
+                        TextInput::make('zip_code')
+                            ->label('ZIP Code')
+                            ->numeric()
+                            ->minLength(4)
+                            ->maxLength(4)
+                            ->required(),
+
                         Select::make('barangay')
                             ->label('Barangay')
                             ->options(function (Get $get) {
@@ -151,12 +146,19 @@ class FormSubmissionForm
                             ->disabled(fn (Get $get) => ! $get('municipality'))
                             ->required(),
 
-                        TextInput::make('zip_code')
-                            ->label('ZIP Code')
-                            ->numeric()
-                            ->minLength(4)
-                            ->maxLength(4)
-                            ->required(),
+                        TextInput::make('house_no')
+                            ->label('House No.')
+                            ->required()
+                            ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
+                            ->maxLength(255),
+                        TextInput::make('street')
+                            ->label('Street')
+                            ->required()
+                            ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
+                            ->maxLength(255),
+
                     ]),
 
                 Select::make('office_id')

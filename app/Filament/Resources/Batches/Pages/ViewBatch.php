@@ -14,7 +14,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
-use App\Exports\BatchSubmissionsExport;
 
 class ViewBatch extends ViewRecord
 {
@@ -218,15 +217,15 @@ class ViewBatch extends ViewRecord
 
                     $this->redirect(BatchResource::getUrl('index'));
                 }),
-                Action::make('export_csv')
-                        ->label('Export CSV')
-                        ->icon('heroicon-o-arrow-down-tray')
-                        ->color('gray')
-                        ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
-                            && $this->isForSubmission())
-                        ->url(fn () => route('batch.export-csv', $this->record->id))
-                        ->openUrlInNewTab(),
-             
+            Action::make('export_csv')
+                ->label('Export CSV')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
+                    && $this->isForSubmission())
+                ->url(fn () => route('batch.export-csv', $this->record->id))
+                ->openUrlInNewTab(),
+
         ];
     }
 

@@ -19,7 +19,7 @@ Route::get('/test-psgc', function () {
 Route::get('/submission/download-pdf', [SubmissionPdfController::class, 'download'])
     ->name('submission.download-pdf')
     ->middleware('signed');
-    use App\Exports\BatchSubmissionsExport;
+use App\Exports\BatchSubmissionsExport;
 use App\Models\Batch;
 
 Route::get('/batches/{batch}/export-csv', function (Batch $batch) {

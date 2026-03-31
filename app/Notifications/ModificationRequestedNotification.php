@@ -24,7 +24,7 @@ class ModificationRequestedNotification extends Notification
     {
         return FilamentNotification::make()
             ->title('Modification requested')
-            ->body($this->batch->batch_name . ' — ' . $this->batch->office?->name)
+            ->body($this->batch->batch_name.' — '.$this->batch->office?->name)
             ->actions([
                 \Filament\Actions\Action::make('view')
                     ->label('View Batch')

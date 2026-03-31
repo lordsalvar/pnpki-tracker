@@ -479,7 +479,7 @@ class PublicEmployeeForm extends Page implements HasForms
             return;
         }
         $this->formModel->user->notify(
-          new \App\Notifications\NewFormSubmissionNotification($formSubmission)
+            new \App\Notifications\NewFormSubmissionNotification($formSubmission)
         );
 
         // Generate a signed URL (expires in 5 minutes)

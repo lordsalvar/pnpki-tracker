@@ -14,7 +14,7 @@ class ListEmployeeForms extends ListRecords
     {
         return [
             CreateAction::make()
-            ->label('New Shareable Form'),
+                ->label('New Shareable Form'),
         ];
     }
 }

@@ -6,8 +6,8 @@ use App\Enums\UserRole;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class UserForm
 {
@@ -17,16 +17,16 @@ class UserForm
             ->components([
                 Section::make('User Information')
                     ->schema([
-                    FileUpload::make('avatar')
-                        ->label('Avatar')
-                        ->alignCenter()
-                        ->image()
-                        ->avatar()
-                        ->maxSize(5120) // 5MB
-                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg'])
-                        ->disk('public')
-                        ->directory('users')
-                        ->visibility('public'),
+                        FileUpload::make('avatar')
+                            ->label('Avatar')
+                            ->alignCenter()
+                            ->image()
+                            ->avatar()
+                            ->maxSize(5120) // 5MB
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg'])
+                            ->disk('public')
+                            ->directory('users')
+                            ->visibility('public'),
                     ])
                     ->columnSpanFull(),
                 TextInput::make('name')

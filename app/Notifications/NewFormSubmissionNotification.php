@@ -3,12 +3,9 @@
 namespace App\Notifications;
 
 use App\Models\FormSubmission;
-
 use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
-
 
 class NewFormSubmissionNotification extends Notification
 {
@@ -28,7 +25,7 @@ class NewFormSubmissionNotification extends Notification
         return FilamentNotification::make()
             ->title('New submission entry')
             ->body(trim(
-                $this->formSubmission->firstname . ' ' .
+                $this->formSubmission->firstname.' '.
                 $this->formSubmission->lastname
             ))
             ->actions([

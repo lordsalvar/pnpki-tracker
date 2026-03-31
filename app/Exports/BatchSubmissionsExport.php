@@ -11,7 +11,6 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -43,20 +42,20 @@ class BatchSubmissionsExport
 
     public function rows(): Collection
     {
-        $psgc        = app(PsgcService::class);
+        $psgc = app(PsgcService::class);
         $submissions = $this->batch->formSubmissions()->with(['address', 'attachments', 'office'])->get();
 
         return $submissions->map(function ($submission, $index) use ($psgc) {
-            $address          = $submission->address;
-            $provinceName     = $address ? ($psgc->provinces()[$address->province] ?? $address->province) : '';
+            $address = $submission->address;
+            $provinceName = $address ? ($psgc->provinces()[$address->province] ?? $address->province) : '';
             $municipalityName = $address ? ($psgc->municipalities($address->province)[$address->municipality] ?? $address->municipality) : '';
-            $barangayName     = $address ? ($psgc->barangays($address->municipality)[$address->barangay] ?? $address->barangay) : '';
+            $barangayName = $address ? ($psgc->barangays($address->municipality)[$address->barangay] ?? $address->barangay) : '';
 
             $fullAddress = collect([
-                $address->house_no   ?? '',
-                $address->street     ?? '',
+                $address->house_no ?? '',
+                $address->street ?? '',
                 $barangayName,
-                $address->zip_code   ?? '',
+                $address->zip_code ?? '',
                 $municipalityName,
                 $provinceName,
             ])->filter()->implode(', ');
@@ -98,35 +97,35 @@ class BatchSubmissionsExport
 
     public function download(): StreamedResponse
     {
-        $filename    = $this->batch->batch_name . '_submissions.xlsx';
-        $spreadsheet = new Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet();
+        $filename = $this->batch->batch_name.'_submissions.xlsx';
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Submissions');
 
-        $headers     = $this->headers();
-        $rows        = $this->rows();
-        $totalCols   = count($headers);
-        $totalRows   = count($rows);
-        $lastCol     = Coordinate::stringFromColumnIndex($totalCols);
+        $headers = $this->headers();
+        $rows = $this->rows();
+        $totalCols = count($headers);
+        $totalRows = count($rows);
+        $lastCol = Coordinate::stringFromColumnIndex($totalCols);
 
         // ── Title row (row 1) ──────────────────────────────────────────
-        $batchName  = $this->batch->batch_name;
+        $batchName = $this->batch->batch_name;
         $officeName = $this->batch->office?->name ?? '';
         $sheet->mergeCells("A1:{$lastCol}1");
-        $sheet->setCellValue('A1', strtoupper($batchName) . ' — Batch Submission Report');
+        $sheet->setCellValue('A1', strtoupper($batchName).' — Batch Submission Report');
         $sheet->getStyle('A1')->applyFromArray([
-            'font'      => ['bold' => true, 'size' => 13, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1E3A5F']],
+            'font' => ['bold' => true, 'size' => 13, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1E3A5F']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
         ]);
         $sheet->getRowDimension(1)->setRowHeight(28);
 
         // ── Subtitle row (row 2) ───────────────────────────────────────
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Generated: ' . now('Asia/Manila')->format('F d, Y h:i A'));
+        $sheet->setCellValue('A2', 'Generated: '.now('Asia/Manila')->format('F d, Y h:i A'));
         $sheet->getStyle('A2')->applyFromArray([
-            'font'      => ['italic' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF2E5090']],
+            'font' => ['italic' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF2E5090']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
         ]);
         $sheet->getRowDimension(2)->setRowHeight(18);
@@ -137,10 +136,10 @@ class BatchSubmissionsExport
             $sheet->setCellValue("{$colLetter}3", $header);
         }
         $sheet->getStyle("A3:{$lastCol}3")->applyFromArray([
-            'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF3B6EA5']],
+            'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF3B6EA5']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
-            'borders'   => [
+            'borders' => [
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFBFCFE0']],
             ],
         ]);
@@ -159,12 +158,12 @@ class BatchSubmissionsExport
 
         // ── Data rows (starting row 4) ─────────────────────────────────
         foreach ($rows as $rowIndex => $row) {
-            $excelRow  = $rowIndex + 4;
+            $excelRow = $rowIndex + 4;
             $isEvenRow = $rowIndex % 2 === 0;
 
             foreach ($row as $colIndex => $value) {
                 $colLetter = Coordinate::stringFromColumnIndex($colIndex + 1);
-                $cell      = $sheet->getCell("{$colLetter}{$excelRow}");
+                $cell = $sheet->getCell("{$colLetter}{$excelRow}");
 
                 if (in_array($colIndex, $stringColumns, true)) {
                     $cell->setValueExplicit((string) $value, DataType::TYPE_STRING);
@@ -176,9 +175,9 @@ class BatchSubmissionsExport
             // Alternating row background
             $rowBg = $isEvenRow ? 'FFF0F4FA' : 'FFFFFFFF';
             $sheet->getStyle("A{$excelRow}:{$lastCol}{$excelRow}")->applyFromArray([
-                'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $rowBg]],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $rowBg]],
                 'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
-                'borders'   => [
+                'borders' => [
                     'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFD6E0EE']],
                 ],
             ]);
@@ -192,12 +191,12 @@ class BatchSubmissionsExport
         // ── Summary row ────────────────────────────────────────────────
         $summaryRow = $totalRows + 4;
         $sheet->mergeCells("A{$summaryRow}:{$lastCol}{$summaryRow}");
-        $sheet->setCellValue("A{$summaryRow}", 'Total Submissions: ' . $totalRows);
+        $sheet->setCellValue("A{$summaryRow}", 'Total Submissions: '.$totalRows);
         $sheet->getStyle("A{$summaryRow}")->applyFromArray([
-            'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FF1E3A5F']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFD6E4F0']],
+            'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => 'FF1E3A5F']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFD6E4F0']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT, 'vertical' => Alignment::VERTICAL_CENTER],
-            'borders'   => [
+            'borders' => [
                 'outline' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF3B6EA5']],
             ],
         ]);
@@ -220,11 +219,11 @@ class BatchSubmissionsExport
             },
             200,
             [
-                'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-                'Pragma'              => 'no-cache',
-                'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
-                'Expires'             => '0',
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0',
             ]
         );
     }
