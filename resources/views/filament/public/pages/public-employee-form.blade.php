@@ -109,26 +109,37 @@
     </div>
 
     @else
-        <form wire:submit="submit">
-            {{ $this->form }}
+        <div class="relative min-h-[60vh] overflow-hidden px-4 pb-20 pt-6 sm:px-6 lg:px-8">
+            <div
+                class="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-sky-50/90 dark:from-gray-950 dark:via-gray-900 dark:to-sky-950/30"
+                aria-hidden="true"
+            ></div>
 
-            <div class="mt-6" wire:ignore>
+            <div class="relative mx-auto w-full max-w-5xl">
+                <header class="mb-8 text-center sm:mb-10">
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">
+                        {{ __('Employee registration') }}
+                    </p>
+                    <h1 class="mt-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+                        {{ $this->formModel?->name ?? __('Registration') }}
+                    </h1>
+                    <p class="mx-auto mt-2 max-w-lg text-sm text-gray-600 dark:text-gray-400">
+                        {{ __('Work through each step. You can go back to review before you submit.') }}
+                    </p>
+                </header>
+
                 <div
-                    class="cf-turnstile"
-                    data-sitekey="{{ config('services.turnstile.site_key') }}"
-                    data-callback="onTurnstileSolved"
-                    data-expired-callback="onTurnstileExpired"
-                    data-error-callback="onTurnstileExpired"
-                    data-theme="auto"
-                ></div>
+                    class="overflow-hidden rounded-2xl border border-gray-200/90 bg-white/95 shadow-2xl shadow-slate-200/40 ring-1 ring-gray-950/[0.04] backdrop-blur-sm dark:border-gray-700/90 dark:bg-gray-900/95 dark:shadow-black/30 dark:ring-white/[0.06]"
+                >
+                    <div
+                        class="h-1.5 w-full bg-gradient-to-r from-primary-600 via-sky-500 to-indigo-600"
+                    ></div>
+                    <div class="p-5 sm:p-8 lg:p-10">
+                        {{ $this->form }}
+                    </div>
+                </div>
             </div>
-
-            <div class="mt-4">
-                <x-filament::button type="submit" size="lg">
-                    Submit
-                </x-filament::button>
-            </div>
-        </form>
+        </div>
 
         <script>
             function onTurnstileSolved(token) {

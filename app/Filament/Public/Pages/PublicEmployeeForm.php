@@ -20,15 +20,22 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Panel;
+use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\Wizard;
+use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\IconPosition;
+use Filament\Support\Enums\Size;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Js;
 
 class PublicEmployeeForm extends Page implements HasForms
@@ -59,6 +66,15 @@ class PublicEmployeeForm extends Page implements HasForms
         return $this->formModel?->name ?? 'Employee Registration';
     }
 
+    /**
+     * Omit the Filament page header &lt;h1 class="fi-header-heading"&gt;; title still
+     * feeds the document &lt;title&gt; via {@see getTitle()}.
+     */
+    public function getHeading(): string|Htmlable|null
+    {
+        return null;
+    }
+
     public function mount(string $publicId): void
     {
         $this->formModel = EmployeeForm::query()
@@ -70,325 +86,369 @@ class PublicEmployeeForm extends Page implements HasForms
 
     public function form(Schema $form): Schema
     {
+        $turnstileHtml = new HtmlString(
+            '<div class="mt-8 rounded-xl border border-gray-200/80 bg-gray-50/80 p-4 dark:border-gray-700 dark:bg-gray-800/50">'
+            .'<p class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">Security check</p>'
+            .'<div wire:ignore class="flex justify-center sm:justify-start">'
+            .'<div class="cf-turnstile" '
+            .'data-sitekey="'.e(config('services.turnstile.site_key')).'" '
+            .'data-callback="onTurnstileSolved" '
+            .'data-expired-callback="onTurnstileExpired" '
+            .'data-error-callback="onTurnstileExpired" '
+            .'data-theme="auto"></div>'
+            .'</div></div>'
+        );
+
         return $form
             ->components([
-                Section::make('Personal Information')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('firstname')
-                            ->label('First Name')
-                            ->required()
-                            ->rule($this->noEmojiRule())
-                            ->rule($this->noSymbolRule())
-                            ->maxLength(255),
+                Wizard::make([
+                    Step::make('Personal & contact')
+                        ->description('Legal name, suffix, email, and phone')
+                        ->icon(Heroicon::OutlinedUser)
+                        ->schema([
+                            Section::make('Personal information')
+                                ->columns(2)
+                                ->schema([
+                                    TextInput::make('firstname')
+                                        ->label('First Name')
+                                        ->required()
+                                        ->rule($this->noEmojiRule())
+                                        ->rule($this->noSymbolRule())
+                                        ->maxLength(255),
 
-                        TextInput::make('lastname')
-                            ->label('Last Name')
-                            ->required()
-                            ->rule($this->noEmojiRule())
-                            ->rule($this->noSymbolRule())
-                            ->maxLength(255),
+                                    TextInput::make('lastname')
+                                        ->label('Last Name')
+                                        ->required()
+                                        ->rule($this->noEmojiRule())
+                                        ->rule($this->noSymbolRule())
+                                        ->maxLength(255),
 
-                        TextInput::make('middlename')
-                            ->label('Middle Name')
-                            ->required()
-                            ->rule($this->noEmojiRule())
-                            ->rule($this->noSymbolRule())
-                            ->maxLength(255)
-                            ->suffixAction(
-                                Action::make('set_na_mid')
-                                    ->label('N/A')
-                                    ->link()
-                                    ->color('gray')
-                                    ->action(fn (Set $set) => $set('middlename', 'N/A'))
-                            ),
+                                    TextInput::make('middlename')
+                                        ->label('Middle Name')
+                                        ->required()
+                                        ->rule($this->noEmojiRule())
+                                        ->rule($this->noSymbolRule())
+                                        ->maxLength(255)
+                                        ->suffixAction(
+                                            Action::make('set_na_mid')
+                                                ->label('N/A')
+                                                ->link()
+                                                ->color('gray')
+                                                ->action(fn (Set $set) => $set('middlename', 'N/A'))
+                                        ),
 
-                        Select::make('suffix')
-                            ->label('Suffix')
-                            ->options([
-                                'N/A' => 'N/A',
-                                'Jr.' => 'Jr.',
-                                'Sr.' => 'Sr.',
-                                'I' => 'I',
-                                'II' => 'II',
-                                'III' => 'III',
-                                'IV' => 'IV',
-                                'V' => 'V',
-                            ])
-                            ->required()
-                            ->native(false),
-                    ]),
+                                    Select::make('suffix')
+                                        ->label('Suffix')
+                                        ->options([
+                                            'N/A' => 'N/A',
+                                            'Jr.' => 'Jr.',
+                                            'Sr.' => 'Sr.',
+                                            'I' => 'I',
+                                            'II' => 'II',
+                                            'III' => 'III',
+                                            'IV' => 'IV',
+                                            'V' => 'V',
+                                        ])
+                                        ->required()
+                                        ->native(false),
+                                ]),
 
-                Section::make('Contact Information')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('email')
-                            ->label('Email Address')
-                            ->email()
-                            ->required()
-                            ->rule($this->noEmojiRule())
-                            ->maxLength(255),
+                            Section::make('Contact information')
+                                ->columns(2)
+                                ->schema([
+                                    TextInput::make('email')
+                                        ->label('Email Address')
+                                        ->email()
+                                        ->required()
+                                        ->rule($this->noEmojiRule())
+                                        ->maxLength(255),
 
-                        TextInput::make('phone_number')
-                            ->label('Phone Number')
-                            ->tel()
-                            ->placeholder('e.g. 09171234567')
-                            ->required()
-                            ->rule($this->noEmojiRule())
-                            ->minLength(11)
-                            ->maxLength(11)
-                            ->rule('regex:/^09\d{9}$/')
-                            ->validationMessages([
-                                'regex' => 'numbers should start with 09',
-                            ])
-                            ->extraInputAttributes([
-                                'inputmode' => 'numeric',
-                                'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 11)",
-                            ]),
-                    ]),
+                                    TextInput::make('phone_number')
+                                        ->label('Phone Number')
+                                        ->tel()
+                                        ->placeholder('e.g. 09171234567')
+                                        ->required()
+                                        ->rule($this->noEmojiRule())
+                                        ->minLength(11)
+                                        ->maxLength(11)
+                                        ->rule('regex:/^09\d{9}$/')
+                                        ->validationMessages([
+                                            'regex' => 'numbers should start with 09',
+                                        ])
+                                        ->extraInputAttributes([
+                                            'inputmode' => 'numeric',
+                                            'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 11)",
+                                        ]),
+                                ]),
+                        ]),
 
-                Section::make('Address')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('house_no')
-                            ->label('House No.')
-                            ->required()
-                            ->rule($this->noEmojiRule())
-                            ->rule($this->noSymbolRule())
-                            ->maxLength(255),
+                    Step::make('Address')
+                        ->description('Complete location details')
+                        ->icon(Heroicon::OutlinedMapPin)
+                        ->columns(2)
+                        ->schema([
+                            TextInput::make('house_no')
+                                ->label('House No.')
+                                ->required()
+                                ->rule($this->noEmojiRule())
+                                ->rule($this->noSymbolRule())
+                                ->maxLength(255),
 
-                        TextInput::make('street')
-                            ->label('Street')
-                            ->required()
-                            ->rule($this->noEmojiRule())
-                            ->rule($this->noSymbolRule())
-                            ->maxLength(255),
+                            TextInput::make('street')
+                                ->label('Street')
+                                ->required()
+                                ->rule($this->noEmojiRule())
+                                ->rule($this->noSymbolRule())
+                                ->maxLength(255),
 
-                        Select::make('province')
-                            ->label('Province')
-                            ->options(fn () => app(PsgcService::class)->provinces())
-                            ->searchable()
-                            ->preload()
-                            ->live()
-                            ->afterStateUpdated(function (Set $set) {
-                                $set('municipality', null);
-                                $set('barangay', null);
-                            })
-                            ->required(),
+                            Select::make('province')
+                                ->label('Province')
+                                ->options(fn () => app(PsgcService::class)->provinces())
+                                ->searchable()
+                                ->preload()
+                                ->live()
+                                ->afterStateUpdated(function (Set $set) {
+                                    $set('municipality', null);
+                                    $set('barangay', null);
+                                })
+                                ->required(),
 
-                        Select::make('municipality')
-                            ->label('City / Municipality')
-                            ->options(function (Get $get) {
-                                $province = $get('province');
-                                if (! $province) {
-                                    return [];
-                                }
+                            Select::make('municipality')
+                                ->label('City / Municipality')
+                                ->options(function (Get $get) {
+                                    $province = $get('province');
+                                    if (! $province) {
+                                        return [];
+                                    }
 
-                                return app(PsgcService::class)->municipalities($province);
-                            })
-                            ->searchable()
-                            ->preload()
-                            ->live()
-                            ->afterStateUpdated(fn (Set $set) => $set('barangay', null))
-                            ->disabled(fn (Get $get) => ! $get('province'))
-                            ->required(),
+                                    return app(PsgcService::class)->municipalities($province);
+                                })
+                                ->searchable()
+                                ->preload()
+                                ->live()
+                                ->afterStateUpdated(fn (Set $set) => $set('barangay', null))
+                                ->disabled(fn (Get $get) => ! $get('province'))
+                                ->required(),
 
-                        Select::make('barangay')
-                            ->label('Barangay')
-                            ->options(function (Get $get) {
-                                $municipality = $get('municipality');
-                                if (! $municipality) {
-                                    return [];
-                                }
+                            Select::make('barangay')
+                                ->label('Barangay')
+                                ->options(function (Get $get) {
+                                    $municipality = $get('municipality');
+                                    if (! $municipality) {
+                                        return [];
+                                    }
 
-                                return app(PsgcService::class)->barangays($municipality);
-                            })
-                            ->searchable()
-                            ->live()
-                            ->disabled(fn (Get $get) => ! $get('municipality'))
-                            ->required(),
+                                    return app(PsgcService::class)->barangays($municipality);
+                                })
+                                ->searchable()
+                                ->live()
+                                ->disabled(fn (Get $get) => ! $get('municipality'))
+                                ->required(),
 
-                        TextInput::make('zip_code')
-                            ->label('ZIP Code')
-                            ->numeric()
-                            ->minLength(4)
-                            ->maxLength(4)
-                            ->required()
-                            ->validationMessages([
-                                'regex' => 'numbers should only contain 4 digits',
-                            ])
-                            ->extraInputAttributes([
-                                'inputmode' => 'numeric',
-                                'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 4)",
-                            ]),
-                    ]),
+                            TextInput::make('zip_code')
+                                ->label('ZIP Code')
+                                ->numeric()
+                                ->minLength(4)
+                                ->maxLength(4)
+                                ->required()
+                                ->validationMessages([
+                                    'regex' => 'numbers should only contain 4 digits',
+                                ])
+                                ->extraInputAttributes([
+                                    'inputmode' => 'numeric',
+                                    'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 4)",
+                                ]),
+                        ]),
 
-                Section::make('Employment Details')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('organizational_unit')
-                            ->label('Organizational Unit')
-                            ->required()
-                            ->rule($this->noEmojiRule())
-                            ->rule($this->noSymbolRule())
-                            ->maxLength(255),
+                    Step::make('Employment')
+                        ->description('Unit, gender, and TIN')
+                        ->icon(Heroicon::OutlinedBriefcase)
+                        ->columns(2)
+                        ->schema([
+                            TextInput::make('organizational_unit')
+                                ->label('Organizational Unit')
+                                ->required()
+                                ->rule($this->noEmojiRule())
+                                ->rule($this->noSymbolRule())
+                                ->maxLength(255),
 
-                        Select::make('gender')
-                            ->label('Gender')
-                            ->options(Gender::class)
-                            ->required(),
+                            Select::make('gender')
+                                ->label('Gender')
+                                ->options(Gender::class)
+                                ->required(),
 
-                        TextInput::make('tin_number')
-                            ->label('TIN Number')
-                            ->required()
-                            ->rule($this->noEmojiRule())
-                            ->rule($this->noSymbolRule())
-                            ->maxLength(20),
-                    ]),
+                            TextInput::make('tin_number')
+                                ->label('TIN Number')
+                                ->required()
+                                ->rule($this->noEmojiRule())
+                                ->rule($this->noSymbolRule())
+                                ->maxLength(20),
+                        ]),
 
-                Section::make('Document Attachments')
-                    ->columns(2)
-                    ->schema([
-                        Select::make('id_combo')
-                            ->label('Select ID Combination')
-                            ->options([
-                                'national_id' => 'PNPKI form & National ID',
-                                'birth_cert_umid' => 'PNPKI form, Birth Cert & UMID',
-                                'passport_umid' => 'PNPKI form, Passport & UMID',
-                                'birth_cert_valid_ids' => 'PNPKI form, Birth Cert & 2 Valid IDs',
-                                'passport_valid_ids' => 'PNPKI form, Passport & 2 valid IDs',
-                            ])
-                            ->required()
-                            ->live()
-                            ->columnSpan(2),
+                    Step::make('Documents')
+                        ->description('ID option and PDF uploads')
+                        ->icon(Heroicon::OutlinedDocumentArrowUp)
+                        ->columns(2)
+                        ->schema([
+                            Select::make('id_combo')
+                                ->label('Select ID Combination')
+                                ->options([
+                                    'national_id' => 'PNPKI form & National ID',
+                                    'birth_cert_umid' => 'PNPKI form, Birth Cert & UMID',
+                                    'passport_umid' => 'PNPKI form, Passport & UMID',
+                                    'birth_cert_valid_ids' => 'PNPKI form, Birth Cert & 2 Valid IDs',
+                                    'passport_valid_ids' => 'PNPKI form, Passport & 2 valid IDs',
+                                ])
+                                ->required()
+                                ->live()
+                                ->columnSpan(2),
 
-                        FileUpload::make('upload_pnpki')
-                            ->label('PNPKI Form')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PNPKI'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable(fn () => ! $this->submitted)
-                            ->previewable()
-                            ->uploadingMessage('Uploading PNPKI Form...')
-                            ->required()
-                            ->columnSpan(2)
-                            ->visible(fn (Get $get) => filled($get('id_combo'))),
+                            FileUpload::make('upload_pnpki')
+                                ->label('PNPKI Form')
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PNPKI'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage('Uploading PNPKI Form...')
+                                ->required()
+                                ->columnSpan(2)
+                                ->visible(fn (Get $get) => filled($get('id_combo'))),
 
-                        FileUpload::make('upload_national_id')
-                            ->label('Philippine National ID')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('NationalID'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable(fn () => ! $this->submitted)
-                            ->previewable()
-                            ->uploadingMessage('Uploading National ID...')
-                            ->required()
-                            ->columnSpan(2)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
+                            FileUpload::make('upload_national_id')
+                                ->label('Philippine National ID')
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('NationalID'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage('Uploading National ID...')
+                                ->required()
+                                ->columnSpan(2)
+                                ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
 
-                        FileUpload::make('upload_birth_cert')
-                            ->label('Birth Certificate')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('BirthCert'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable(fn () => ! $this->submitted)
-                            ->previewable()
-                            ->uploadingMessage('Uploading Birth Certificate...')
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'birth_cert_valid_ids'])),
+                            FileUpload::make('upload_birth_cert')
+                                ->label('Birth Certificate')
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('BirthCert'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage('Uploading Birth Certificate...')
+                                ->required()
+                                ->columnSpan(1)
+                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'birth_cert_valid_ids'])),
 
-                        FileUpload::make('upload_passport')
-                            ->label('Passport (Bio-data page)')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('Passport'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable(fn () => ! $this->submitted)
-                            ->previewable()
-                            ->uploadingMessage('Uploading Passport...')
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_umid', 'passport_valid_ids'])),
+                            FileUpload::make('upload_passport')
+                                ->label('Passport (Bio-data page)')
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('Passport'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage('Uploading Passport...')
+                                ->required()
+                                ->columnSpan(1)
+                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_umid', 'passport_valid_ids'])),
 
-                        FileUpload::make('upload_umid')
-                            ->label('UMID Card')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('UMID'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable(fn () => ! $this->submitted)
-                            ->previewable()
-                            ->uploadingMessage('Uploading UMID...')
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'passport_umid'])),
+                            FileUpload::make('upload_umid')
+                                ->label('UMID Card')
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('UMID'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage('Uploading UMID...')
+                                ->required()
+                                ->columnSpan(1)
+                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'passport_umid'])),
 
-                        FileUpload::make('upload_id1')
-                            ->label('Valid ID #1')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID1'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable(fn () => ! $this->submitted)
-                            ->previewable()
-                            ->uploadingMessage('Uploading Valid ID #1...')
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
+                            FileUpload::make('upload_id1')
+                                ->label('Valid ID #1')
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID1'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage('Uploading Valid ID #1...')
+                                ->required()
+                                ->columnSpan(1)
+                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
 
-                        FileUpload::make('upload_id2')
-                            ->label('Valid ID #2')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID2'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable(fn () => ! $this->submitted)
-                            ->previewable()
-                            ->uploadingMessage('Uploading Valid ID #2...')
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
+                            FileUpload::make('upload_id2')
+                                ->label('Valid ID #2')
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID2'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage('Uploading Valid ID #2...')
+                                ->required()
+                                ->columnSpan(1)
+                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
 
-                    ]),
+                            Html::make($turnstileHtml)
+                                ->columnSpanFull(),
+                        ]),
+                ])
+                    ->label(__('Registration steps'))
+                    ->contained(true)
+                    ->alpineSubmitHandler('$wire.submit()')
+                    ->nextAction(fn (Action $action) => $action
+                        ->label(__('Next'))
+                        ->icon(Heroicon::OutlinedArrowRight)
+                        ->iconPosition(IconPosition::After))
+                    ->previousAction(fn (Action $action) => $action
+                        ->label(__('Back')))
+                    ->submitAction(
+                        Action::make('submit')
+                            ->label(__('Submit registration'))
+                            ->action('submit')
+                            ->icon(Heroicon::OutlinedCheckBadge)
+                            ->size(Size::Large)
+                    ),
             ])
             ->statePath('employeeData');
     }
