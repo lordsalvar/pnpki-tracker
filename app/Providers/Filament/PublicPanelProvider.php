@@ -22,6 +22,7 @@ class PublicPanelProvider extends PanelProvider
         return $panel
             ->id('public')
             ->path('p')
+            ->homeUrl('/')
             ->colors([
                 'primary' => Color::Blue,
             ])
