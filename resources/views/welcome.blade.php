@@ -11,13 +11,83 @@
         .dark body { background-color: #030712; color: #f9fafb; }
     </style>
     <script>
-        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-        function toggleTheme(t) {
-            localStorage.setItem('theme', t);
-            document.documentElement.classList.toggle('dark', t === 'dark');
-        }
+        (function () {
+            const storageKey = 'theme';
+
+            function storedTheme() {
+                const v = localStorage.getItem(storageKey);
+                if (v === 'light' || v === 'dark' || v === 'system') {
+                    return v;
+                }
+
+                return 'system';
+            }
+
+            function resolvedDark() {
+                const mode = storedTheme();
+                if (mode === 'dark') {
+                    return true;
+                }
+                if (mode === 'light') {
+                    return false;
+                }
+
+                return window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+
+            function applyHtmlClass() {
+                document.documentElement.classList.toggle('dark', resolvedDark());
+            }
+
+            function syncThemeButtons() {
+                const activeClasses = [
+                    'text-blue-600', 'dark:text-blue-400',
+                    'hover:text-blue-600', 'dark:hover:text-blue-400',
+                ];
+                const inactiveClasses = [
+                    'text-gray-500', 'dark:text-gray-400',
+                    'hover:text-gray-700', 'dark:hover:text-gray-300',
+                ];
+
+                document.querySelectorAll('[data-theme-toggle]').forEach(function (el) {
+                    const mode = el.getAttribute('data-theme-toggle');
+                    const active = mode === storedTheme();
+                    el.setAttribute('aria-pressed', active ? 'true' : 'false');
+                    activeClasses.forEach(function (c) {
+                        el.classList.toggle(c, active);
+                    });
+                    inactiveClasses.forEach(function (c) {
+                        el.classList.toggle(c, !active);
+                    });
+
+                    const iconWrap = el.querySelector('[data-theme-icon-wrap]');
+                    if (iconWrap) {
+                        const wrapActive = [
+                            'ring-1', 'ring-inset', 'ring-blue-600/85', 'dark:ring-blue-400/85',
+                        ];
+                        wrapActive.forEach(function (c) {
+                            iconWrap.classList.toggle(c, active);
+                        });
+                    }
+                });
+            }
+
+            window.toggleTheme = function (mode) {
+                localStorage.setItem(storageKey, mode);
+                applyHtmlClass();
+                syncThemeButtons();
+            };
+
+            applyHtmlClass();
+
+            document.addEventListener('DOMContentLoaded', syncThemeButtons);
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+                if (storedTheme() === 'system') {
+                    applyHtmlClass();
+                }
+            });
+        })();
     </script>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-950 antialiased dark:bg-gray-950 dark:text-white">
@@ -38,12 +108,27 @@
                     </div>
 
                     <div id="mobile-menu" class="hidden lg:flex w-full lg:w-auto flex-wrap justify-end items-center gap-4 py-4 lg:py-0">
-                        <div class="flex gap-1">
-                            <button type="button" onclick="toggleTheme('light')" class="p-2 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition" title="Light">
-                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.061 1.06l1.06 1.06Z"/></svg>
+                        <div class="flex items-center gap-3" role="group" aria-label="{{ __('Theme') }}">
+                            <button type="button" data-theme-toggle="light" onclick="toggleTheme('light')" class="rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950 text-gray-500 dark:text-gray-400" title="{{ __('Light') }}" aria-label="{{ __('Light mode') }}">
+                                <span data-theme-icon-wrap class="inline-flex rounded-md p-1 transition-shadow duration-200">
+                                    <svg class="size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.166a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75ZM17.834 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18ZM7.758 17.303a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12ZM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591Z" />
+                                    </svg>
+                                </span>
                             </button>
-                            <button type="button" onclick="toggleTheme('dark')" class="p-2 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition" title="Dark">
-                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd"/></svg>
+                            <button type="button" data-theme-toggle="dark" onclick="toggleTheme('dark')" class="rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950 text-gray-500 dark:text-gray-400" title="{{ __('Dark') }}" aria-label="{{ __('Dark mode') }}">
+                                <span data-theme-icon-wrap class="inline-flex rounded-md p-1 transition-shadow duration-200">
+                                    <svg class="size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            </button>
+                            <button type="button" data-theme-toggle="system" onclick="toggleTheme('system')" class="rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950 text-gray-500 dark:text-gray-400" title="{{ __('System') }}" aria-label="{{ __('Match system appearance') }}">
+                                <span data-theme-icon-wrap class="inline-flex rounded-md p-1 transition-shadow duration-200">
+                                    <svg class="size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
                             </button>
                         </div>
                         <div class="flex items-center gap-2 border-l border-gray-200 dark:border-gray-800 pl-4">
