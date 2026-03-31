@@ -26,6 +26,13 @@ class EmployeeFormsTable
                 $query->withCount('formSubmissions');
             })
             ->columns([
+
+                TextColumn::make('office.name')
+                    ->label('Office')
+                    ->searchable()
+                    ->sortable()
+                    ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value),
+
                 IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean()
@@ -55,6 +62,20 @@ class EmployeeFormsTable
             ])
             ->filters([
                 //
+                \Filament\Tables\Filters\SelectFilter::make('office_id')
+                    ->label('Office')
+                    ->relationship('office', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value),
+
+                \Filament\Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Active Status')
+                    ->trueLabel('Active')
+                    ->falseLabel('Inactive')
+                    ->native(false)
+                    ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value),
+
             ])
             ->recordActions([
                 ViewAction::make(),
