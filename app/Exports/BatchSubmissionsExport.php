@@ -34,6 +34,7 @@ class BatchSubmissionsExport
             'Gender',
             'TIN Number',
             'Organizational Unit',
+            'Office',
             'Address',
             'Status',
             'ID Combination',
@@ -43,7 +44,7 @@ class BatchSubmissionsExport
     public function rows(): Collection
     {
         $psgc        = app(PsgcService::class);
-        $submissions = $this->batch->formSubmissions()->with(['address', 'attachments'])->get();
+        $submissions = $this->batch->formSubmissions()->with(['address', 'attachments', 'office'])->get();
 
         return $submissions->map(function ($submission, $index) use ($psgc) {
             $address          = $submission->address;
@@ -87,6 +88,7 @@ class BatchSubmissionsExport
                 $submission->gender instanceof BackedEnum ? ucfirst($submission->gender->value) : ucfirst($submission->gender),
                 (string) $submission->tin_number,
                 $submission->organizational_unit,
+                $submission->office?->name ?? '',
                 $fullAddress,
                 $submission->status instanceof BackedEnum ? ucfirst($submission->status->value) : ucfirst($submission->status),
                 $attachmentList,
@@ -121,7 +123,7 @@ class BatchSubmissionsExport
 
         // ── Subtitle row (row 2) ───────────────────────────────────────
         $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->setCellValue('A2', 'Office: ' . $officeName . '   |   Generated: ' . now('Asia/Manila')->format('F d, Y h:i A'));
+        $sheet->setCellValue('A2', 'Generated: ' . now('Asia/Manila')->format('F d, Y h:i A'));
         $sheet->getStyle('A2')->applyFromArray([
             'font'      => ['italic' => true, 'size' => 10, 'color' => ['argb' => 'FFFFFFFF']],
             'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF2E5090']],
