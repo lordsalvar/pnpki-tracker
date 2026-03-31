@@ -54,8 +54,11 @@ class FormSubmissionsTable
                     ->label('Email')
                     ->searchable(),
 
-                TextColumn::make('phone_number')
-                    ->label('Phone')
+                TextColumn::make('batch.name')
+                    ->label('Batch')
+                    ->badge()
+                    ->getStateUsing(fn ($record) => $record->batch?->batch_name ?? 'Unassigned')
+                    ->color(fn ($record) => $record->batch_id ? 'success' : 'warning')
                     ->searchable(),
 
                 TextColumn::make('status')

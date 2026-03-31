@@ -41,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
                 .'</span>'
             ))
             ->brandLogoHeight('1.5rem')
-             ->maxContentWidth('full')
+            ->maxContentWidth('full')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
