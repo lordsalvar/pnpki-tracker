@@ -7,6 +7,7 @@ use App\Models\Office;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,7 +21,7 @@ class DatabaseSeeder extends Seeder
         User::query()->create([
             'name' => 'admin',
             'email' => 'admin@local.dev',
-            'password' => 'password',
+            'password' => Hash::make('password'),
             'role' => UserRole::ADMIN->value,
         ]);
 
@@ -42,7 +43,7 @@ class DatabaseSeeder extends Seeder
         User::query()->create([
             'name' => 'PICTO Representative',
             'email' => 'picto@local.dev',
-            'password' => 'password',
+            'password' => Hash::make('password'),
             'role' => UserRole::REPRESENTATIVE->value,
             'office_id' => $picto->id,
         ]);
@@ -50,7 +51,7 @@ class DatabaseSeeder extends Seeder
         User::query()->create([
             'name' => 'PHRMO Representative',
             'email' => 'phrmo@local.dev',
-            'password' => 'password',
+            'password' => Hash::make('password'),
             'role' => UserRole::REPRESENTATIVE->value,
             'office_id' => $phrmo->id,
         ]);
@@ -58,7 +59,7 @@ class DatabaseSeeder extends Seeder
         User::query()->create([
             'name' => 'PHO Representative',
             'email' => 'pho@local.dev',
-            'password' => 'password',
+            'password' => Hash::make('password'),
             'role' => UserRole::REPRESENTATIVE->value,
             'office_id' => $pho->id,
         ]);
