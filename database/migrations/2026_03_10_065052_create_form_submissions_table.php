@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('status');
             $table->string('gender');
             $table->string('tin_number');
+            $table->string('reference_number')->nullable();
             $table->string('flagged_by')->nullable();
             $table->softDeletes();
             $table->timestamps();

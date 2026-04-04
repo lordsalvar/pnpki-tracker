@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\FormSubmissionStatus;
 use App\Enums\Gender;
+use App\Services\FormSubmissionReferenceNumberGenerator;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,17 @@ class FormSubmission extends Model
 {
     use HasUlids;
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::creating(function (FormSubmission $submission): void {
+            if ($submission->reference_number !== null && $submission->reference_number !== '') {
+                return;
+            }
+
+            $submission->reference_number = app(FormSubmissionReferenceNumberGenerator::class)->next();
+        });
+    }
 
     protected $primaryKey = 'id';
 
