@@ -24,9 +24,11 @@ return new class extends Migration
             $table->foreignUlid('office_id')->nullable()->constrained('offices')->onDelete('cascade');
             $table->foreignUlid('form_id')->nullable()->constrained('employee_forms')->nullOnDelete();
             $table->string('organizational_unit');
+            $table->string('civil_status');
             $table->string('status');
             $table->string('gender');
             $table->string('tin_number');
+            $table->string('reference_number')->nullable();
             $table->string('flagged_by')->nullable();
             $table->softDeletes();
             $table->timestamps();
