@@ -405,12 +405,14 @@
           <div class="field-value">{{ $submission->suffix ?: '—' }}</div>
         </td>
       </tr>
+      @if(filled($submission->maiden_name) && $submission->maiden_name !== 'N/A')
       <tr>
         <td class="field full-row" colspan="4">
           <div class="field-label">Maiden Name</div>
-          <div class="field-value">{{ $submission->maiden_name ?: '—' }}</div>
+          <div class="field-value">{{ $submission->maiden_name }}</div>
         </td>
       </tr>
+      @endif
       <tr>
         <td class="field" colspan="2">
           <div class="field-label">Sex</div>
