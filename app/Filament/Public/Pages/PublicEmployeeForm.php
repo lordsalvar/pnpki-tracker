@@ -126,7 +126,9 @@ class PublicEmployeeForm extends Page implements HasForms
                                                 ->hiddenLabel()
                                                 ->inline(false)
                                                 ->accepted()
-                                                ->validationAttribute('data privacy consent')
+                                                ->validationMessages([
+                                                    'accepted' => "\u{200B}",
+                                                ])
                                                 ->live()
                                                 ->dehydrated(false)
                                                 ->columnSpan([
@@ -134,7 +136,7 @@ class PublicEmployeeForm extends Page implements HasForms
                                                     'sm' => 0.5,
                                                 ])
                                                 ->extraFieldWrapperAttributes([
-                                                    'class' => '!max-w-none w-full sm:max-w-[3.5rem]',
+                                                    'class' => '!max-w-none w-full sm:max-w-[3.5rem] [&_.fi-fo-field-wrp-error-list]:hidden [&_p.fi-fo-field-wrp-error-message]:hidden [&_div.fi-fo-field-wrp-error-message]:hidden',
                                                 ])
                                                 ->extraInputAttributes([
                                                     'class' => 'mt-1 size-5 shrink-0 cursor-pointer',
