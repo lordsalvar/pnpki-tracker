@@ -70,6 +70,11 @@ class FormSubmissionsTable
                     })
                     ->searchable(),
 
+                TextColumn::make('organization')
+                    ->label('Organization')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('organizational_unit')
                     ->label('Org. Unit')
                     ->searchable()

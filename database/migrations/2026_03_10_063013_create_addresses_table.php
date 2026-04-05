@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('addresses', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->string('house_no');
-            $table->string('street');
-            $table->string('barangay');
-            $table->string('municipality');
             $table->string('province');
+            $table->string('municipality');
+            $table->string('barangay');
+            $table->string('street');
             $table->string('zip_code');
             $table->timestamps();
         });

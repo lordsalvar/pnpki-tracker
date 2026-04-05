@@ -4,7 +4,7 @@ namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum Gender: string implements HasLabel
+enum Sex: string implements HasLabel
 {
     case Male = 'male';
     case Female = 'female';
@@ -12,8 +12,8 @@ enum Gender: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            Gender::Male => 'Male',
-            Gender::Female => 'Female',
+            Sex::Male => 'Male',
+            Sex::Female => 'Female',
         };
     }
 }

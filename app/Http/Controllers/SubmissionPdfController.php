@@ -18,7 +18,7 @@ class SubmissionPdfController extends Controller
 
         $submissionId = $request->query('submission_id');
         $submission = FormSubmission::with(['address', 'attachments'])->findOrFail($submissionId);
-        $genderLabel = $submission->gender instanceof \BackedEnum ? ucfirst($submission->gender->value) : ucfirst($submission->gender);
+        $sexLabel = $submission->sex?->getLabel() ?? '—';
 
         // Resolve PSGC names from codes
         $psgc = app(PsgcService::class);
@@ -33,7 +33,7 @@ class SubmissionPdfController extends Controller
             'provinceName' => $provinceName,
             'municipalityName' => $municipalityName,
             'barangayName' => $barangayName,
-            'genderLabel' => $genderLabel,
+            'sexLabel' => $sexLabel,
         ])
             ->format('a4')
             ->name($filename)

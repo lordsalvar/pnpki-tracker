@@ -3,12 +3,14 @@
 namespace App\Filament\Public\Pages;
 
 use App\Actions\FormSubmission\StorePublicFormSubmissionAction;
-use App\Enums\Gender;
+use App\Enums\CivilStatus;
+use App\Enums\Sex;
 use App\Models\EmployeeForm;
 use App\Models\FormSubmission;
 use App\Services\PsgcService;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -74,10 +76,21 @@ class PublicEmployeeForm extends Page implements HasForms
     public function mount(string $publicId): void
     {
         $this->formModel = EmployeeForm::query()
+            ->with('office')
             ->where('public_id', $publicId)
             ->where('is_active', true)
             ->firstOrFail();
-        $this->form->fill();
+
+        $office = $this->formModel->office;
+        $organization = match (true) {
+            $office !== null && filled($office->acronym) => "{$office->acronym} — {$office->name}",
+            $office !== null => $office->name,
+            default => $this->formModel->name ?? 'Employee registration',
+        };
+
+        $this->form->fill([
+            'organization' => $organization,
+        ]);
     }
 
     public function form(Schema $form): Schema
@@ -98,13 +111,37 @@ class PublicEmployeeForm extends Page implements HasForms
         return $form
             ->components([
                 Wizard::make([
-                    Step::make('Personal & contact')
-                        ->description('Legal name, suffix, email, and phone')
+                    Step::make('Personal')
+                        ->description('Legal name, sex, birth details, and civil status')
                         ->icon(Heroicon::OutlinedUser)
                         ->schema([
                             Section::make('Personal information')
                                 ->columns(2)
                                 ->schema([
+                                    Select::make('sex')
+                                        ->label('Sex')
+                                        ->options(Sex::class)
+                                        ->required()
+                                        ->native(false)
+                                        ->live()
+                                        ->afterStateUpdated(function (Get $get, Set $set): void {
+                                            if (! $this->maidenNameIsApplicable($get)) {
+                                                $set('maiden_name', null);
+                                            }
+                                        }),
+
+                                    Select::make('civil_status')
+                                        ->label('Civil Status')
+                                        ->options(CivilStatus::class)
+                                        ->required()
+                                        ->native(false)
+                                        ->live()
+                                        ->afterStateUpdated(function (Get $get, Set $set): void {
+                                            if (! $this->maidenNameIsApplicable($get)) {
+                                                $set('maiden_name', null);
+                                            }
+                                        }),
+
                                     TextInput::make('firstname')
                                         ->label('First Name')
                                         ->required()
@@ -147,9 +184,134 @@ class PublicEmployeeForm extends Page implements HasForms
                                         ])
                                         ->required()
                                         ->native(false),
+
+                                    TextInput::make('maiden_name')
+                                        ->label('Maiden Name')
+                                        ->visible(fn (Get $get) => $this->maidenNameIsApplicable($get))
+                                        ->required(fn (Get $get) => $this->maidenNameIsApplicable($get))
+                                        ->dehydrated(fn (Get $get) => $this->maidenNameIsApplicable($get))
+                                        ->default(null)
+                                        ->rule($this->noEmojiRule())
+                                        ->rule($this->noSymbolRule())
+                                        ->maxLength(255),
+
+                                ]),
+
+                            Section::make('Birth information')
+                                ->columns(2)
+                                ->schema([
+                                    DatePicker::make('birth_date')
+                                        ->label('Date of Birth')
+                                        ->required()
+                                        ->native(false)
+                                        ->displayFormat('M d, Y')
+                                        ->maxDate(now())
+                                        ->minDate(now()->subYears(100))
+                                        ->validationMessages([
+                                            'max' => 'The date of birth cannot be in the future.',
+                                        ]),
+
+                                    TextInput::make('birth_place_country')
+                                        ->label('Country of Birth')
+                                        ->required()
+                                        ->rule($this->noEmojiRule())
+                                        ->rule($this->noSymbolRule())
+                                        ->maxLength(255),
+
+                                    TextInput::make('birth_place_province')
+                                        ->label('Province / State of Birth')
+                                        ->required()
+                                        ->rule($this->noEmojiRule())
+                                        ->rule($this->noSymbolRule())
+                                        ->maxLength(255)
+                                        ->columnSpanFull(),
+                                ]),
+
+                        ]),
+
+                    Step::make('Address & contact')
+                        ->description('Residential address and how to reach you')
+                        ->icon(Heroicon::OutlinedMapPin)
+                        ->schema([
+                            Section::make('Residential address')
+                                ->description('Current address in the Philippines')
+                                ->columns(2)
+                                ->schema([
+                                    TextInput::make('house_no')
+                                        ->label('House No.')
+                                        ->required()
+                                        ->rule($this->noEmojiRule())
+                                        ->rule($this->noSymbolRule())
+                                        ->maxLength(255),
+
+                                    TextInput::make('street')
+                                        ->label('Street')
+                                        ->required()
+                                        ->rule($this->noEmojiRule())
+                                        ->rule($this->noSymbolRule())
+                                        ->maxLength(255),
+
+                                    Select::make('province')
+                                        ->label('Province')
+                                        ->options(fn () => app(PsgcService::class)->provinces())
+                                        ->searchable()
+                                        ->preload()
+                                        ->live()
+                                        ->afterStateUpdated(function (Set $set) {
+                                            $set('municipality', null);
+                                            $set('barangay', null);
+                                        })
+                                        ->required(),
+
+                                    Select::make('municipality')
+                                        ->label('City / Municipality')
+                                        ->options(function (Get $get) {
+                                            $province = $get('province');
+                                            if (! $province) {
+                                                return [];
+                                            }
+
+                                            return app(PsgcService::class)->municipalities($province);
+                                        })
+                                        ->searchable()
+                                        ->preload()
+                                        ->live()
+                                        ->afterStateUpdated(fn (Set $set) => $set('barangay', null))
+                                        ->disabled(fn (Get $get) => ! $get('province'))
+                                        ->required(),
+
+                                    Select::make('barangay')
+                                        ->label('Barangay')
+                                        ->options(function (Get $get) {
+                                            $municipality = $get('municipality');
+                                            if (! $municipality) {
+                                                return [];
+                                            }
+
+                                            return app(PsgcService::class)->barangays($municipality);
+                                        })
+                                        ->searchable()
+                                        ->live()
+                                        ->disabled(fn (Get $get) => ! $get('municipality'))
+                                        ->required(),
+
+                                    TextInput::make('zip_code')
+                                        ->label('ZIP Code')
+                                        ->numeric()
+                                        ->minLength(4)
+                                        ->maxLength(4)
+                                        ->required()
+                                        ->validationMessages([
+                                            'regex' => 'numbers should only contain 4 digits',
+                                        ])
+                                        ->extraInputAttributes([
+                                            'inputmode' => 'numeric',
+                                            'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 4)",
+                                        ]),
                                 ]),
 
                             Section::make('Contact information')
+                                ->description('For updates about this registration')
                                 ->columns(2)
                                 ->schema([
                                     TextInput::make('email')
@@ -178,100 +340,26 @@ class PublicEmployeeForm extends Page implements HasForms
                                 ]),
                         ]),
 
-                    Step::make('Address')
-                        ->description('Complete location details')
-                        ->icon(Heroicon::OutlinedMapPin)
-                        ->columns(2)
-                        ->schema([
-                            TextInput::make('house_no')
-                                ->label('House No.')
-                                ->required()
-                                ->rule($this->noEmojiRule())
-                                ->rule($this->noSymbolRule())
-                                ->maxLength(255),
-
-                            TextInput::make('street')
-                                ->label('Street')
-                                ->required()
-                                ->rule($this->noEmojiRule())
-                                ->rule($this->noSymbolRule())
-                                ->maxLength(255),
-
-                            Select::make('province')
-                                ->label('Province')
-                                ->options(fn () => app(PsgcService::class)->provinces())
-                                ->searchable()
-                                ->preload()
-                                ->live()
-                                ->afterStateUpdated(function (Set $set) {
-                                    $set('municipality', null);
-                                    $set('barangay', null);
-                                })
-                                ->required(),
-
-                            Select::make('municipality')
-                                ->label('City / Municipality')
-                                ->options(function (Get $get) {
-                                    $province = $get('province');
-                                    if (! $province) {
-                                        return [];
-                                    }
-
-                                    return app(PsgcService::class)->municipalities($province);
-                                })
-                                ->searchable()
-                                ->preload()
-                                ->live()
-                                ->afterStateUpdated(fn (Set $set) => $set('barangay', null))
-                                ->disabled(fn (Get $get) => ! $get('province'))
-                                ->required(),
-
-                            Select::make('barangay')
-                                ->label('Barangay')
-                                ->options(function (Get $get) {
-                                    $municipality = $get('municipality');
-                                    if (! $municipality) {
-                                        return [];
-                                    }
-
-                                    return app(PsgcService::class)->barangays($municipality);
-                                })
-                                ->searchable()
-                                ->live()
-                                ->disabled(fn (Get $get) => ! $get('municipality'))
-                                ->required(),
-
-                            TextInput::make('zip_code')
-                                ->label('ZIP Code')
-                                ->numeric()
-                                ->minLength(4)
-                                ->maxLength(4)
-                                ->required()
-                                ->validationMessages([
-                                    'regex' => 'numbers should only contain 4 digits',
-                                ])
-                                ->extraInputAttributes([
-                                    'inputmode' => 'numeric',
-                                    'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 4)",
-                                ]),
-                        ]),
-
                     Step::make('Employment')
-                        ->description('Unit, gender, and TIN')
+                        ->description('Organization, your unit, and TIN')
                         ->icon(Heroicon::OutlinedBriefcase)
                         ->columns(2)
                         ->schema([
+                            TextInput::make('organization')
+                                ->label('Organization')
+                                ->disabled()
+                                ->dehydrated()
+                                ->maxLength(255)
+                                ->columnSpanFull(),
+
                             TextInput::make('organizational_unit')
                                 ->label('Organizational Unit')
                                 ->required()
                                 ->rule($this->noEmojiRule())
                                 ->rule($this->noSymbolRule())
-                                ->maxLength(255),
-
-                            Select::make('gender')
-                                ->label('Gender')
-                                ->options(Gender::class)
-                                ->required(),
+                                ->maxLength(255)
+                                ->helperText('Your department, division, or station within this organization.')
+                                ->columnSpanFull(),
 
                             TextInput::make('tin_number')
                                 ->label('TIN Number')
@@ -562,6 +650,22 @@ class PublicEmployeeForm extends Page implements HasForms
 
             return "{$officeFolder}/Employees/{$employeeFolder}/{$filename}";
         };
+    }
+
+    private function maidenNameIsApplicable(Get $get): bool
+    {
+        $sex = $get('sex');
+        $civilStatus = $get('civil_status');
+
+        $isFemale = $sex instanceof Sex
+            ? $sex === Sex::Female
+            : $sex === Sex::Female->value;
+
+        $isMarried = $civilStatus instanceof CivilStatus
+            ? $civilStatus === CivilStatus::Married
+            : $civilStatus === CivilStatus::Married->value;
+
+        return $isFemale && $isMarried;
     }
 
     private function noEmojiRule(): string

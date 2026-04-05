@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\FormSubmissions\Schemas;
 
-use App\Enums\Gender;
+use App\Enums\Sex;
 use App\Services\PsgcService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -169,6 +169,10 @@ class FormSubmissionForm
                     ->preload()
                     ->required(),
 
+                TextInput::make('organization')
+                    ->label('Organization')
+                    ->maxLength(255),
+
                 TextInput::make('organizational_unit')
                     ->label('Organizational Unit')
                     ->required()
@@ -176,9 +180,9 @@ class FormSubmissionForm
                     ->rule(self::noSymbolRule())
                     ->maxLength(255),
 
-                Select::make('gender')
-                    ->label('Gender')
-                    ->options(Gender::class)
+                Select::make('sex')
+                    ->label('Sex')
+                    ->options(Sex::class)
                     ->required(),
 
                 TextInput::make('tin_number')

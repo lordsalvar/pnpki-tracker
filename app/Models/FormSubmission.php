@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\CivilStatus;
 use App\Enums\FormSubmissionStatus;
-use App\Enums\Gender;
+use App\Enums\Sex;
 use App\Services\FormSubmissionReferenceNumberGenerator;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -36,23 +37,31 @@ class FormSubmission extends Model
         'lastname',
         'middlename',
         'suffix',
-        'email',
+        'maiden_name',
+        'birth_date',
+        'birth_place_country',
+        'birth_place_province',
+        'civil_status',
         'phone_number',
+        'email',
         'batch_id',
         'address_id',
         'office_id',
         'form_id',
+        'organization',
         'organizational_unit',
-        'gender',
+        'sex',
         'tin_number',
         'status',
         'flagged_by',
     ];
 
     protected $casts = [
-        'gender' => Gender::class,
+        'sex' => Sex::class,
         'status' => FormSubmissionStatus::class,
         'flagged_by' => 'string',
+        'birth_date' => 'date',
+        'civil_status' => CivilStatus::class,
     ];
 
     public function getFullNameAttribute(): string

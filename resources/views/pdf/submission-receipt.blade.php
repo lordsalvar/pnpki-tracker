@@ -407,8 +407,34 @@
       </tr>
       <tr>
         <td class="field full-row" colspan="4">
-          <div class="field-label">Gender</div>
-          <div class="field-value">{{ $genderLabel }}</div>
+          <div class="field-label">Maiden Name</div>
+          <div class="field-value">{{ $submission->maiden_name ?: '—' }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="field" colspan="2">
+          <div class="field-label">Sex</div>
+          <div class="field-value">{{ $sexLabel }}</div>
+        </td>
+        <td class="field no-border-right" colspan="2">
+          <div class="field-label">Civil Status</div>
+          <div class="field-value">{{ $submission->civil_status?->getLabel() ?? '—' }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="field" colspan="2">
+          <div class="field-label">Date of Birth</div>
+          <div class="field-value">{{ $submission->birth_date?->format('F j, Y') ?? '—' }}</div>
+        </td>
+        <td class="field no-border-right" colspan="2">
+          <div class="field-label">Country of Birth</div>
+          <div class="field-value">{{ $submission->birth_place_country ?: '—' }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="field full-row" colspan="4">
+          <div class="field-label">Province / State of Birth</div>
+          <div class="field-value">{{ $submission->birth_place_province ?: '—' }}</div>
         </td>
       </tr>
     </table>
@@ -499,6 +525,12 @@
       </div>
     </div>
     <table class="fields-table cols-2">
+      <tr>
+        <td class="field full-row" colspan="2">
+          <div class="field-label">Organization</div>
+          <div class="field-value">{{ $submission->organization ?: '—' }}</div>
+        </td>
+      </tr>
       <tr>
         <td class="field">
           <div class="field-label">Organizational Unit</div>
