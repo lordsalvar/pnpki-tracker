@@ -10,6 +10,7 @@ use App\Models\FormSubmission;
 use App\Services\PsgcService;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -19,6 +20,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Panel;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -112,11 +114,42 @@ class PublicEmployeeForm extends Page implements HasForms
             ->components([
                 Wizard::make([
                     Step::make('Personal')
-                        ->description('Legal name, sex, birth details, and civil status')
+                        ->description('Data privacy, then your legal name, sex, birth details, and civil status')
                         ->icon(Heroicon::OutlinedUser)
                         ->schema([
+                            Section::make('Data privacy (consent / agreement)')
+                                ->description('Acknowledge this notice before entering your information below.')
+                                ->schema([
+                                    Grid::make(12)
+                                        ->schema([
+                                            Checkbox::make('data_privacy_consent')
+                                                ->hiddenLabel()
+                                                ->inline(false)
+                                                ->accepted()
+                                                ->validationAttribute('data privacy consent')
+                                                ->live()
+                                                ->dehydrated(false)
+                                                ->columnSpan([
+                                                    'default' => 12,
+                                                    'sm' => 0.5,
+                                                ])
+                                                ->extraFieldWrapperAttributes([
+                                                    'class' => '!max-w-none w-full sm:max-w-[3.5rem]',
+                                                ])
+                                                ->extraInputAttributes([
+                                                    'class' => 'mt-1 size-5 shrink-0 cursor-pointer',
+                                                ]),
+                                            Html::make($this->dataPrivacyConsentHtml())
+                                                ->columnSpan([
+                                                    'default' => 12,
+                                                    'sm' => 10,
+                                                ]),
+                                        ]),
+                                ]),
+
                             Section::make('Personal information')
                                 ->columns(2)
+                                ->disabled(fn (Get $get) => ! (bool) $get('data_privacy_consent'))
                                 ->schema([
                                     Select::make('sex')
                                         ->label('Sex')
@@ -199,6 +232,7 @@ class PublicEmployeeForm extends Page implements HasForms
 
                             Section::make('Birth information')
                                 ->columns(2)
+                                ->disabled(fn (Get $get) => ! (bool) $get('data_privacy_consent'))
                                 ->schema([
                                     DatePicker::make('birth_date')
                                         ->label('Date of Birth')
@@ -650,6 +684,22 @@ class PublicEmployeeForm extends Page implements HasForms
 
             return "{$officeFolder}/Employees/{$employeeFolder}/{$filename}";
         };
+    }
+
+    private function dataPrivacyConsentHtml(): HtmlString
+    {
+        return new HtmlString(
+            '<div class="text-sm leading-relaxed text-gray-700 dark:text-gray-300">'
+            .'<p class="mb-2 font-semibold text-gray-900 dark:text-gray-100">Data Privacy (Consent/Agreement)</p>'
+            .'<p>I hereby authorize the Department of Information and Communications Technology (DICT) and recognize '
+            .'their responsibilities under the Republic Act No. 10173, also known as the Data Privacy Act of 2012, '
+            .'with respect to the data they collect, record, organize, update, use, consolidate or destruct from '
+            .'PNPKI applicants. The personal data obtained from this portal is entered and stored within the DICT '
+            .'authorized information and communications system and will only be accessed by the PNPKI RA Officers. '
+            .'The DICT have instituted appropriate organizational, technical and physical security measures to ensure '
+            .'the protection of the PNPKI applicants personal data.</p>'
+            .'</div>'
+        );
     }
 
     private function maidenNameIsApplicable(Get $get): bool
