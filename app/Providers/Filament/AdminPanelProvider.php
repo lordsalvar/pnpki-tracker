@@ -34,6 +34,10 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->colors([
                 'primary' => Color::Blue,
+                'gray' => array_replace(Color::Zinc, [
+                    50 => 'oklch(0.985 0.010 286)',  // same hue as yours, more chroma
+                    100 => 'oklch(0.962 0.012 286)',  // noticeably less flat/gray
+                ]),
             ])
             ->brandLogo(fn (): HtmlString => new HtmlString(
                 '<span class="block mx-auto text-xl font-black tracking-tight text-transparent w-fit bg-clip-text bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 dark:from-sky-300 dark:via-blue-400 dark:to-indigo-400">'
