@@ -4,14 +4,14 @@ namespace App\Filament\Resources\FormSubmissions\Pages;
 
 use App\Actions\Batch\AssignBatchAction;
 use App\Actions\Batch\UnAssignBatchAction;
+use App\Actions\FormSubmission\FlagNeedsRevisionFormSubmissionAction;
 use App\Actions\FormSubmission\UnFinalizeFormSubmissionAction;
-use App\Enums\ApplicationStatus;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
-use App\Enums\UserRole;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
 use App\Models\Batch;
+use App\Models\User;
 use App\Services\AttachmentRuleService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -72,15 +72,12 @@ class ViewFormSubmission extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Flag Needs Revision')
                 ->modalDescription('This will flag this submission for revision.')
-                ->visible(fn () => in_array(Auth::user()?->role, [UserRole::REPRESENTATIVE->value, UserRole::ADMIN->value])
-                    && $this->record->status === FormSubmissionStatus::FINALIZED
-                    && $this->record->batch?->status === BatchStatus::FINALIZED
-                    && $this->record->batch?->application_status !== ApplicationStatus::FOR_SUBMISSION
-                    && $this->record->flagged_by === null)
-                ->action(function () {
-                    $this->record->update([
-                        'flagged_by' => Auth::user()?->role,
-                    ]);
+                ->visible(fn (): bool => Auth::check() && Gate::allows('flagNeedsRevision', $this->record))
+                ->action(function (): void {
+                    $user = Auth::user();
+                    abort_unless($user instanceof User, 403);
+
+                    app(FlagNeedsRevisionFormSubmissionAction::class)->execute($this->record, $user);
 
                     Notification::make()
                         ->title('Submission flagged for revision.')
@@ -96,33 +93,13 @@ class ViewFormSubmission extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Unflag Needs Revision')
                 ->modalDescription('This will remove the revision flag from this submission.')
-                ->visible(function () {
-                    $role = Auth::user()?->role;
+                ->visible(fn (): bool => Auth::check() && Gate::allows('unflagNeedsRevision', $this->record))
+                ->action(function (): void {
+                    $user = Auth::user();
+                    abort_unless($user instanceof User, 403);
 
-                    if (! in_array($role, [UserRole::REPRESENTATIVE->value, UserRole::ADMIN->value], true)) {
-                        return false;
-                    }
+                    Gate::forUser($user)->authorize('unflagNeedsRevision', $this->record);
 
-                    // Only allow unflagging if the current user's role matches the flagged_by value
-                    if ($this->record->flagged_by !== $role) {
-                        return false;
-                    }
-
-                    if ($this->record->status !== FormSubmissionStatus::FINALIZED
-                        || $this->record->batch?->status !== BatchStatus::FINALIZED
-                        || $this->record->batch?->application_status === ApplicationStatus::FOR_SUBMISSION
-                        || $this->record->flagged_by === null) {
-                        return false;
-                    }
-
-                    if ($role === UserRole::REPRESENTATIVE->value
-                        && $this->record->batch?->application_status === ApplicationStatus::MODIFICATION_REQUESTED) {
-                        return false;
-                    }
-
-                    return true;
-                })
-                ->action(function () {
                     $this->record->update([
                         'flagged_by' => null,
                     ]);

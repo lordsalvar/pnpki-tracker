@@ -51,6 +51,62 @@ class FormSubmissionPolicy
     }
 
     /**
+     * Flag a finalized submission for revision (finalized batch, not yet for submission to DICT).
+     */
+    public function flagNeedsRevision(User $user, FormSubmission $formSubmission): bool
+    {
+        if (! in_array($user->role, [UserRole::REPRESENTATIVE->value, UserRole::ADMIN->value], true)) {
+            return false;
+        }
+
+        $formSubmission->loadMissing('batch');
+
+        if ($formSubmission->status !== FormSubmissionStatus::FINALIZED) {
+            return false;
+        }
+
+        if ($formSubmission->batch?->status !== BatchStatus::FINALIZED) {
+            return false;
+        }
+
+        if ($formSubmission->batch?->application_status === ApplicationStatus::FOR_SUBMISSION) {
+            return false;
+        }
+
+        return $formSubmission->flagged_by === null;
+    }
+
+    /**
+     * Clear the revision flag (only the role that flagged may unflag, with batch/status guards).
+     */
+    public function unflagNeedsRevision(User $user, FormSubmission $formSubmission): bool
+    {
+        if (! in_array($user->role, [UserRole::REPRESENTATIVE->value, UserRole::ADMIN->value], true)) {
+            return false;
+        }
+
+        if ($formSubmission->flagged_by !== $user->role) {
+            return false;
+        }
+
+        $formSubmission->loadMissing('batch');
+
+        if ($formSubmission->status !== FormSubmissionStatus::FINALIZED
+            || $formSubmission->batch?->status !== BatchStatus::FINALIZED
+            || $formSubmission->batch?->application_status === ApplicationStatus::FOR_SUBMISSION
+            || $formSubmission->flagged_by === null) {
+            return false;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value
+            && $formSubmission->batch?->application_status === ApplicationStatus::MODIFICATION_REQUESTED) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Revert a finalized submission to pending (not allowed once the parent batch is finalized).
      */
     public function unfinalize(User $user, FormSubmission $formSubmission): bool
