@@ -51,6 +51,30 @@ class FormSubmissionPolicy
     }
 
     /**
+     * Revert a finalized submission to pending (not allowed once the parent batch is finalized).
+     */
+    public function unfinalize(User $user, FormSubmission $formSubmission): bool
+    {
+        if ($formSubmission->status !== FormSubmissionStatus::FINALIZED) {
+            return false;
+        }
+
+        if ($formSubmission->batch?->status === BatchStatus::FINALIZED) {
+            return false;
+        }
+
+        if ($user->role === UserRole::ADMIN->value) {
+            return true;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value) {
+            return $formSubmission->office_id === $user->office_id;
+        }
+
+        return false;
+    }
+
+    /**
      * Determine whether the user can update the model.
      */
     public function update(User $user, FormSubmission $formSubmission): bool

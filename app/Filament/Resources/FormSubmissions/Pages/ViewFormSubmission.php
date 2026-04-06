@@ -4,6 +4,7 @@ namespace App\Filament\Resources\FormSubmissions\Pages;
 
 use App\Actions\Batch\AssignBatchAction;
 use App\Actions\Batch\UnAssignBatchAction;
+use App\Actions\FormSubmission\UnFinalizeFormSubmissionAction;
 use App\Enums\ApplicationStatus;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
@@ -17,6 +18,7 @@ use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class ViewFormSubmission extends ViewRecord
 {
@@ -41,6 +43,28 @@ class ViewFormSubmission extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('unfinalize')
+                ->label('Revert to pending')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading('Revert submission to pending?')
+                ->modalDescription('The submission will be editable again and can be finalized later. This is not available for submissions in a finalized batch.')
+                ->visible(fn (): bool => Gate::allows('unfinalize', $this->record))
+                ->action(function (): void {
+                    Gate::authorize('unfinalize', $this->record);
+
+                    app(UnFinalizeFormSubmissionAction::class)->execute($this->record);
+
+                    $this->record->refresh();
+
+                    Notification::make()
+                        ->title('Submission reverted to pending.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(FormSubmissionResource::getUrl('edit', ['record' => $this->record]));
+                }),
             Action::make('flag_needs_revision')
                 ->label('Flag Needs Revision')
                 ->icon('heroicon-o-flag')
