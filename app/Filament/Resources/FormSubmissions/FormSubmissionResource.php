@@ -11,6 +11,7 @@ use App\Filament\Resources\FormSubmissions\Pages\ListFormSubmissions;
 use App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission;
 use App\Filament\Resources\FormSubmissions\Schemas\FormSubmissionForm;
 use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
+use App\Filament\Resources\FormSubmissions\Widgets\FormSubmissionListStats;
 use App\Models\FormSubmission;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -87,6 +88,16 @@ class FormSubmissionResource extends Resource
     public static function getRelations(): array
     {
         return [];
+    }
+
+    /**
+     * @return array<class-string<\Filament\Widgets\Widget>>
+     */
+    public static function getWidgets(): array
+    {
+        return [
+            FormSubmissionListStats::class,
+        ];
     }
 
     public static function getPages(): array
