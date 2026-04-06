@@ -10,6 +10,11 @@ class ListFormSubmissions extends ListRecords
 {
     protected static string $resource = FormSubmissionResource::class;
 
+    public static function getNavigationSort(): ?int
+    {
+        return static::getResource()::getNavigationSort();
+    }
+
     protected function getHeaderActions(): array
     {
         return [

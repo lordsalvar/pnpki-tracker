@@ -21,6 +21,8 @@ class EmployeeFormResource extends Resource
 {
     protected static ?string $cluster = FormsCluster::class;
 
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = EmployeeForm::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShare;

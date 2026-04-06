@@ -10,6 +10,11 @@ class ListEmployeeForms extends ListRecords
 {
     protected static string $resource = EmployeeFormResource::class;
 
+    public static function getNavigationSort(): ?int
+    {
+        return static::getResource()::getNavigationSort();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
