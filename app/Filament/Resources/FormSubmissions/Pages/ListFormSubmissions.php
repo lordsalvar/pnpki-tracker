@@ -26,9 +26,9 @@ class ListFormSubmissions extends ListRecords
     /**
      * @return int | array<string, ?int>
      */
-    public function getHeaderWidgetsColumns(): int | array
+    public function getHeaderWidgetsColumns(): int|array
     {
-        return 3;
+        return 4;
     }
 
     protected function getHeaderActions(): array

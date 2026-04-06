@@ -23,25 +23,28 @@ class FormSubmissionListStats extends StatsOverviewWidget
      */
     protected function getStats(): array
     {
-        $pending = $this->scopedQuery()->where('status', FormSubmissionStatus::PENDING->value)->count();
-        $finalized = $this->scopedQuery()->where('status', FormSubmissionStatus::FINALIZED->value)->count();
-        $needsRevision = $this->scopedQuery()->where('status', FormSubmissionStatus::NEEDS_REVISION->value)->count();
+        $counts = $this->aggregatedCounts();
 
         return [
-            Stat::make('Pending', number_format($pending))
+            Stat::make('Pending', number_format($counts['pending']))
                 ->description('Awaiting review')
                 ->descriptionIcon(Heroicon::OutlinedClock)
                 ->color('warning'),
 
-            Stat::make('Finalized', number_format($finalized))
+            Stat::make('Finalized', number_format($counts['finalized']))
                 ->description('Completed')
                 ->descriptionIcon(Heroicon::OutlinedCheckCircle)
                 ->color('success'),
 
-            Stat::make('Needs revision', number_format($needsRevision))
+            Stat::make('Needs revision', number_format($counts['needs_revision']))
                 ->description('Action required')
                 ->descriptionIcon(Heroicon::OutlinedExclamationTriangle)
                 ->color('danger'),
+
+            Stat::make('Unassigned', number_format($counts['unassigned']))
+                ->description('No batch yet')
+                ->descriptionIcon(Heroicon::OutlinedRectangleStack)
+                ->color('gray'),
         ];
     }
 
@@ -56,5 +59,35 @@ class FormSubmissionListStats extends StatsOverviewWidget
         }
 
         return $query;
+    }
+
+    /**
+     * One round-trip: conditional aggregates over the scoped submission set.
+     *
+     * @return array{pending: int, finalized: int, needs_revision: int, unassigned: int}
+     */
+    private function aggregatedCounts(): array
+    {
+        $pending = FormSubmissionStatus::PENDING->value;
+        $finalized = FormSubmissionStatus::FINALIZED->value;
+        $needsRevision = FormSubmissionStatus::NEEDS_REVISION->value;
+
+        $row = $this->scopedQuery()
+            ->clone()
+            ->selectRaw(
+                'SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_count, '.
+                'SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as finalized_count, '.
+                'SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as needs_revision_count, '.
+                'SUM(CASE WHEN batch_id IS NULL THEN 1 ELSE 0 END) as unassigned_count',
+                [$pending, $finalized, $needsRevision]
+            )
+            ->first();
+
+        return [
+            'pending' => (int) ($row->pending_count ?? 0),
+            'finalized' => (int) ($row->finalized_count ?? 0),
+            'needs_revision' => (int) ($row->needs_revision_count ?? 0),
+            'unassigned' => (int) ($row->unassigned_count ?? 0),
+        ];
     }
 }
