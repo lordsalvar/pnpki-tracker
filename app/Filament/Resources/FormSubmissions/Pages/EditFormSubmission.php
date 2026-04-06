@@ -61,7 +61,7 @@ class EditFormSubmission extends EditRecord
                         ->success()
                         ->send();
 
-                    $this->refreshFormWithPersistedState();
+                    $this->redirect(FormSubmissionResource::getUrl('view', ['record' => $this->record]));
                 }),
             Action::make('assign_batch')
                 ->label('Assign to Batch')

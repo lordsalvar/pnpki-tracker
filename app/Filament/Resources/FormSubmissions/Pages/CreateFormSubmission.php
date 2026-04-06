@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\FormSubmissions\Pages;
 
+use App\Enums\FormSubmissionStatus;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
 use App\Models\Attachment;
+use App\Services\AttachmentRuleService;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateFormSubmission extends CreateRecord
@@ -13,6 +15,10 @@ class CreateFormSubmission extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        if (empty($data['status'] ?? null)) {
+            $data['status'] = FormSubmissionStatus::PENDING->value;
+        }
+
         $address = Address::create([
             'house_no' => $data['house_no'],
             'street' => $data['street'],
@@ -34,14 +40,9 @@ class CreateFormSubmission extends CreateRecord
     {
         $data = $this->form->getRawState();
         $formSubmission = $this->getRecord();
-        $combo = $data['id_combo'];
 
-        $fileKeys = match ($combo) {
-            'national_id' => ['upload_pnpki', 'upload_national_id'],
-            'passport_umid' => ['upload_pnpki', 'upload_passport', 'upload_umid'],
-            'valid_ids' => ['upload_pnpki', 'upload_id1', 'upload_id2'],
-            default => [],
-        };
+        $ruleService = app(AttachmentRuleService::class);
+        $fileKeys = $ruleService->activeFieldsForCombo($data['id_combo'] ?? null);
 
         foreach ($fileKeys as $fieldName) {
             $fieldValue = $data[$fieldName] ?? [];
@@ -50,12 +51,18 @@ class CreateFormSubmission extends CreateRecord
                 continue;
             }
 
-            $filePath = array_values($fieldValue)[0];
+            $filePath = is_array($fieldValue) ? array_values($fieldValue)[0] : $fieldValue;
+
+            $type = $ruleService->fileTypeForField($fieldName);
+
+            if ($type === null) {
+                continue;
+            }
 
             Attachment::create([
-                'employee_id' => $formSubmission->id,
-                'file_type' => $fieldName,
-                'file_name' => basename($filePath),
+                'form_submission_id' => $formSubmission->id,
+                'file_type' => $type,
+                'file_name' => basename((string) $filePath),
                 'file_path' => $filePath,
             ]);
         }

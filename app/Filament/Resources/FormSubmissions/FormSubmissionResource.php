@@ -39,6 +39,7 @@ class FormSubmissionResource extends Resource
             'lastname',
             'middlename',
             'email',
+            'reference_number',
         ];
     }
 
@@ -48,7 +49,7 @@ class FormSubmissionResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with('office');
+        $query = parent::getEloquentQuery()->with(['office', 'employeeForm']);
         $user = Auth::user();
 
         if ($user?->role === UserRole::REPRESENTATIVE->value) {

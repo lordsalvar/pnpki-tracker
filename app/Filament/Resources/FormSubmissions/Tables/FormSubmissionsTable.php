@@ -24,6 +24,13 @@ class FormSubmissionsTable
         return $table
             ->deferFilters(false)
             ->columns([
+                TextColumn::make('reference_number')
+                    ->label('Ref.')
+                    ->searchable()
+                    ->toggleable()
+                    ->copyable()
+                    ->weight('medium'),
+
                 TextColumn::make('fullname')
                     ->label('Full Name')
                     ->description(fn ($state, $record): ?string => $record->flagged_by === Auth::user()?->role

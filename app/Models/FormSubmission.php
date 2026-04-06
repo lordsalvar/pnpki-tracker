@@ -12,6 +12,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Stored fields include public-registration-only data ({@see maiden_name}, birth place, {@see form_id})
+ * that the admin form now surfaces; {@see reference_number} is assigned on create.
+ */
 class FormSubmission extends Model
 {
     use HasUlids;

@@ -2,95 +2,164 @@
 
 namespace App\Filament\Resources\FormSubmissions\Schemas;
 
+use App\Enums\CivilStatus;
 use App\Enums\Sex;
 use App\Services\PsgcService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Group;
+use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 class FormSubmissionForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
-            ->columns(2)
             ->components([
-                TextInput::make('firstname')
-                    ->label('First Name')
-                    ->required()
-                    ->rule(self::noEmojiRule())
-                    ->rule(self::noSymbolRule())
-                    ->maxLength(255),
-                TextInput::make('lastname')
-                    ->label('Last Name')
-                    ->required()
-                    ->rule(self::noEmojiRule())
-                    ->rule(self::noSymbolRule())
-                    ->maxLength(255),
-                TextInput::make('middlename')
-                    ->required()
-                    ->rule(self::noEmojiRule())
-                    ->rule(self::noSymbolRule())
-                    ->maxLength(255)
-                    ->suffixAction(
-                        Action::make('set_na')
-                            ->label('N/A')
-                            ->link()
-                            ->tooltip('Click to set Middle Name as N/A')
-                            ->color('gray')
-                            ->action(fn (Set $set) => $set('middlename', 'N/A'))
-                            ->visible(fn ($livewire) => ! $livewire instanceof \App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission)
-                    ),
-                TextInput::make('suffix')
-                    ->label('Suffix')
-                    ->placeholder('Jr., Sr., III')
-                    ->required()
-                    ->rule(self::noEmojiRule())
-                    ->rule(self::noSymbolRule())
-                    ->maxLength(20)
-                    ->suffixAction(
-                        Action::make('set_na')
-                            ->label('N/A')
-                            ->link()
-                            ->tooltip('Click to set Suffix as N/A')
-                            ->color('gray')
-                            ->action(fn (Set $set) => $set('suffix', 'N/A'))
-                            ->visible(fn ($livewire) => ! $livewire instanceof \App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission)
-                    ),
-
-                TextInput::make('email')
-                    ->label('Email Address')
-                    ->email()
-                    ->required()
-                    ->unique(ignoreRecord: true)
-                    ->rule(self::noEmojiRule())
-                    ->maxLength(255),
-
-                TextInput::make('phone_number')
-                    ->label('Phone Number')
-                    ->tel()
-                    ->placeholder('e.g. 09171234567')
-                    ->required()
-                    ->rule(self::noEmojiRule())
-                    ->minLength(11)
-                    ->maxLength(11)
-                    ->rule('regex:/^09\d{9}$/')
-                    ->validationMessages([
-                        'regex' => 'numbers should start with 09',
+                Section::make('Submission details')
+                    ->description('System reference and link to the public registration form, when applicable.')
+                    ->icon(Heroicon::OutlinedClipboardDocumentList)
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('reference_number')
+                            ->label('Reference number')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->placeholder('Assigned when the record is saved')
+                            ->visible(fn ($livewire) => ! $livewire instanceof CreateRecord),
+                        Select::make('form_id')
+                            ->label('Source employee form')
+                            ->relationship(
+                                'employeeForm',
+                                'name',
+                                fn ($query) => $query->orderBy('name')
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('None — manual entry')
+                            ->helperText('Applicants who used a published employee registration link are tied to that form.'),
                     ])
-                    ->extraInputAttributes([
-                        'inputmode' => 'numeric',
-                        'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 11)",
-                    ]),
+                    ->columnSpanFull(),
 
-                Group::make()
-                    ->columnSpan(2)
+                Section::make('Personal information')
+                    ->description('Legal name, sex, and contact details for this applicant.')
+                    ->icon(Heroicon::OutlinedUser)
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('firstname')
+                            ->label('First Name')
+                            ->required()
+                            ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
+                            ->maxLength(255),
+                        TextInput::make('lastname')
+                            ->label('Last Name')
+                            ->required()
+                            ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
+                            ->maxLength(255),
+                        TextInput::make('middlename')
+                            ->required()
+                            ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
+                            ->maxLength(255)
+                            ->suffixAction(
+                                Action::make('set_na')
+                                    ->label('N/A')
+                                    ->link()
+                                    ->tooltip('Click to set Middle Name as N/A')
+                                    ->color('gray')
+                                    ->action(fn (Set $set) => $set('middlename', 'N/A'))
+                                    ->visible(fn ($livewire) => ! $livewire instanceof \App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission)
+                            ),
+                        TextInput::make('suffix')
+                            ->label('Suffix')
+                            ->placeholder('Jr., Sr., III')
+                            ->required()
+                            ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
+                            ->maxLength(20)
+                            ->suffixAction(
+                                Action::make('set_na')
+                                    ->label('N/A')
+                                    ->link()
+                                    ->tooltip('Click to set Suffix as N/A')
+                                    ->color('gray')
+                                    ->action(fn (Set $set) => $set('suffix', 'N/A'))
+                                    ->visible(fn ($livewire) => ! $livewire instanceof \App\Filament\Resources\FormSubmissions\Pages\ViewFormSubmission)
+                            ),
+                        Select::make('sex')
+                            ->label('Sex')
+                            ->options(Sex::class)
+                            ->required(),
+                        TextInput::make('email')
+                            ->label('Email Address')
+                            ->email()
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->rule(self::noEmojiRule())
+                            ->maxLength(255),
+                        TextInput::make('phone_number')
+                            ->label('Phone Number')
+                            ->tel()
+                            ->placeholder('e.g. 09171234567')
+                            ->required()
+                            ->rule(self::noEmojiRule())
+                            ->minLength(11)
+                            ->maxLength(11)
+                            ->rule('regex:/^09\d{9}$/')
+                            ->validationMessages([
+                                'regex' => 'numbers should start with 09',
+                            ])
+                            ->extraInputAttributes([
+                                'inputmode' => 'numeric',
+                                'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 11)",
+                            ]),
+                    ])
+                    ->columnSpanFull(),
+
+                Section::make('Birth and civil status')
+                    ->description('Collected from the public registration form. Complete for manual entries where you have this information.')
+                    ->icon(Heroicon::OutlinedCalendarDays)
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('maiden_name')
+                            ->label('Maiden name')
+                            ->maxLength(255)
+                            ->nullable(),
+                        Select::make('civil_status')
+                            ->label('Civil status')
+                            ->options(CivilStatus::class)
+                            ->required()
+                            ->native(false),
+                        DatePicker::make('birth_date')
+                            ->label('Date of birth')
+                            ->native(false)
+                            ->displayFormat('M d, Y')
+                            ->maxDate(now())
+                            ->minDate(now()->subYears(100)),
+                        TextInput::make('birth_place_country')
+                            ->label('Country of birth')
+                            ->maxLength(255)
+                            ->nullable(),
+                        TextInput::make('birth_place_province')
+                            ->label('Province / state of birth')
+                            ->maxLength(255)
+                            ->nullable()
+                            ->columnSpanFull(),
+                    ])
+                    ->columnSpanFull(),
+
+                Section::make('Residential address')
+                    ->description('Select province, city or municipality, and barangay in order. Then enter street-level details.')
+                    ->icon(Heroicon::OutlinedMapPin)
                     ->columns(2)
                     ->schema([
                         Select::make('province')
@@ -158,43 +227,46 @@ class FormSubmissionForm
                             ->rule(self::noEmojiRule())
                             ->rule(self::noSymbolRule())
                             ->maxLength(255),
+                    ])
+                    ->columnSpanFull(),
 
-                    ]),
+                Section::make('Employment and tax')
+                    ->description('Office assignment, organization, and taxpayer identification.')
+                    ->icon(Heroicon::OutlinedBuildingOffice2)
+                    ->columns(2)
+                    ->schema([
+                        Select::make('office_id')
+                            ->label('Office')
+                            ->relationship('office', 'name')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->acronym)
+                            ->searchable()
+                            ->preload()
+                            ->required(),
 
-                Select::make('office_id')
-                    ->label('Office')
-                    ->relationship('office', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->acronym)
-                    ->searchable()
-                    ->preload()
-                    ->required(),
+                        TextInput::make('organization')
+                            ->label('Organization')
+                            ->maxLength(255),
 
-                TextInput::make('organization')
-                    ->label('Organization')
-                    ->maxLength(255),
+                        TextInput::make('organizational_unit')
+                            ->label('Organizational Unit')
+                            ->required()
+                            ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
+                            ->maxLength(255),
 
-                TextInput::make('organizational_unit')
-                    ->label('Organizational Unit')
-                    ->required()
-                    ->rule(self::noEmojiRule())
-                    ->rule(self::noSymbolRule())
-                    ->maxLength(255),
+                        TextInput::make('tin_number')
+                            ->label('TIN Number')
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->rule(self::noEmojiRule())
+                            ->rule(self::noSymbolRule())
+                            ->maxLength(20),
+                    ])
+                    ->columnSpanFull(),
 
-                Select::make('sex')
-                    ->label('Sex')
-                    ->options(Sex::class)
-                    ->required(),
-
-                TextInput::make('tin_number')
-                    ->label('TIN Number')
-                    ->required()
-                    ->unique(ignoreRecord: true)
-                    ->rule(self::noEmojiRule())
-                    ->rule(self::noSymbolRule())
-                    ->maxLength(20),
-
-                Section::make('Document Attachments')
-                    ->columnSpan(2)
+                Section::make('Document attachments')
+                    ->description('ID combination is fixed after submission. Replace PDFs as needed; each file must be PDF, max 5 MB.')
+                    ->icon(Heroicon::OutlinedDocumentArrowUp)
                     ->columns(2)
                     ->schema([
                         Select::make('id_combo')
@@ -344,7 +416,8 @@ class FormSubmissionForm
                             ->required()
                             ->columnSpan(1)
                             ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
-                    ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 
