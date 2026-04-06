@@ -167,11 +167,8 @@ class ViewFormSubmission extends ViewRecord
                 ->label('Remove from Batch')
                 ->icon('heroicon-o-archive-box-x-mark')
                 ->color('danger')
-                ->visible(function () {
-                    return $this->record->batch_id !== null
-                        && $this->record->status !== FormSubmissionStatus::FINALIZED
-                        && $this->record->batch?->status !== BatchStatus::FINALIZED;
-                })
+                ->visible(fn (): bool => $this->record->batch_id !== null
+                    && $this->record->batch?->status !== BatchStatus::FINALIZED)
                 ->requiresConfirmation()
                 ->action(function () {
                     app(UnAssignBatchAction::class)->execute($this->record);

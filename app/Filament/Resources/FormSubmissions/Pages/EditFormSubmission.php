@@ -107,7 +107,8 @@ class EditFormSubmission extends EditRecord
                 ->label('Remove from Batch')
                 ->icon('heroicon-o-archive-box-x-mark')
                 ->color('danger')
-                ->visible(fn () => $this->record->batch_id !== null)
+                ->visible(fn (): bool => $this->record->batch_id !== null
+                    && $this->record->batch?->status !== BatchStatus::FINALIZED)
                 ->requiresConfirmation()
                 ->action(function () {
                     app(UnAssignBatchAction::class)->execute($this->record);
