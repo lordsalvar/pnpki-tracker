@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Batches\Pages;
 
+use App\Actions\Batch\AcceptModificationRequestBatchAction;
+use App\Actions\Batch\RequestModificationBatchAction;
 use App\Actions\FinalizeBatchAction;
 use App\Enums\ApplicationStatus;
 use App\Enums\BatchStatus;
@@ -14,6 +16,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
+use InvalidArgumentException;
 
 class ViewBatch extends ViewRecord
 {
@@ -134,13 +137,15 @@ class ViewBatch extends ViewRecord
                     && $this->record->application_status !== ApplicationStatus::MODIFICATION_REQUESTED
                     && $this->record->application_status !== ApplicationStatus::FOR_SUBMISSION)
                 ->action(function () {
-                    $this->record->update([
-                        'application_status' => ApplicationStatus::MODIFICATION_REQUESTED->value,
-                    ]);
+                    try {
+                        app(RequestModificationBatchAction::class)->execute($this->record);
+                    } catch (InvalidArgumentException $exception) {
+                        Notification::make()
+                            ->title($exception->getMessage())
+                            ->danger()
+                            ->send();
 
-                    $admins = \App\Models\User::where('role', UserRole::ADMIN->value)->get();
-                    foreach ($admins as $admin) {
-                        $admin->notify(new \App\Notifications\ModificationRequestedNotification($this->record));
+                        return;
                     }
 
                     $this->refreshFormData(['application_status']);
@@ -161,19 +166,16 @@ class ViewBatch extends ViewRecord
                     && $this->record->application_status === ApplicationStatus::MODIFICATION_REQUESTED
                     && $this->record->application_status !== ApplicationStatus::FOR_SUBMISSION)
                 ->action(function () {
-                    $this->record->update([
-                        'application_status' => null,
-                        'status' => BatchStatus::NEEDS_REVISION->value,
-                    ]);
+                    try {
+                        app(AcceptModificationRequestBatchAction::class)->execute($this->record);
+                    } catch (InvalidArgumentException $exception) {
+                        Notification::make()
+                            ->title($exception->getMessage())
+                            ->danger()
+                            ->send();
 
-                    $this->record->user?->notify(new BatchNeedsRevisionNotification($this->record));
-
-                    $this->record->formSubmissions()
-                        ->where('flagged_by', UserRole::REPRESENTATIVE->value)
-                        ->update([
-                            'status' => FormSubmissionStatus::NEEDS_REVISION->value,
-                            'flagged_by' => null,
-                        ]);
+                        return;
+                    }
 
                     $this->refreshFormData(['application_status', 'status']);
 
