@@ -59,6 +59,10 @@ class FormSubmissionPolicy
             return false;
         }
 
+        if ($user->role === UserRole::REPRESENTATIVE->value && $formSubmission->status !== FormSubmissionStatus::FINALIZED) {
+            return false;
+        }
+
         $formSubmission->loadMissing('batch');
 
         if ($formSubmission->status !== FormSubmissionStatus::FINALIZED) {
@@ -82,6 +86,10 @@ class FormSubmissionPolicy
     public function unflagNeedsRevision(User $user, FormSubmission $formSubmission): bool
     {
         if (! in_array($user->role, [UserRole::REPRESENTATIVE->value, UserRole::ADMIN->value], true)) {
+            return false;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value && $formSubmission->status !== FormSubmissionStatus::FINALIZED) {
             return false;
         }
 

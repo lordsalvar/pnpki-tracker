@@ -39,6 +39,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['office_id', 'firstname', 'phone_number'], 'unique_submission_per_office');
+            $table->index('status', 'form_submissions_status_index');
+            $table->index(['office_id', 'status'], 'form_submissions_office_status_index');
+            $table->index('batch_id', 'form_submissions_batch_id_index');
         });
     }
 

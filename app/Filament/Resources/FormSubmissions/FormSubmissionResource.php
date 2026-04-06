@@ -20,6 +20,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class FormSubmissionResource extends Resource
 {
@@ -50,7 +51,7 @@ class FormSubmissionResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['office', 'employeeForm']);
+        $query = parent::getEloquentQuery()->with(['office']);
         $user = Auth::user();
 
         if ($user?->role === UserRole::REPRESENTATIVE->value) {
@@ -73,11 +74,33 @@ class FormSubmissionResource extends Resource
     {
         $user = Auth::user();
 
-        $count = $user?->role === UserRole::REPRESENTATIVE->value
-            ? FormSubmission::where('office_id', $user->office_id)->where('status', FormSubmissionStatus::PENDING->value)->count()
-            : FormSubmission::where('status', FormSubmissionStatus::FINALIZED->value)->count();
+        $count = Cache::remember(
+            static::navigationBadgeCacheKey(),
+            now()->addSeconds(20),
+            function () use ($user): int {
+                return $user?->role === UserRole::REPRESENTATIVE->value
+                    ? FormSubmission::query()
+                        ->where('office_id', $user->office_id)
+                        ->where('status', FormSubmissionStatus::PENDING->value)
+                        ->count()
+                    : FormSubmission::query()
+                        ->where('status', FormSubmissionStatus::FINALIZED->value)
+                        ->count();
+            }
+        );
 
         return $count > 0 ? (string) $count : null;
+    }
+
+    private static function navigationBadgeCacheKey(): string
+    {
+        $user = Auth::user();
+
+        if ($user?->role === UserRole::REPRESENTATIVE->value) {
+            return 'nav_badge:forms:rep:office:'.($user->office_id ?? 'none').':pending';
+        }
+
+        return 'nav_badge:forms:admin:finalized';
     }
 
     public static function table(Table $table): Table

@@ -9,6 +9,7 @@ use BackedEnum;
 use Filament\Clusters\Cluster;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class FormsCluster extends Cluster
 {
@@ -20,10 +21,32 @@ class FormsCluster extends Cluster
     {
         $user = Auth::user();
 
-        $count = $user?->role === UserRole::REPRESENTATIVE->value
-            ? FormSubmission::where('office_id', $user->office_id)->where('status', FormSubmissionStatus::PENDING->value)->count()
-            : FormSubmission::where('status', FormSubmissionStatus::FINALIZED->value)->count();
+        $count = Cache::remember(
+            static::navigationBadgeCacheKey(),
+            now()->addSeconds(20),
+            function () use ($user): int {
+                return $user?->role === UserRole::REPRESENTATIVE->value
+                    ? FormSubmission::query()
+                        ->where('office_id', $user->office_id)
+                        ->where('status', FormSubmissionStatus::PENDING->value)
+                        ->count()
+                    : FormSubmission::query()
+                        ->where('status', FormSubmissionStatus::FINALIZED->value)
+                        ->count();
+            }
+        );
 
         return $count > 0 ? (string) $count : null;
+    }
+
+    private static function navigationBadgeCacheKey(): string
+    {
+        $user = Auth::user();
+
+        if ($user?->role === UserRole::REPRESENTATIVE->value) {
+            return 'nav_badge:forms_cluster:rep:office:'.($user->office_id ?? 'none').':pending';
+        }
+
+        return 'nav_badge:forms_cluster:admin:finalized';
     }
 }

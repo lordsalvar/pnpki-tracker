@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Cache;
 
 class UserResource extends Resource
 {
@@ -44,11 +45,9 @@ class UserResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        if (User::count() > 0) {
-            return User::count();
-        }
+        $count = Cache::remember('nav_badge:users:count', now()->addSeconds(20), fn (): int => User::query()->count());
 
-        return null;
+        return $count > 0 ? (string) $count : null;
     }
 
     public static function getPages(): array

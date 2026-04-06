@@ -6,6 +6,7 @@ use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
+use App\Models\FormSubmission;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -15,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class FormSubmissionsTable
@@ -113,6 +115,21 @@ class FormSubmissionsTable
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->recordUrl(function (Model $record): ?string {
+                if (! $record instanceof FormSubmission) {
+                    return null;
+                }
+
+                if ($record->status === FormSubmissionStatus::NEEDS_REVISION) {
+                    return FormSubmissionResource::getUrl('edit', ['record' => $record]);
+                }
+
+                if ($record->status === FormSubmissionStatus::FINALIZED) {
+                    return FormSubmissionResource::getUrl('view', ['record' => $record]);
+                }
+
+                return FormSubmissionResource::getUrl('edit', ['record' => $record]);
+            })
             ->filters([
 
                 TrashedFilter::make(),

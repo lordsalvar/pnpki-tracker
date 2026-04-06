@@ -8,6 +8,7 @@ use App\Actions\FormSubmission\FlagNeedsRevisionFormSubmissionAction;
 use App\Actions\FormSubmission\UnFinalizeFormSubmissionAction;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
+use App\Enums\UserRole;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
 use App\Models\Batch;
@@ -72,7 +73,8 @@ class ViewFormSubmission extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Flag Needs Revision')
                 ->modalDescription('This will flag this submission for revision.')
-                ->visible(fn (): bool => Auth::check() && Gate::allows('flagNeedsRevision', $this->record))
+                ->visible(fn (): bool => $this->canSeeRevisionFlagActions()
+                    && Gate::allows('flagNeedsRevision', $this->record))
                 ->action(function (): void {
                     $user = Auth::user();
                     abort_unless($user instanceof User, 403);
@@ -93,7 +95,8 @@ class ViewFormSubmission extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Unflag Needs Revision')
                 ->modalDescription('This will remove the revision flag from this submission.')
-                ->visible(fn (): bool => Auth::check() && Gate::allows('unflagNeedsRevision', $this->record))
+                ->visible(fn (): bool => $this->canSeeRevisionFlagActions()
+                    && Gate::allows('unflagNeedsRevision', $this->record))
                 ->action(function (): void {
                     $user = Auth::user();
                     abort_unless($user instanceof User, 403);
@@ -203,5 +206,23 @@ class ViewFormSubmission extends ViewRecord
     private function detectComboFromAttachmentPaths(array $paths): ?string
     {
         return app(AttachmentRuleService::class)->detectComboFromPaths($paths);
+    }
+
+    /**
+     * Representatives only see flag/unflag when the submission is finalized; admins follow policy alone.
+     */
+    private function canSeeRevisionFlagActions(): bool
+    {
+        if (! Auth::check()) {
+            return false;
+        }
+
+        $user = Auth::user();
+
+        if ($user?->role !== UserRole::REPRESENTATIVE->value) {
+            return true;
+        }
+
+        return $this->record->status === FormSubmissionStatus::FINALIZED;
     }
 }

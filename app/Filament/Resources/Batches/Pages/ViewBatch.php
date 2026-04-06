@@ -130,12 +130,19 @@ class ViewBatch extends ViewRecord
                 ->color('warning')
                 ->requiresConfirmation()
                 ->modalHeading('Request Modification')
-                ->modalDescription('This will mark the application as Modification Requested.')
+                ->modalDescription('This will mark the application as Modification Requested and notify administrators.')
                 ->visible(fn () => Auth::user()?->role === UserRole::REPRESENTATIVE->value
                     && $this->record->status === BatchStatus::FINALIZED
-                    && $this->record->formSubmissions()->whereNotNull('flagged_by')->exists()
                     && $this->record->application_status !== ApplicationStatus::MODIFICATION_REQUESTED
-                    && $this->record->application_status !== ApplicationStatus::FOR_SUBMISSION)
+                    && ! $this->isForSubmission())
+                ->disabled(fn () => ! $this->hasFlaggedSubmissions())
+                ->tooltip(function (): ?string {
+                    if (! $this->hasFlaggedSubmissions()) {
+                        return 'Flag at least one submission for revision before requesting modification.';
+                    }
+
+                    return null;
+                })
                 ->action(function () {
                     try {
                         app(RequestModificationBatchAction::class)->execute($this->record);
