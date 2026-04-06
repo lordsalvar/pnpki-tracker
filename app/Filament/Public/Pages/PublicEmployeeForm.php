@@ -352,6 +352,7 @@ class PublicEmployeeForm extends Page implements HasForms
                                 ->schema([
                                     TextInput::make('email')
                                         ->label('Email Address')
+                                        ->helperText('Use your active personal email address.')
                                         ->email()
                                         ->required()
                                         ->rule($this->noEmojiRule())
@@ -359,6 +360,7 @@ class PublicEmployeeForm extends Page implements HasForms
 
                                     TextInput::make('phone_number')
                                         ->label('Phone Number')
+                                        ->helperText('Use your active personal phone number.')
                                         ->tel()
                                         ->placeholder('e.g. 09171234567')
                                         ->required()
