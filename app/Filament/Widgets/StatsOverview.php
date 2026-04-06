@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\UserRole;
 use App\Models\Batch;
 use App\Models\EmployeeForm;
 use App\Models\FormSubmission;
@@ -50,7 +51,33 @@ class StatsOverview extends StatsOverviewWidget
                 ->description('Registered offices')
                 ->descriptionIcon(Heroicon::OutlinedBuildingOffice2)
                 ->color('gray'),
+
+            $this->employeeHeadcountStat(),
         ];
+    }
+
+    private function employeeHeadcountStat(): Stat
+    {
+        $user = auth()->user();
+
+        if ($user?->role === UserRole::ADMIN->value) {
+            $total = (int) (Office::query()->sum('number_of_employees') ?? 0);
+
+            return Stat::make('Employees (all offices)', number_format($total))
+                    ->description('Sum of headcount from each office')
+                ->descriptionIcon(Heroicon::OutlinedUserGroup)
+                ->color('success');
+        }
+
+        $officeId = $user?->office_id;
+        $total = $officeId
+            ? (int) (Office::query()->whereKey($officeId)->value('number_of_employees') ?? 0)
+            : 0;
+
+        return Stat::make('Employees', number_format($total))
+            ->description('Headcount for your office')
+            ->descriptionIcon(Heroicon::OutlinedUserGroup)
+            ->color('success');
     }
 
     /**
