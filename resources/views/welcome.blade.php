@@ -100,15 +100,40 @@
                         <span class="block text-xl font-black tracking-tight bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent dark:from-sky-300 dark:via-blue-400 dark:to-indigo-400">
                             {{ config('app.name') }}
                         </span>
-                        <button type="button" id="menu-btn" class="block lg:hidden p-2 rounded-md text-gray-700 dark:text-gray-200" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
-                            <svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5"/>
-                            </svg>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-3 lg:hidden" role="group" aria-label="{{ __('Theme') }}">
+                                <button type="button" data-theme-toggle="light" onclick="toggleTheme('light')" class="rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950 text-gray-500 dark:text-gray-400" title="{{ __('Light') }}" aria-label="{{ __('Light mode') }}">
+                                    <span data-theme-icon-wrap class="inline-flex rounded-md p-1 transition-shadow duration-200">
+                                        <svg class="size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.166a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75ZM17.834 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18ZM7.758 17.303a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12ZM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591Z" />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <button type="button" data-theme-toggle="dark" onclick="toggleTheme('dark')" class="rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950 text-gray-500 dark:text-gray-400" title="{{ __('Dark') }}" aria-label="{{ __('Dark mode') }}">
+                                    <span data-theme-icon-wrap class="inline-flex rounded-md p-1 transition-shadow duration-200">
+                                        <svg class="size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <button type="button" data-theme-toggle="system" onclick="toggleTheme('system')" class="rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950 text-gray-500 dark:text-gray-400" title="{{ __('System') }}" aria-label="{{ __('Match system appearance') }}">
+                                    <span data-theme-icon-wrap class="inline-flex rounded-md p-1 transition-shadow duration-200">
+                                        <svg class="size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                </button>
+                            </div>
+                            <button type="button" id="menu-btn" class="block lg:hidden p-2 rounded-md text-gray-700 dark:text-gray-200" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+                                <svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
                     <div id="mobile-menu" class="hidden lg:flex w-full lg:w-auto flex-wrap justify-end items-center gap-4 py-4 lg:py-0">
-                        <div class="flex items-center gap-3" role="group" aria-label="{{ __('Theme') }}">
+                        <div class="hidden lg:flex items-center gap-3" role="group" aria-label="{{ __('Theme') }}">
                             <button type="button" data-theme-toggle="light" onclick="toggleTheme('light')" class="rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950 text-gray-500 dark:text-gray-400" title="{{ __('Light') }}" aria-label="{{ __('Light mode') }}">
                                 <span data-theme-icon-wrap class="inline-flex rounded-md p-1 transition-shadow duration-200">
                                     <svg class="size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -136,7 +161,7 @@
                                 {{ __('Log in') }}
                             </a>
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="px-3 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 transition shadow-sm">
+                                <a href="{{ route('register') }}" class="hidden lg:inline-flex px-3 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 transition shadow-sm">
                                     {{ __('Register') }}
                                 </a>
                             @endif
