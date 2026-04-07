@@ -79,6 +79,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
 
         return $panel->getId() === 'admin'
-            && $this->role === UserRole::ADMIN->value;
+            && in_array($this->role, [
+                UserRole::ADMIN->value,
+                UserRole::REPRESENTATIVE->value,
+            ], true);
     }
 }
