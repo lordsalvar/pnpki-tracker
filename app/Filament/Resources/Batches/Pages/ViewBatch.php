@@ -216,7 +216,6 @@ class ViewBatch extends ViewRecord
                         ->where('flagged_by', UserRole::ADMIN->value)
                         ->update([
                             'status' => FormSubmissionStatus::NEEDS_REVISION->value,
-                            'flagged_by' => null,
                         ]);
 
                     Notification::make()

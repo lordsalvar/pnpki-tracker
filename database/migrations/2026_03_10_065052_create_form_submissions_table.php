@@ -35,6 +35,7 @@ return new class extends Migration
             $table->string('tin_number');
             $table->string('reference_number')->nullable();
             $table->string('flagged_by')->nullable();
+            $table->string('flag_remarks')->nullable();
             $table->softDeletes();
             $table->timestamps();
 

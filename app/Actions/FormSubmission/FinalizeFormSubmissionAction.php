@@ -11,6 +11,8 @@ class FinalizeFormSubmissionAction
     {
         $formSubmission->update([
             'status' => FormSubmissionStatus::FINALIZED->value,
+            'flagged_by' => null,
+            'flag_remarks' => null,
         ]);
     }
 }

@@ -35,9 +35,19 @@ class FormSubmissionsTable
 
                 TextColumn::make('fullname')
                     ->label('Full Name')
-                    ->description(fn ($state, $record): ?string => $record->flagged_by === Auth::user()?->role
-                        ? '⚠️ Flagged for revision by '.ucfirst($record->flagged_by)
-                        : null)
+                    ->description(function ($state, $record): ?string {
+                        if ($record->flagged_by === Auth::user()?->role) {
+                            $desc = '⚠️ Flagged for revision by '.ucfirst($record->flagged_by);
+                            if ($record->flag_remarks) {
+                                $preview = str($record->flag_remarks)->limit(100);
+                                $desc .= "\n".$preview;
+                            }
+
+                            return $desc;
+                        }
+
+                        return null;
+                    })
                     ->getStateUsing(fn ($record) => trim(
                         $record->firstname.' '.
                         (($record->middlename && $record->middlename !== 'N/A')

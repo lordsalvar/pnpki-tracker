@@ -8,12 +8,13 @@ use Illuminate\Support\Facades\Gate;
 
 class FlagNeedsRevisionFormSubmissionAction
 {
-    public function execute(FormSubmission $formSubmission, User $user): void
+    public function execute(FormSubmission $formSubmission, User $user, ?string $remarks = null): void
     {
         Gate::forUser($user)->authorize('flagNeedsRevision', $formSubmission);
 
         $formSubmission->update([
             'flagged_by' => $user->role,
+            'flag_remarks' => $remarks,
         ]);
     }
 }

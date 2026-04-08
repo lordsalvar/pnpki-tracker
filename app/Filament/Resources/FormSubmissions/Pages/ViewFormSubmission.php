@@ -73,20 +73,26 @@ class ViewFormSubmission extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Flag Needs Revision')
                 ->modalDescription('This will flag this submission for revision.')
+                ->form([
+                    \Filament\Forms\Components\Textarea::make('flag_remarks')
+                        ->label('Remarks')
+                        ->placeholder('Explain what needs to be corrected...')
+                        ->required(),
+                ])
                 ->visible(fn (): bool => $this->canSeeRevisionFlagActions()
                     && Gate::allows('flagNeedsRevision', $this->record))
-                ->action(function (): void {
+                ->action(function (array $data): void {
                     $user = Auth::user();
                     abort_unless($user instanceof User, 403);
 
-                    app(FlagNeedsRevisionFormSubmissionAction::class)->execute($this->record, $user);
+                    app(FlagNeedsRevisionFormSubmissionAction::class)->execute($this->record, $user, $data['flag_remarks']);
 
                     Notification::make()
                         ->title('Submission flagged for revision.')
                         ->success()
                         ->send();
 
-                    $this->refreshFormData(['flagged_by']);
+                    $this->refreshFormData(['flagged_by', 'flag_remarks']);
                 }),
             Action::make('unflag_needs_revision')
                 ->label('Unflag Needs Revision')
@@ -105,6 +111,7 @@ class ViewFormSubmission extends ViewRecord
 
                     $this->record->update([
                         'flagged_by' => null,
+                        'flag_remarks' => null,
                     ]);
 
                     Notification::make()
@@ -112,7 +119,7 @@ class ViewFormSubmission extends ViewRecord
                         ->success()
                         ->send();
 
-                    $this->refreshFormData(['flagged_by']);
+                    $this->refreshFormData(['flagged_by', 'flag_remarks']);
                 }),
             Action::make('assign_batch')
                 ->label('Assign to Batch')
