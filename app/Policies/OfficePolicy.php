@@ -15,7 +15,6 @@ class OfficePolicy
     {
         return in_array($user->role, [
             UserRole::ADMIN->value,
-            UserRole::REPRESENTATIVE->value,
         ]);
     }
 
