@@ -13,6 +13,7 @@ use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
 use App\Models\Attachment;
 use App\Models\Batch;
+use App\Models\FormSubmission;
 use App\Services\AttachmentPathService;
 use App\Services\AttachmentRuleService;
 use Filament\Actions\Action;
@@ -30,6 +31,19 @@ class EditFormSubmission extends EditRecord
     private ?string $originalLastname = null;
 
     protected static string $resource = FormSubmissionResource::class;
+
+    public function mount(int|string $record): void
+    {
+        $submission = FormSubmission::find($record);
+
+        if ($submission && $submission->status === FormSubmissionStatus::FINALIZED) {
+            $this->redirect(FormSubmissionResource::getUrl('view', ['record' => $submission]), navigate: true);
+
+            return;
+        }
+
+        parent::mount($record);
+    }
 
     public function getTitle(): string
     {
