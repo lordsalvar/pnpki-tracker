@@ -5,6 +5,7 @@ namespace App\Filament\Resources\FormSubmissions\Pages;
 use App\Actions\Batch\AssignBatchAction;
 use App\Actions\Batch\UnAssignBatchAction;
 use App\Actions\FormSubmission\FlagNeedsRevisionFormSubmissionAction;
+use App\Actions\FormSubmission\ForSubmissionAction;
 use App\Actions\FormSubmission\UnFinalizeFormSubmissionAction;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
@@ -44,6 +45,26 @@ class ViewFormSubmission extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('for_submission')
+                ->label('Mark as For Submission')
+                ->icon('heroicon-o-paper-airplane')
+                ->color('success')
+                ->requiresConfirmation()
+                ->modalHeading('Mark submission as For Submission?')
+                ->modalDescription('This will move the submission to the For Submission status.')
+                ->visible(fn (): bool => Auth::user()?->role === UserRole::ADMIN->value
+                    && $this->record->status === FormSubmissionStatus::FINALIZED
+                    && $this->record->batch_id !== null)
+                ->action(function (): void {
+                    app(ForSubmissionAction::class)->execute($this->record);
+
+                    $this->record->refresh();
+
+                    Notification::make()
+                        ->title('Submission marked as For Submission.')
+                        ->success()
+                        ->send();
+                }),
             Action::make('unfinalize')
                 ->label('Revert to pending')
                 ->icon('heroicon-o-arrow-uturn-left')

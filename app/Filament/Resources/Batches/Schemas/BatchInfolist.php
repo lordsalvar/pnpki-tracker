@@ -14,7 +14,7 @@ class BatchInfolist
                 TextEntry::make('office.name')
                     ->label('Office'),
                 TextEntry::make('user.name')
-                    ->label('User'),
+                    ->label('Created By'),
                 TextEntry::make('batch_name'),
                 TextEntry::make('status'),
                 TextEntry::make('created_at')

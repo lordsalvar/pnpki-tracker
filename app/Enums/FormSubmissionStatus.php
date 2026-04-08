@@ -11,12 +11,18 @@ enum FormSubmissionStatus: string implements HasColor, HasLabel
     case FINALIZED = 'finalized';
     case NEEDS_REVISION = 'needs_revision';
 
+    case FLAGGED = 'flagged';
+
+    case FOR_SUBMISSION = 'for_submission';
+
     public function getLabel(): string
     {
         return match ($this) {
             FormSubmissionStatus::PENDING => 'Pending',
             FormSubmissionStatus::FINALIZED => 'Finalized',
             FormSubmissionStatus::NEEDS_REVISION => 'Needs Revision',
+            FormSubmissionStatus::FLAGGED => 'Flagged',
+            FormSubmissionStatus::FOR_SUBMISSION => 'For Submission',
         };
     }
 
@@ -24,8 +30,10 @@ enum FormSubmissionStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             FormSubmissionStatus::PENDING => 'warning',
-            FormSubmissionStatus::FINALIZED => 'success',
+            FormSubmissionStatus::FINALIZED => 'info',
             FormSubmissionStatus::NEEDS_REVISION => 'danger',
+            FormSubmissionStatus::FLAGGED => 'warning',
+            FormSubmissionStatus::FOR_SUBMISSION => 'success',
         };
     }
 }

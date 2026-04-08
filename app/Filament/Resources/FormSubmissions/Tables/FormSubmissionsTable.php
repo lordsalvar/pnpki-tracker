@@ -83,8 +83,9 @@ class FormSubmissionsTable
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn ($record) => match ($record->status) {
-                        FormSubmissionStatus::FINALIZED => 'success',
+                        FormSubmissionStatus::FINALIZED => 'info',
                         FormSubmissionStatus::NEEDS_REVISION => 'danger',
+                        FormSubmissionStatus::FOR_SUBMISSION => 'success',
                         default => 'warning',
                     })
                     ->searchable(),
@@ -134,7 +135,7 @@ class FormSubmissionsTable
                     return FormSubmissionResource::getUrl('edit', ['record' => $record]);
                 }
 
-                if ($record->status === FormSubmissionStatus::FINALIZED) {
+                if (in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION], true)) {
                     return FormSubmissionResource::getUrl('view', ['record' => $record]);
                 }
 
@@ -168,7 +169,7 @@ class FormSubmissionsTable
                                 return true;
                             }
 
-                            if ($record->status === FormSubmissionStatus::FINALIZED) {
+                            if (in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION], true)) {
                                 return true;
                             }
 

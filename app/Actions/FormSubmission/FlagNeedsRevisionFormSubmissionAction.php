@@ -15,6 +15,7 @@ class FlagNeedsRevisionFormSubmissionAction
         $formSubmission->update([
             'flagged_by' => $user->role,
             'flag_remarks' => $remarks,
+            'status' => FormSubmissionStatus::FLAGGED->value,
         ]);
     }
 }

@@ -34,7 +34,7 @@ class FormSubmissionsRelationManager extends RelationManager
                 $isFinalized ? [
                     ViewAction::make()
                         ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
-                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION])),
+                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
                 ] : [
                     EditAction::make()
                         ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record]))
@@ -43,7 +43,7 @@ class FormSubmissionsRelationManager extends RelationManager
                             && Gate::allows('update', $record)),
                     ViewAction::make()
                         ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
-                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION])),
+                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
                 ],
             )
             ->toolbarActions(
