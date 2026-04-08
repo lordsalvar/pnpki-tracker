@@ -58,12 +58,14 @@ class FormSubmission extends Model
         'tin_number',
         'status',
         'flagged_by',
+        'flag_remarks',
     ];
 
     protected $casts = [
         'sex' => Sex::class,
         'status' => FormSubmissionStatus::class,
         'flagged_by' => 'string',
+        'flag_remarks' => 'string',
         'birth_date' => 'date',
         'civil_status' => CivilStatus::class,
     ];

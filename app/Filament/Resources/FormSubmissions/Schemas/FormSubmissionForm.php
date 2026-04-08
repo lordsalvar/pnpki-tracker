@@ -8,6 +8,7 @@ use App\Services\PsgcService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\CreateRecord;
@@ -23,6 +24,17 @@ class FormSubmissionForm
     {
         return $schema
             ->components([
+                Section::make('Flag remarks')
+                    ->description('Remarks from the reviewer.')
+                    ->icon(Heroicon::OutlinedExclamationTriangle)
+                    ->columns(1)
+                    ->schema([
+                        Placeholder::make('flag_remarks')
+                            ->label('Remarks')
+                            ->content(fn ($livewire) => $livewire->record?->flag_remarks),
+                    ])
+                    ->columnSpanFull()
+                    ->visible(fn ($livewire) => $livewire->record?->flagged_by !== null),
                 Section::make('Submission details')
                     ->description('System reference and link to the public registration form, when applicable.')
                     ->icon(Heroicon::OutlinedClipboardDocumentList)
@@ -418,6 +430,7 @@ class FormSubmissionForm
                             ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
                     ])
                     ->columnSpanFull(),
+
             ]);
     }
 

@@ -36,7 +36,6 @@ class AcceptModificationRequestBatchAction
             ->where('flagged_by', UserRole::REPRESENTATIVE->value)
             ->update([
                 'status' => FormSubmissionStatus::NEEDS_REVISION->value,
-                'flagged_by' => null,
             ]);
     }
 }
