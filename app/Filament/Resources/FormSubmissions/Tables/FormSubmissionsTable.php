@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
+
 class FormSubmissionsTable
 {
     public static function configure(Table $table): Table
@@ -26,12 +27,6 @@ class FormSubmissionsTable
         return $table
             ->deferFilters(false)
             ->columns([
-                TextColumn::make('reference_number')
-                    ->label('Ref.')
-                    ->searchable()
-                    ->toggleable()
-                    ->copyable()
-                    ->weight('medium'),
 
                 TextColumn::make('fullname')
                     ->label('Full Name')
@@ -67,7 +62,8 @@ class FormSubmissionsTable
                 TextColumn::make('office.acronym')
                     ->label('Office')
                     ->searchable()
-                    ->tooltip(fn ($record) => $record->office?->name),
+                    ->tooltip(fn ($record) => $record->office?->name)
+                    ->visible(fn () => Auth::user()?->role === 'ADMIN'),
 
                 TextColumn::make('email')
                     ->label('Email')
