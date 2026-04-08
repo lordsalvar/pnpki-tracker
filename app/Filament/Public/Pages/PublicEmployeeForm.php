@@ -594,13 +594,14 @@ class PublicEmployeeForm extends Page implements HasForms
 
         // Duplicate check BEFORE transaction (prevents orphaned address rows)
         $alreadySubmitted = FormSubmission::where('office_id', $rep->office_id)
-            ->where('phone_number', $data['phone_number'])
+            ->where('firstname', $data['firstname'])
+            ->where('birth_date', $data['birth_date'])
             ->exists();
 
         if ($alreadySubmitted) {
             Notification::make()
-                ->title('Duplicated Submission')
-                ->body('A submission with this details already exists for this office.')
+                ->title('Duplicated Submission Error')
+                ->body('A submission with this name and birth date already exists for this office.')
                 ->warning()
                 ->send();
 
@@ -615,8 +616,8 @@ class PublicEmployeeForm extends Page implements HasForms
             );
         } catch (UniqueConstraintViolationException) {
             Notification::make()
-                ->title('Duplicate Submission')
-                ->body('A submission with this phone number already exists for this office.')
+                ->title('Duplicate Submission Error')
+                ->body('A submission with this name and birth date already exists for this office.')
                 ->warning()
                 ->send();
 
