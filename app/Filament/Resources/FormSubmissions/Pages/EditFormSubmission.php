@@ -7,6 +7,8 @@ use App\Actions\Batch\UnAssignBatchAction;
 use App\Actions\FormSubmission\FinalizeFormSubmissionAction;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
+use App\Enums\UserRole;
+use App\Filament\Resources\Batches\BatchResource;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
 use App\Models\Attachment;
@@ -18,6 +20,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class EditFormSubmission extends EditRecord
@@ -56,10 +59,18 @@ class EditFormSubmission extends EditRecord
                 ->action(function () {
                     app(FinalizeFormSubmissionAction::class)->execute($this->record);
 
+                    $this->record->refresh();
+
                     Notification::make()
                         ->title('Submission finalized.')
                         ->success()
                         ->send();
+
+                    if (Auth::user()?->role === UserRole::REPRESENTATIVE->value && $this->record->batch_id !== null) {
+                        $this->redirect(BatchResource::getUrl('view', ['record' => $this->record->batch_id]));
+
+                        return;
+                    }
 
                     $this->redirect(FormSubmissionResource::getUrl('view', ['record' => $this->record]));
                 }),
@@ -68,7 +79,8 @@ class EditFormSubmission extends EditRecord
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->color('info')
                 ->visible(fn () => $this->record->status === FormSubmissionStatus::FINALIZED && $this->record->batch_id === null)
-                ->schema([
+                ->modalSubmitActionLabel('Assign')
+                ->form([
                     Select::make('batch_id')
                         ->label('Batch')
                         ->options(
@@ -99,6 +111,12 @@ class EditFormSubmission extends EditRecord
                         ->title('Batch assigned.')
                         ->success()
                         ->send();
+
+                    if (Auth::user()?->role === UserRole::REPRESENTATIVE->value) {
+                        $this->redirect(FormSubmissionResource::getUrl('index'), navigate: true);
+
+                        return;
+                    }
 
                     $this->refreshFormWithPersistedState();
                 }),

@@ -152,6 +152,12 @@ class ViewFormSubmission extends ViewRecord
                         ->title('Batch assigned.')
                         ->success()
                         ->send();
+
+                    if (Auth::user()?->role === UserRole::REPRESENTATIVE->value) {
+                        $this->redirect(FormSubmissionResource::getUrl('index'), navigate: true);
+
+                        return;
+                    }
                 }),
             Action::make('unassign_batch')
                 ->label('Remove from Batch')
