@@ -128,7 +128,7 @@ class FormSubmissionPolicy
         }
 
         if ($user->role === UserRole::ADMIN->value) {
-            return true;
+            return false;
         }
 
         if ($user->role === UserRole::REPRESENTATIVE->value) {

@@ -125,7 +125,10 @@ class ViewFormSubmission extends ViewRecord
                 ->label('Assign to Batch')
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->color('info')
-                ->visible(fn () => $this->record->status === FormSubmissionStatus::FINALIZED && $this->record->batch_id === null && $this->record->batch?->status !== BatchStatus::FINALIZED)
+                ->visible(fn () => Auth::user()->role !== UserRole::ADMIN->value
+                    && $this->record->status === FormSubmissionStatus::FINALIZED
+                    && $this->record->batch_id === null
+                    && $this->record->batch?->status !== BatchStatus::FINALIZED)
                 ->form([
                     Select::make('batch_id')
                         ->label('Batch')
@@ -154,7 +157,8 @@ class ViewFormSubmission extends ViewRecord
                 ->label('Remove from Batch')
                 ->icon('heroicon-o-archive-box-x-mark')
                 ->color('danger')
-                ->visible(fn (): bool => $this->record->batch_id !== null
+                ->visible(fn (): bool => Auth::user()->role !== UserRole::ADMIN->value
+                    && $this->record->batch_id !== null
                     && $this->record->batch?->status !== BatchStatus::FINALIZED)
                 ->requiresConfirmation()
                 ->action(function () {
