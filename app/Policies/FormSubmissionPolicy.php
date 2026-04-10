@@ -51,6 +51,28 @@ class FormSubmissionPolicy
     }
 
     /**
+     * Mark a finalized submission as For Submission (admin only, parent batch must be finalized).
+     */
+    public function markForSubmission(User $user, FormSubmission $formSubmission): bool
+    {
+        if ($user->role !== UserRole::ADMIN->value) {
+            return false;
+        }
+
+        if ($formSubmission->status !== FormSubmissionStatus::FINALIZED) {
+            return false;
+        }
+
+        $formSubmission->loadMissing('batch');
+
+        if ($formSubmission->batch_id === null || $formSubmission->batch === null) {
+            return false;
+        }
+
+        return $formSubmission->batch->status === BatchStatus::FINALIZED;
+    }
+
+    /**
      * Flag a finalized submission for revision (finalized batch, not yet for submission to DICT).
      */
     public function flagNeedsRevision(User $user, FormSubmission $formSubmission): bool
