@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Batches\Pages;
 
 use App\Actions\Batch\AcceptModificationRequestBatchAction;
+use App\Actions\Batch\DownloadBatchAttachmentsAction;
 use App\Actions\Batch\RequestModificationBatchAction;
 use App\Actions\FinalizeBatchAction;
 use App\Enums\ApplicationStatus;
@@ -233,6 +234,15 @@ class ViewBatch extends ViewRecord
                     && $this->isForSubmission())
                 ->url(fn () => route('batch.export-csv', $this->record->id))
                 ->openUrlInNewTab(),
+            Action::make('download_attachments')
+                ->label('Download Attachments')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('info')
+                ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
+                    && $this->isForSubmission())
+                ->action(function () {
+                    return app(DownloadBatchAttachmentsAction::class)->execute($this->record);
+                }),
 
         ];
     }
