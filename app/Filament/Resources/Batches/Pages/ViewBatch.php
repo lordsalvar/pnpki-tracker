@@ -71,14 +71,14 @@ class ViewBatch extends ViewRecord
                 ->color('success')
                 ->requiresConfirmation()
                 ->modalHeading('Mark as For Submission')
-                ->modalDescription('This will mark the finalized batch as ready for submission.')
+                ->modalDescription('Every submission in this batch must already be marked For Submission. This updates the batch application status.')
                 ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
                     && $this->isBatchFinalized()
                     && ! $this->isForSubmission())
-                ->disabled(fn () => $this->hasNotFinalizedSubmissions() || $this->hasFlaggedSubmissions())
+                ->disabled(fn () => $this->hasSubmissionsNotMarkedForSubmission() || $this->hasFlaggedSubmissions())
                 ->tooltip(function (): ?string {
-                    if ($this->hasNotFinalizedSubmissions()) {
-                        return 'Some submissions are not yet finalized';
+                    if ($this->hasSubmissionsNotMarkedForSubmission()) {
+                        return 'All submissions must be marked For Submission before marking the batch';
                     }
 
                     if ($this->hasFlaggedSubmissions()) {
@@ -88,13 +88,13 @@ class ViewBatch extends ViewRecord
                     return null;
                 })
                 ->action(function () {
-                    $notFinalized = $this->record->formSubmissions()
-                        ->where('status', '!=', FormSubmissionStatus::FINALIZED->value)
+                    $notAllForSubmission = $this->record->formSubmissions()
+                        ->where('status', '!=', FormSubmissionStatus::FOR_SUBMISSION->value)
                         ->exists();
 
-                    if ($notFinalized) {
+                    if ($notAllForSubmission) {
                         Notification::make()
-                            ->title('All submissions must be finalized before marking for submission')
+                            ->title('All submissions must be marked For Submission before marking the batch')
                             ->warning()
                             ->send();
 
@@ -247,10 +247,10 @@ class ViewBatch extends ViewRecord
         ];
     }
 
-    private function hasNotFinalizedSubmissions(): bool
+    private function hasSubmissionsNotMarkedForSubmission(): bool
     {
         return $this->record->formSubmissions()
-            ->where('status', '!=', FormSubmissionStatus::FINALIZED->value)
+            ->where('status', '!=', FormSubmissionStatus::FOR_SUBMISSION->value)
             ->exists();
     }
 
