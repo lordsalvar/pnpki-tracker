@@ -92,6 +92,7 @@ class PublicEmployeeForm extends Page implements HasForms
 
         $this->form->fill([
             'organization' => $organization,
+            'phone_number' => '09',
         ]);
     }
 
@@ -365,16 +366,18 @@ class PublicEmployeeForm extends Page implements HasForms
                                         ->placeholder('e.g. 09171234567')
                                         ->required()
                                         ->rule($this->noEmojiRule())
+                                        ->default('09')
                                         ->minLength(11)
                                         ->maxLength(11)
                                         ->rule('regex:/^09\d{9}$/')
                                         ->validationMessages([
-                                            'regex' => 'numbers should start with 09',
+                                            'regex' => 'The phone number must start with 09 and be followed by 9 digits (total 11 digits).',
                                         ])
                                         ->extraInputAttributes([
                                             'inputmode' => 'numeric',
-                                            'oninput' => "this.value = this.value.replace(/\\D/g, '').slice(0, 11)",
-                                        ]),
+                                            'oninput' => "let value = this.value.replace(/\\D/g, ''); if (value.startsWith('09')) { value = '09' + value.slice(2); } else if (value.startsWith('9')) { value = '09' + value.slice(1).replace(/^0+/, ''); } else { value = '09' + value.replace(/^0+/, ''); } this.value = value.slice(0, 11);",
+                                        ])
+                                        
                                 ]),
                         ]),
 
