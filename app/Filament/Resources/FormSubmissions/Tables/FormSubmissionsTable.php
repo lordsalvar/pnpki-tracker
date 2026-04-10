@@ -19,7 +19,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
-
 class FormSubmissionsTable
 {
     public static function configure(Table $table): Table
@@ -179,7 +178,11 @@ class FormSubmissionsTable
                         }),
                     ViewAction::make()
                         ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
-                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION])),
+                        ->visible(fn ($record) => in_array($record->status, [
+                            FormSubmissionStatus::FINALIZED,
+                            FormSubmissionStatus::FOR_SUBMISSION,
+                            FormSubmissionStatus::NEEDS_REVISION,
+                        ], true)),
                 ]),
 
             ])

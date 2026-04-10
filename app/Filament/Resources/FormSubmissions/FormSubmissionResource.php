@@ -59,7 +59,10 @@ class FormSubmissionResource extends Resource
         }
 
         if ($user?->role === UserRole::ADMIN->value) {
-            $query->where('status', FormSubmissionStatus::FINALIZED->value);
+            $query->whereIn('status', [
+                FormSubmissionStatus::FINALIZED->value,
+                FormSubmissionStatus::FOR_SUBMISSION->value,
+            ]);
         }
 
         return $query;
@@ -84,7 +87,10 @@ class FormSubmissionResource extends Resource
                         ->where('status', FormSubmissionStatus::PENDING->value)
                         ->count()
                     : FormSubmission::query()
-                        ->where('status', FormSubmissionStatus::FINALIZED->value)
+                        ->whereIn('status', [
+                            FormSubmissionStatus::FINALIZED->value,
+                            FormSubmissionStatus::FOR_SUBMISSION->value,
+                        ])
                         ->count();
             }
         );
@@ -100,7 +106,7 @@ class FormSubmissionResource extends Resource
             return 'nav_badge:forms:rep:office:'.($user->office_id ?? 'none').':pending';
         }
 
-        return 'nav_badge:forms:admin:finalized';
+        return 'nav_badge:forms:admin:finalized-for-submission';
     }
 
     public static function table(Table $table): Table

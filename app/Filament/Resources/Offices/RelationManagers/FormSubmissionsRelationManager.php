@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Offices\RelationManagers;
 
+use App\Enums\FormSubmissionStatus;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Filament\Resources\FormSubmissions\Schemas\FormSubmissionForm;
 use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
@@ -45,10 +46,16 @@ class FormSubmissionsRelationManager extends RelationManager
             ->recordActions([
                 EditAction::make()
                     ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record]))
-                    ->hidden(fn ($record) => $record->status === \App\Enums\FormSubmissionStatus::FINALIZED),
+                    ->hidden(fn ($record) => in_array($record->status, [
+                        FormSubmissionStatus::FINALIZED,
+                        FormSubmissionStatus::FOR_SUBMISSION,
+                    ], true)),
                 ViewAction::make()
                     ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
-                    ->visible(fn ($record) => $record->status === \App\Enums\FormSubmissionStatus::FINALIZED),
+                    ->visible(fn ($record) => in_array($record->status, [
+                        FormSubmissionStatus::FINALIZED,
+                        FormSubmissionStatus::FOR_SUBMISSION,
+                    ], true)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
