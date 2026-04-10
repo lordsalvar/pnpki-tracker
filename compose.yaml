@@ -5,7 +5,7 @@ services:
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'
-        image: 'pnpki-tracker-app:latest'
+        image: 'pnpki-tracker-app'
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
