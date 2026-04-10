@@ -36,7 +36,10 @@ class EditFormSubmission extends EditRecord
     {
         $submission = FormSubmission::find($record);
 
-        if ($submission && $submission->status === FormSubmissionStatus::FINALIZED) {
+        if ($submission && in_array($submission->status, [
+            FormSubmissionStatus::FINALIZED,
+            FormSubmissionStatus::FOR_SUBMISSION,
+        ], true)) {
             $this->redirect(FormSubmissionResource::getUrl('view', ['record' => $submission]), navigate: true);
 
             return;
