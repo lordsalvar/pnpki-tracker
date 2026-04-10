@@ -52,10 +52,10 @@ class ViewFormSubmission extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Mark submission as For Submission?')
                 ->modalDescription('This will move the submission to the For Submission status.')
-                ->visible(fn (): bool => Auth::user()?->role === UserRole::ADMIN->value
-                    && $this->record->status === FormSubmissionStatus::FINALIZED
-                    && $this->record->batch_id !== null)
+                ->visible(fn (): bool => $this->adminCanMarkForSubmission())
                 ->action(function (): void {
+                    Gate::authorize('update', $this->record);
+
                     app(ForSubmissionAction::class)->execute($this->record);
 
                     $this->record->refresh();
@@ -262,5 +262,22 @@ class ViewFormSubmission extends ViewRecord
         }
 
         return $this->record->status === FormSubmissionStatus::FINALIZED;
+    }
+
+    private function adminCanMarkForSubmission(): bool
+    {
+        $user = Auth::user();
+
+        if (! $user || $user->role !== UserRole::ADMIN->value) {
+            return false;
+        }
+
+        $status = $this->record->status;
+
+        if ($status instanceof FormSubmissionStatus) {
+            return $status === FormSubmissionStatus::FINALIZED;
+        }
+
+        return FormSubmissionStatus::tryFrom((string) $status) === FormSubmissionStatus::FINALIZED;
     }
 }
