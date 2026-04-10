@@ -271,10 +271,16 @@ class FormSubmissionForm
                         TextInput::make('tin_number')
                             ->label('TIN Number')
                             ->required()
+                            ->length(9)
+                            ->rule(self::noSymbolRule())
+                            ->rule(self::noEmojiRule())
+                            ->mask('999999999')
                             ->unique(ignoreRecord: true)
                             ->rule(self::noEmojiRule())
                             ->rule(self::noSymbolRule())
-                            ->maxLength(20),
+                            ->validationMessages([
+                                'regex' => 'The TIN number must be 9 digits (total 9 digits).',
+                            ])
                     ])
                     ->columnSpanFull(),
 

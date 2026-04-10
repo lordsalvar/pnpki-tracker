@@ -405,9 +405,16 @@ class PublicEmployeeForm extends Page implements HasForms
                             TextInput::make('tin_number')
                                 ->label('TIN Number')
                                 ->required()
-                                ->rule($this->noEmojiRule())
                                 ->rule($this->noSymbolRule())
-                                ->maxLength(20),
+                                ->rule($this->noEmojiRule())
+                                ->length(9)
+                                ->mask('999999999')
+                                ->unique(ignoreRecord: true)
+                                ->rule(self::noEmojiRule())
+                                ->rule(self::noSymbolRule())
+                                ->validationMessages([
+                                    'regex' => 'The TIN number must be 9 digits (total 9 digits).',
+                                ])
                         ]),
 
                     Step::make('Documents')
