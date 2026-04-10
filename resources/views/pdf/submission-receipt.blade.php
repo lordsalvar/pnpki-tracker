@@ -16,12 +16,16 @@
   /* Dompdf: no CSS Grid; remote fonts off by default. Use tables + DejaVu. */
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  /* Reserve bottom margin on every page for the fixed footer */
+  @page {
+    margin: 40px 20px 80px 20px;
+  }
+
   body {
     font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif;
     background: #f0f2f7;
-    padding: 40px 20px 60px;
+    padding: 40px 20px 0;
     color: #0f1724;
-    min-height: 100vh;
   }
 
   .page {
@@ -42,16 +46,11 @@
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    background: #fff;
+    background: #ffffff;
     border: 1.5px solid #dde2ee;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'DejaVu Sans Mono', 'Courier New', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    color: #1a3a6e;
-    letter-spacing: 0.04em;
+    display: block;
+    margin: 0 auto;
+    overflow: hidden;
   }
 
   .header-text h1 {
@@ -100,24 +99,6 @@
     margin-top: 4px;
   }
 
-  .receipt-banner-table .status-pill {
-    display: inline-block;
-    background: #2ee89a22;
-    border: 1px solid #2ee89a55;
-    color: #2ee89a;
-    padding: 6px 14px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-  }
-
-  .receipt-banner-table .cell-status {
-    text-align: right;
-    width: 1%;
-  }
-
   /* Section card */
   .section {
     background: #fff;
@@ -133,19 +114,26 @@
   }
 
   .section-header-inner {
-    display: table;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     width: 100%;
-  }
-
-  .section-header-inner .section-icon,
-  .section-header-inner .section-title-wrap {
-    display: table-cell;
-    vertical-align: middle;
   }
 
   .section-header-inner .section-icon {
     width: 38px;
-    padding-right: 10px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    padding: 0;
+  }
+
+  .section-header-inner .section-title-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
   }
 
   .section-title-wrap .section-title {
@@ -269,35 +257,55 @@
     color: #0f1724;
   }
 
-  .submitted-badge {
-    font-size: 10px;
-    font-weight: 600;
-    color: #1a7a52;
-    background: #e6f7f0;
-    border: 1px solid #b3e8d0;
-    padding: 4px 12px;
-    border-radius: 100px;
-    white-space: nowrap;
-    letter-spacing: 0.03em;
+  /* Footer — fixed so Dompdf stamps it on every page */
+  .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 10px 0 6px;
+    border-top: 2px dashed #b6c3e0;
+    background: #f7faff;
+    font-size: 12px;
+    width: 100%;
   }
 
-  /* Footer */
-  .footer {
-    text-align: center;
-    padding: 28px 0 0;
-    border-top: 1px solid #e2e7f3;
-    margin-top: 8px;
+  .footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0 10px;
   }
 
   .footer p {
     font-size: 11px;
-    color: #9aa4be;
-    line-height: 1.8;
+    color: #7fa3d4;
+    line-height: 1.5;
+    margin: 0;
   }
 
   .footer strong {
-    color: #6b7898;
-    font-weight: 500;
+    color: #1a3a6e;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .footer-logo {
+    font-family: 'DejaVu Sans Mono', 'Courier New', monospace;
+    font-size: 10px;
+    color: #b6c3e0;
+    margin-bottom: 2px;
+    letter-spacing: 0.12em;
+  }
+
+  /* Page break for Dompdf */
+  .page-break {
+    page-break-after: always;
+    height: 0;
+    margin: 0;
+    border: none;
   }
 
   /* Address rows (tables for Dompdf) */
@@ -346,241 +354,243 @@
 @endif
 </head>
 <body>
-<div class="page">
 
-  {{-- Header --}}
-  <div class="header">
-    <div class="logo-ring">PNPKI</div>
-    <div class="header-text">
-      <h1>Submission Receipt</h1>
-      <p>Employee Registration Form</p>
+  {{-- Single fixed footer — Dompdf stamps this on every page automatically --}}
+  <div class="footer">
+    <div class="footer-content">
+      <div class="footer-logo">PNPKI</div>
+      <p>Generated on <strong>{{ now('Asia/Manila')->format('F d, Y \a\t h:i A') }}</strong></p>
+      <p>This is an official submission receipt. Please keep a copy for your records.</p>
     </div>
   </div>
 
-  {{-- Receipt Banner --}}
-  <table class="receipt-banner-table">
-    <tr>
-      <td>
-        <div class="label">Reference No.</div>
-        <div class="value">{{ $submission->reference_number ?? 'N/A' }}</div>
-      </td>
-      <td style="text-align: center;">
-        <div class="label">Submitted</div>
-        <div class="value">{{ $submission->created_at->format('F j, Y \a\t g:i A') }}</div>
-      </td>
-      <td class="cell-status">
-        <span class="status-pill">Received</span>
-      </td>
-    </tr>
-  </table>
-
-  {{-- Personal Information --}}
-  <div class="section">
-    <div class="section-header">
-      <div class="section-header-inner">
-        <div class="section-icon">
-          <x-heroicon-o-user aria-hidden="true" />
-        </div>
-        <div class="section-title-wrap">
-          <span class="section-title">Personal Information</span>
-        </div>
+  <!-- PAGE 1 -->
+  <div class="page">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-ring">
+        <img src="{{ public_path('images/Logo.jpg') }}"
+             style="width:100%; height:100%; object-fit:cover;"
+             alt="PNPKI Logo" />
+      </div>
+      <div class="header-text">
+        <h1>Submission Receipt</h1>
+        <p>Employee Registration Form</p>
       </div>
     </div>
-    <table class="fields-table">
+    <!-- Receipt Banner -->
+    <table class="receipt-banner-table">
       <tr>
-        <td class="field">
-          <div class="field-label">First Name</div>
-          <div class="field-value">{{ $submission->firstname }}</div>
+        <td>
+          <div class="label">Reference No.</div>
+          <div class="value">{{ $submission->reference_number ?? 'N/A' }}</div>
         </td>
-        <td class="field">
-          <div class="field-label">Last Name</div>
-          <div class="field-value">{{ $submission->lastname }}</div>
-        </td>
-        <td class="field">
-          <div class="field-label">Middle Name</div>
-          <div class="field-value">{{ $submission->middlename }}</div>
-        </td>
-        <td class="field no-border-right">
-          <div class="field-label">Suffix</div>
-          <div class="field-value">{{ $submission->suffix ?: '—' }}</div>
-        </td>
-      </tr>
-      @if(filled($submission->maiden_name) && $submission->maiden_name !== 'N/A')
-      <tr>
-        <td class="field full-row" colspan="4">
-          <div class="field-label">Maiden Name</div>
-          <div class="field-value">{{ $submission->maiden_name }}</div>
-        </td>
-      </tr>
-      @endif
-      <tr>
-        <td class="field" colspan="2">
-          <div class="field-label">Sex</div>
-          <div class="field-value">{{ $sexLabel }}</div>
-        </td>
-        <td class="field no-border-right" colspan="2">
-          <div class="field-label">Civil Status</div>
-          <div class="field-value">{{ $submission->civil_status?->getLabel() ?? '—' }}</div>
-        </td>
-      </tr>
-      <tr>
-        <td class="field" colspan="2">
-          <div class="field-label">Date of Birth</div>
-          <div class="field-value">{{ $submission->birth_date?->format('F j, Y') ?? '—' }}</div>
-        </td>
-        <td class="field no-border-right" colspan="2">
-          <div class="field-label">Country of Birth</div>
-          <div class="field-value">{{ $submission->birth_place_country ?: '—' }}</div>
-        </td>
-      </tr>
-      <tr>
-        <td class="field full-row" colspan="4">
-          <div class="field-label">Province / State of Birth</div>
-          <div class="field-value">{{ $submission->birth_place_province ?: '—' }}</div>
+        <td style="text-align: center;">
+          <div class="label">Submitted</div>
+          <div class="value">{{ $submission->created_at->setTimezone('Asia/Manila')->format('F j, Y \a\t g:i A') }}</div>
         </td>
       </tr>
     </table>
-  </div>
-
-  {{-- Contact Information --}}
-  <div class="section">
-    <div class="section-header">
-      <div class="section-header-inner">
-        <div class="section-icon">
-          <x-heroicon-o-envelope aria-hidden="true" />
-        </div>
-        <div class="section-title-wrap">
-          <span class="section-title">Contact Information</span>
-        </div>
-      </div>
-    </div>
-    <table class="fields-table cols-2">
-      <tr>
-        <td class="field">
-          <div class="field-label">Email Address</div>
-          <div class="field-value">{{ $submission->email }}</div>
-        </td>
-        <td class="field no-border-right">
-          <div class="field-label">Phone Number</div>
-          <div class="field-value mono">{{ $submission->phone_number }}</div>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  {{-- Address --}}
-  <div class="section">
-    <div class="section-header">
-      <div class="section-header-inner">
-        <div class="section-icon">
-          <x-heroicon-o-map-pin aria-hidden="true" />
-        </div>
-        <div class="section-title-wrap">
-          <span class="section-title">Address</span>
-        </div>
-      </div>
-    </div>
-    <table class="addr-grid-table">
-      <tr>
-        <td class="field">
-          <div class="field-label">House No.</div>
-          <div class="field-value mono">{{ $submission->address->house_no }}</div>
-        </td>
-        <td class="field">
-          <div class="field-label">Street</div>
-          <div class="field-value">{{ $submission->address->street }}</div>
-        </td>
-      </tr>
-    </table>
-    <table class="addr-grid-2-table">
-      <tr>
-        <td class="field">
-          <div class="field-label">Barangay</div>
-          <div class="field-value">{{ $barangayName }}</div>
-        </td>
-        <td class="field">
-          <div class="field-label">City / Municipality</div>
-          <div class="field-value">{{ $municipalityName }}</div>
-        </td>
-        <td class="field">
-          <div class="field-label">Province</div>
-          <div class="field-value">{{ $provinceName }}</div>
-        </td>
-        <td class="field">
-          <div class="field-label">ZIP Code</div>
-          <div class="field-value mono">{{ $submission->address->zip_code }}</div>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  {{-- Employment Details --}}
-  <div class="section">
-    <div class="section-header">
-      <div class="section-header-inner">
-        <div class="section-icon">
-          <x-heroicon-o-briefcase aria-hidden="true" />
-        </div>
-        <div class="section-title-wrap">
-          <span class="section-title">Employment Details</span>
-        </div>
-      </div>
-    </div>
-    <table class="fields-table cols-2">
-      <tr>
-        <td class="field full-row" colspan="2">
-          <div class="field-label">Organization</div>
-          <div class="field-value">{{ $submission->organization ?: '—' }}</div>
-        </td>
-      </tr>
-      <tr>
-        <td class="field">
-          <div class="field-label">Organizational Unit</div>
-          <div class="field-value">{{ $submission->organizational_unit }}</div>
-        </td>
-        <td class="field no-border-right">
-          <div class="field-label">TIN Number</div>
-          <div class="field-value mono">{{ $submission->tin_number }}</div>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  {{-- Document Attachments --}}
-  @if($submission->attachments && $submission->attachments->count() > 0)
+    <!-- Personal Information -->
     <div class="section">
       <div class="section-header">
         <div class="section-header-inner">
           <div class="section-icon">
-            <x-heroicon-o-document-arrow-up aria-hidden="true" />
+            <x-heroicon-o-user aria-hidden="true" />
           </div>
           <div class="section-title-wrap">
-            <span class="section-title">Document Attachments</span>
+            <span class="section-title">Personal Information</span>
           </div>
         </div>
       </div>
-      <table class="attachment-table">
-        @foreach($submission->attachments as $attachment)
-          <tr>
-            <td style="width: 1%; white-space: nowrap;">
-              <span class="file-type-badge">{{ $attachment->file_type }}</span>
-            </td>
-            <td class="file-name">{{ $attachment->file_name }}</td>
-            <td style="width: 1%; white-space: nowrap; text-align: right;">
-              <span class="submitted-badge">Submitted</span>
-            </td>
-          </tr>
-        @endforeach
+      <table class="fields-table">
+        <tr>
+          <td class="field">
+            <div class="field-label">First Name</div>
+            <div class="field-value">{{ $submission->firstname }}</div>
+          </td>
+          <td class="field">
+            <div class="field-label">Last Name</div>
+            <div class="field-value">{{ $submission->lastname }}</div>
+          </td>
+          <td class="field">
+            <div class="field-label">Middle Name</div>
+            <div class="field-value">{{ $submission->middlename }}</div>
+          </td>
+          <td class="field no-border-right">
+            <div class="field-label">Suffix</div>
+            <div class="field-value">{{ $submission->suffix ?: '—' }}</div>
+          </td>
+        </tr>
+        @if(filled($submission->maiden_name) && $submission->maiden_name !== 'N/A')
+        <tr>
+          <td class="field full-row" colspan="4">
+            <div class="field-label">Maiden Name</div>
+            <div class="field-value">{{ $submission->maiden_name }}</div>
+          </td>
+        </tr>
+        @endif
+        <tr>
+          <td class="field" colspan="2">
+            <div class="field-label">Sex</div>
+            <div class="field-value">{{ $sexLabel }}</div>
+          </td>
+          <td class="field no-border-right" colspan="2">
+            <div class="field-label">Civil Status</div>
+            <div class="field-value">{{ $submission->civil_status?->getLabel() ?? '—' }}</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field" colspan="2">
+            <div class="field-label">Date of Birth</div>
+            <div class="field-value">{{ $submission->birth_date?->format('F j, Y') ?? '—' }}</div>
+          </td>
+          <td class="field no-border-right" colspan="2">
+            <div class="field-label">Country of Birth</div>
+            <div class="field-value">{{ $submission->birth_place_country ?: '—' }}</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field full-row" colspan="4">
+            <div class="field-label">Province / State of Birth</div>
+            <div class="field-value">{{ $submission->birth_place_province ?: '—' }}</div>
+          </td>
+        </tr>
       </table>
     </div>
-  @endif
-
-  {{-- Footer --}}
-  <div class="footer">
-    <p>Generated on <strong>{{ now()->format('F d, Y \a\t h:i A') }}</strong></p>
-    <p>This is an official submission receipt. Please keep a copy for your records.</p>
+    <!-- Contact Information -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-inner">
+          <div class="section-icon">
+            <x-heroicon-o-envelope aria-hidden="true" />
+          </div>
+          <div class="section-title-wrap">
+            <span class="section-title">Contact Information</span>
+          </div>
+        </div>
+      </div>
+      <table class="fields-table cols-2">
+        <tr>
+          <td class="field">
+            <div class="field-label">Email Address</div>
+            <div class="field-value">{{ $submission->email }}</div>
+          </td>
+          <td class="field no-border-right">
+            <div class="field-label">Phone Number</div>
+            <div class="field-value mono">{{ $submission->phone_number }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
   </div>
 
-</div>
+  <div class="page-break"></div>
+
+  <!-- PAGE 2 -->
+  <div class="page">
+    <!-- Address -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-inner">
+          <div class="section-icon">
+            <x-heroicon-o-map-pin aria-hidden="true" />
+          </div>
+          <div class="section-title-wrap">
+            <span class="section-title">Address</span>
+          </div>
+        </div>
+      </div>
+      <table class="addr-grid-table">
+        <tr>
+          <td class="field">
+            <div class="field-label">House No.</div>
+            <div class="field-value mono">{{ $submission->address->house_no }}</div>
+          </td>
+          <td class="field">
+            <div class="field-label">Street</div>
+            <div class="field-value">{{ $submission->address->street }}</div>
+          </td>
+        </tr>
+      </table>
+      <table class="addr-grid-2-table">
+        <tr>
+          <td class="field">
+            <div class="field-label">Barangay</div>
+            <div class="field-value">{{ $barangayName }}</div>
+          </td>
+          <td class="field">
+            <div class="field-label">City / Municipality</div>
+            <div class="field-value">{{ $municipalityName }}</div>
+          </td>
+          <td class="field">
+            <div class="field-label">Province</div>
+            <div class="field-value">{{ $provinceName }}</div>
+          </td>
+          <td class="field">
+            <div class="field-label">ZIP Code</div>
+            <div class="field-value mono">{{ $submission->address->zip_code }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <!-- Employment Details -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-header-inner">
+          <div class="section-icon">
+            <x-heroicon-o-briefcase aria-hidden="true" />
+          </div>
+          <div class="section-title-wrap">
+            <span class="section-title">Employment Details</span>
+          </div>
+        </div>
+      </div>
+      <table class="fields-table cols-2">
+        <tr>
+          <td class="field full-row" colspan="2">
+            <div class="field-label">Organization</div>
+            <div class="field-value">{{ $submission->organization ?: '—' }}</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field">
+            <div class="field-label">Organizational Unit</div>
+            <div class="field-value">{{ $submission->organizational_unit }}</div>
+          </td>
+          <td class="field no-border-right">
+            <div class="field-label">TIN Number</div>
+            <div class="field-value mono">{{ $submission->tin_number }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <!-- Document Attachments -->
+    @if($submission->attachments && $submission->attachments->count() > 0)
+      <div class="section">
+        <div class="section-header">
+          <div class="section-header-inner">
+            <div class="section-icon">
+              <x-heroicon-o-document-arrow-up aria-hidden="true" />
+            </div>
+            <div class="section-title-wrap">
+              <span class="section-title">Document Attachments</span>
+            </div>
+          </div>
+        </div>
+        <table class="attachment-table">
+          @foreach($submission->attachments as $attachment)
+            <tr>
+              <td style="width: 1%; white-space: nowrap;">
+                <span class="file-type-badge">{{ $attachment->file_type }}</span>
+              </td>
+              <td class="file-name">{{ $attachment->file_name }}</td>
+            </tr>
+          @endforeach
+        </table>
+      </div>
+    @endif
+  </div>
+
 </body>
 </html>
