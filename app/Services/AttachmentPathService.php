@@ -14,7 +14,7 @@ class AttachmentPathService
         return "attachments/{$officeSlug}/Employees/{$last}-{$first}";
     }
 
-    public function submissionDirectory(string $officeSlug, string $firstname, string $lastname, ?int $submissionId = null): string
+    public function submissionDirectory(string $officeSlug, string $firstname, string $lastname, ?string $submissionId = null): string
     {
         $first = str($firstname)->slug();
         $last = str($lastname)->slug();

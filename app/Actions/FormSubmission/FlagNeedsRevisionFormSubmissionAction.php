@@ -2,6 +2,7 @@
 
 namespace App\Actions\FormSubmission;
 
+use App\Enums\FormSubmissionStatus;
 use App\Models\FormSubmission;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -15,7 +16,7 @@ class FlagNeedsRevisionFormSubmissionAction
         $formSubmission->update([
             'flagged_by' => $user->role,
             'flag_remarks' => $remarks,
-            'status' => FormSubmissionStatus::FLAGGED->value,
+            'status' => FormSubmissionStatus::NEEDS_REVISION->value,
         ]);
     }
 }
