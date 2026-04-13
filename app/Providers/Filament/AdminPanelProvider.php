@@ -29,6 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->profile(\App\Filament\Pages\Profile::class)
             ->topNavigation()
             ->globalSearch(false)
             ->databaseNotifications()
