@@ -11,6 +11,10 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -183,12 +187,18 @@ class FormSubmissionsTable
                             FormSubmissionStatus::FOR_SUBMISSION,
                             FormSubmissionStatus::NEEDS_REVISION,
                         ], true)),
+                    RestoreAction::make()
+                        ->visible(fn (FormSubmission $record) => $record->trashed()),
+                    ForceDeleteAction::make()
+                        ->visible(fn (FormSubmission $record) => $record->trashed()),
                 ]),
 
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
+                    ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }

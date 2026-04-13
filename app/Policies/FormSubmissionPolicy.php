@@ -197,8 +197,12 @@ class FormSubmissionPolicy
      */
     public function delete(User $user, FormSubmission $formSubmission): bool
     {
-        if (UserRole::ADMIN->value === $user->role) {
+        if ($user->role === UserRole::ADMIN->value) {
             return true;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value) {
+            return $formSubmission->office_id === $user->office_id;
         }
 
         return false;
@@ -209,8 +213,12 @@ class FormSubmissionPolicy
      */
     public function restore(User $user, FormSubmission $formSubmission): bool
     {
-        if (UserRole::ADMIN->value === $user->role) {
+        if ($user->role === UserRole::ADMIN->value) {
             return true;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value) {
+            return $formSubmission->office_id === $user->office_id;
         }
 
         return false;
@@ -221,8 +229,12 @@ class FormSubmissionPolicy
      */
     public function forceDelete(User $user, FormSubmission $formSubmission): bool
     {
-        if (UserRole::ADMIN->value === $user->role) {
+        if ($user->role === UserRole::ADMIN->value) {
             return true;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value) {
+            return $formSubmission->office_id === $user->office_id;
         }
 
         return false;

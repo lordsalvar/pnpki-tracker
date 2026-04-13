@@ -30,6 +30,16 @@ class FormSubmission extends Model
 
             $submission->reference_number = app(FormSubmissionReferenceNumberGenerator::class)->next();
         });
+
+        static::deleting(function (FormSubmission $submission): void {
+            if ($submission->isForceDeleting()) {
+                $submission->attachments()->forceDelete();
+
+                return;
+            }
+
+            $submission->attachments()->delete();
+        });
     }
 
     protected $primaryKey = 'id';

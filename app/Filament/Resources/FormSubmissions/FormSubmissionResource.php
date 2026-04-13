@@ -19,6 +19,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
@@ -51,7 +52,9 @@ class FormSubmissionResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['office']);
+        $query = parent::getEloquentQuery()
+            ->withoutGlobalScopes([SoftDeletingScope::class])
+            ->with(['office']);
         $user = Auth::user();
 
         if ($user?->role === UserRole::REPRESENTATIVE->value) {
