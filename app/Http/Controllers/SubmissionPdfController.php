@@ -28,15 +28,48 @@ class SubmissionPdfController extends Controller
 
         $filename = 'Submission_'.strtoupper($submission->lastname).'_'.$submission->firstname.'.pdf';
 
-        return Pdf::view('pdf.submission-receipt', [
+        $logoPath = public_path('images/ddslogo.png');
+        $receiptLogoSrc = '';
+        if (is_readable($logoPath)) {
+            $mime = mime_content_type($logoPath) ?: 'image/png';
+            $receiptLogoSrc = sprintf(
+                'data:%s;base64,%s',
+                $mime,
+                base64_encode((string) file_get_contents($logoPath))
+            );
+        }
+
+        $pdf = Pdf::view('pdf.submission-receipt', [
             'submission' => $submission,
             'provinceName' => $provinceName,
             'municipalityName' => $municipalityName,
             'barangayName' => $barangayName,
             'sexLabel' => $sexLabel,
+            'receiptLogoSrc' => $receiptLogoSrc,
         ])
             ->format('a4')
-            ->name($filename)
-            ->download();
+            ->name($filename);
+
+        if ($this->receiptPdfUsesChromiumFooter()) {
+            $pdf
+                ->margins(8, 8, 18, 8, 'mm')
+                ->headerHtml(view('pdf.partials.receipt-chromium-header')->render())
+                ->footerHtml(view('pdf.partials.receipt-chromium-footer')->render());
+        }
+
+        return $pdf->download();
+    }
+
+    /**
+     * Chromium-based PDF engines substitute .pageNumber / .totalPages in footerTemplate only.
+     * An explicit empty headerTemplate is required or Chrome prints date/title in the top margin.
+     */
+    private function receiptPdfUsesChromiumFooter(): bool
+    {
+        return in_array(
+            (string) config('laravel-pdf.driver', 'cloudflare'),
+            ['cloudflare', 'browsershot', 'gotenberg'],
+            true
+        );
     }
 }

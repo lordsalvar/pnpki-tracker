@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Submission Receipt — {{ $submission->firstname }} {{ $submission->lastname }}</title>
+<title>{{ config('app.name') }} — {{ $submission->firstname }} {{ $submission->lastname }}</title>
 @php
     $pdfStyles = rescue(
         static fn (): string => \Illuminate\Support\Facades\Vite::content('resources/css/pdf/submission-receipt.css'),
@@ -53,12 +53,29 @@
     overflow: hidden;
   }
 
-  .header-text h1 {
+  .header-app-name {
     font-size: 22px;
     font-weight: 600;
     color: #0f1724;
     text-align: center;
     letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  /* Filament AdminPanel brand: from-sky-400 via-blue-500 to-indigo-500 */
+  .brand-gradient {
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(to right, #38bdf8, #3b82f6, #6366f1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: #2563eb;
+  }
+
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .brand-gradient {
+      color: transparent;
+    }
   }
 
   .header-text p {
@@ -369,12 +386,24 @@
     <!-- Header -->
     <div class="header">
       <div class="logo-ring">
-        <img src="{{ public_path('images/Logo.jpg') }}"
-             style="width:100%; height:100%; object-fit:cover;"
-             alt="PNPKI Logo" />
+        @if(($receiptLogoSrc ?? '') !== '')
+          <img src="{{ $receiptLogoSrc }}"
+               style="width:100%; height:100%; object-fit:cover;"
+               alt="" />
+        @endif
       </div>
       <div class="header-text">
-        <h1>Submission Receipt</h1>
+        <h1 class="header-app-name">
+          @php
+              $appName = (string) config('app.name');
+              $brandToken = 'PNPKI-TRACKER';
+          @endphp
+          @if(str_contains($appName, $brandToken))
+            {{ Str::before($appName, $brandToken) }}<span class="brand-gradient">{{ $brandToken }}</span>{{ Str::after($appName, $brandToken) }}
+          @else
+            <span class="brand-gradient">{{ $appName }}</span>
+          @endif
+        </h1>
         <p>Employee Registration Form</p>
       </div>
     </div>
