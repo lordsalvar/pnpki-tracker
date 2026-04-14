@@ -33,11 +33,11 @@
     margin: 0 auto;
   }
 
-  /* Header */
+  /* Header — stretch children full width so the brand shell table can use 100% for 50%|center|50% layout */
   .header {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     margin-bottom: 32px;
     gap: 14px;
   }
@@ -53,33 +53,58 @@
     overflow: hidden;
   }
 
-  /* Wrapper centers the row when PDF engines stretch tables to 100% width */
+  /* Outer shell: 50% | intrinsic | 50% — centers in Chromium PDF / Cloudflare */
   .header-brand-wrap {
     width: 100%;
-    text-align: center;
-    margin-bottom: 12px;
+    max-width: 100%;
+    align-self: stretch;
+    margin-bottom: 0;
   }
 
-  /* Logo + government lines — inline-table + parent text-align for Dompdf/Chromium */
-  .header-brand-table {
-    display: inline-table;
+  .header-brand-shell {
+    width: 100%;
     border-collapse: collapse;
+    table-layout: auto;
     margin: 0;
-    vertical-align: top;
+  }
+
+  .header-brand-shell td {
+    vertical-align: middle;
+    padding: 0;
+  }
+
+  .header-brand-spacer {
+    width: 50%;
+    font-size: 0;
+    line-height: 0;
+  }
+
+  .header-brand-middle {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  /* Logo + government lines — separate + border-spacing: Chromium PDF often ignores padding on collapse:collapse cells */
+  .header-brand-table {
+    border-collapse: separate;
+    border-spacing: 14px 0;
+    margin: 0 auto;
   }
 
   .header-brand-table td {
     vertical-align: middle;
+    padding: 0;
   }
 
   .header-logo-cell {
-    padding-right: 16px;
     width: 1%;
     white-space: nowrap;
   }
 
   .header-gov-cell {
     text-align: left;
+    padding: 0;
   }
 
   .header-gov-republic {
@@ -447,22 +472,30 @@
     <!-- Header -->
     <div class="header">
       <div class="header-brand-wrap">
-        <table class="header-brand-table" role="presentation">
+        <table class="header-brand-shell" width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
           <tr>
-            <td class="header-logo-cell">
-              <div class="logo-ring">
-                @if(($receiptLogoSrc ?? '') !== '')
-                  <img src="{{ $receiptLogoSrc }}"
-                       style="width:100%; height:100%; object-fit:cover;"
-                       alt="" />
-                @endif
-              </div>
+            <td class="header-brand-spacer" width="50%">&nbsp;</td>
+            <td class="header-brand-middle" align="center" valign="middle">
+              <table class="header-brand-table" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                <tr>
+                  <td class="header-logo-cell">
+                    <div class="logo-ring">
+                      @if(($receiptLogoSrc ?? '') !== '')
+                        <img src="{{ $receiptLogoSrc }}"
+                             style="width:100%; height:100%; object-fit:cover;"
+                             alt="" />
+                      @endif
+                    </div>
+                  </td>
+                  <td class="header-gov-cell">
+                    <div class="header-gov-republic">REPUBLIC OF THE PHILIPPINES</div>
+                    <div class="header-gov-province">PROVINCE OF DAVAO DEL SUR</div>
+                    <div class="header-gov-address">MATTI, DIGOS CITY</div>
+                  </td>
+                </tr>
+              </table>
             </td>
-            <td class="header-gov-cell">
-              <div class="header-gov-republic">REPUBLIC OF THE PHILIPPINES</div>
-              <div class="header-gov-province">PROVINCE OF DAVAO DEL SUR</div>
-              <div class="header-gov-address">MATTI, DIGOS CITY</div>
-            </td>
+            <td class="header-brand-spacer" width="50%">&nbsp;</td>
           </tr>
         </table>
       </div>
