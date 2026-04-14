@@ -34,11 +34,7 @@ class FormSubmission extends Model
         static::deleting(function (FormSubmission $submission): void {
             if ($submission->isForceDeleting()) {
                 $submission->attachments()->forceDelete();
-
-                return;
             }
-
-            $submission->attachments()->delete();
         });
     }
 

@@ -300,7 +300,31 @@ class FormSubmissionForm
                             ])
                             ->required()
                             ->live()
-                            ->disabledOn('edit')
+                            ->afterStateUpdated(function (?string $state, Set $set, Get $get, $livewire): void {
+                                if (! $livewire instanceof \App\Filament\Resources\FormSubmissions\Pages\EditFormSubmission) {
+                                    return;
+                                }
+
+                                $ruleService = app(\App\Services\AttachmentRuleService::class);
+                                $activeFields = $ruleService->activeFieldsForCombo($state);
+
+                                foreach ($activeFields as $field) {
+                                    $currentState = $get($field);
+
+                                    // Preserve explicit user removals ([]) and current uploads.
+                                    if ($currentState !== null) {
+                                        continue;
+                                    }
+
+                                    $persistedPath = $livewire->persistedAttachmentPathForField($field);
+
+                                    if ($persistedPath === null) {
+                                        continue;
+                                    }
+
+                                    $set($field, [$persistedPath => $persistedPath]);
+                                }
+                            })
                             ->dehydrated(false)
                             ->columnSpan(2),
 
@@ -315,7 +339,7 @@ class FormSubmissionForm
                             ->getUploadedFileNameForStorageUsing(self::fileName('PNPKI'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable()
                             ->previewable()
                             ->uploadingMessage('Uploading PNPKI Form...')
                             ->dehydrated(false)
@@ -334,7 +358,7 @@ class FormSubmissionForm
                             ->getUploadedFileNameForStorageUsing(self::fileName('NationalID'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable()
                             ->previewable()
                             ->uploadingMessage('Uploading National ID...')
                             ->dehydrated(false)
@@ -353,7 +377,7 @@ class FormSubmissionForm
                             ->getUploadedFileNameForStorageUsing(self::fileName('BirthCert'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable()
                             ->previewable()
                             ->uploadingMessage('Uploading Birth Certificate...')
                             ->dehydrated(false)
@@ -372,7 +396,7 @@ class FormSubmissionForm
                             ->getUploadedFileNameForStorageUsing(self::fileName('Passport'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable()
                             ->previewable()
                             ->uploadingMessage('Uploading Passport...')
                             ->dehydrated(false)
@@ -391,7 +415,7 @@ class FormSubmissionForm
                             ->getUploadedFileNameForStorageUsing(self::fileName('UMID'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable()
                             ->previewable()
                             ->uploadingMessage('Uploading UMID...')
                             ->dehydrated(false)
@@ -410,7 +434,7 @@ class FormSubmissionForm
                             ->getUploadedFileNameForStorageUsing(self::fileName('ID1'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable()
                             ->previewable()
                             ->uploadingMessage('Uploading Valid ID #1...')
                             ->dehydrated(false)
@@ -429,7 +453,7 @@ class FormSubmissionForm
                             ->getUploadedFileNameForStorageUsing(self::fileName('ID2'))
                             ->openable()
                             ->downloadable()
-                            ->deletable(false)
+                            ->deletable()
                             ->previewable()
                             ->uploadingMessage('Uploading Valid ID #2...')
                             ->dehydrated(false)

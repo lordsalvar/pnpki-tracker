@@ -250,6 +250,11 @@ class EditFormSubmission extends EditRecord
         return $paths;
     }
 
+    public function persistedAttachmentPathForField(string $field): ?string
+    {
+        return $this->getAttachmentPathsByField()[$field] ?? null;
+    }
+
     /**
      * Infer the ID combo from currently attached file fields.
      */
