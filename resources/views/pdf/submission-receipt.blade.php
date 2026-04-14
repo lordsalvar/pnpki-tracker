@@ -49,8 +49,69 @@
     background: #ffffff;
     border: 1.5px solid #dde2ee;
     display: block;
-    margin: 0 auto;
+    margin: 0;
     overflow: hidden;
+  }
+
+  /* Wrapper centers the row when PDF engines stretch tables to 100% width */
+  .header-brand-wrap {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  /* Logo + government lines — inline-table + parent text-align for Dompdf/Chromium */
+  .header-brand-table {
+    display: inline-table;
+    border-collapse: collapse;
+    margin: 0;
+    vertical-align: top;
+  }
+
+  .header-brand-table td {
+    vertical-align: middle;
+  }
+
+  .header-logo-cell {
+    padding-right: 16px;
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  .header-gov-cell {
+    text-align: left;
+  }
+
+  .header-gov-republic {
+    font-size: 12px;
+    font-weight: normal;
+    color: #0f1724;
+    line-height: 1.35;
+    letter-spacing: 0.02em;
+  }
+
+  .header-gov-province {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f1724;
+    line-height: 1.35;
+    margin-top: 3px;
+    letter-spacing: 0.02em;
+  }
+
+  .header-gov-address {
+    font-size: 11px;
+    font-weight: normal;
+    color: #3d4a63;
+    line-height: 1.35;
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .header-text {
+    margin-top: 4px;
+    width: 100%;
+    text-align: center;
   }
 
   .header-app-name {
@@ -385,12 +446,25 @@
   <div class="page">
     <!-- Header -->
     <div class="header">
-      <div class="logo-ring">
-        @if(($receiptLogoSrc ?? '') !== '')
-          <img src="{{ $receiptLogoSrc }}"
-               style="width:100%; height:100%; object-fit:cover;"
-               alt="" />
-        @endif
+      <div class="header-brand-wrap">
+        <table class="header-brand-table" role="presentation">
+          <tr>
+            <td class="header-logo-cell">
+              <div class="logo-ring">
+                @if(($receiptLogoSrc ?? '') !== '')
+                  <img src="{{ $receiptLogoSrc }}"
+                       style="width:100%; height:100%; object-fit:cover;"
+                       alt="" />
+                @endif
+              </div>
+            </td>
+            <td class="header-gov-cell">
+              <div class="header-gov-republic">REPUBLIC OF THE PHILIPPINES</div>
+              <div class="header-gov-province">PROVINCE OF DAVAO DEL SUR</div>
+              <div class="header-gov-address">MATTI, DIGOS CITY</div>
+            </td>
+          </tr>
+        </table>
       </div>
       <div class="header-text">
         <h1 class="header-app-name">
