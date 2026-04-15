@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Batches\RelationManagers;
 
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
+use App\Enums\UserRole;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
@@ -14,6 +15,7 @@ use Filament\Actions\ViewAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class FormSubmissionsRelationManager extends RelationManager
@@ -36,6 +38,16 @@ class FormSubmissionsRelationManager extends RelationManager
                 }
 
                 if ($record->status === FormSubmissionStatus::NEEDS_REVISION) {
+                    if (
+                        Auth::user()?->role === UserRole::REPRESENTATIVE->value
+                        && $this->ownerRecord->status !== BatchStatus::NEEDS_REVISION->value
+                    ) {
+                        return FormSubmissionResource::getUrl('view', [
+                            'record' => $record,
+                            'batch' => $this->ownerRecord->getKey(),
+                        ]);
+                    }
+
                     return FormSubmissionResource::getUrl('edit', [
                         'record' => $record,
                         'batch' => $this->ownerRecord->getKey(),

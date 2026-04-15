@@ -131,6 +131,13 @@ class FormSubmissionsTable
                 }
 
                 if ($record->status === FormSubmissionStatus::NEEDS_REVISION) {
+                    if (
+                        Auth::user()?->role === UserRole::REPRESENTATIVE->value
+                        && $record->batch?->status !== BatchStatus::NEEDS_REVISION
+                    ) {
+                        return FormSubmissionResource::getUrl('view', ['record' => $record]);
+                    }
+
                     return FormSubmissionResource::getUrl('edit', ['record' => $record]);
                 }
 
