@@ -103,6 +103,7 @@ class EditFormSubmission extends EditRecord
                         ->label('Batch')
                         ->options(
                             Batch::query()
+                                ->where('office_id', $this->record->office_id)
                                 ->where('status', '!=', BatchStatus::FINALIZED)
                                 ->orderBy('batch_name')
                                 ->pluck('batch_name', 'id')
