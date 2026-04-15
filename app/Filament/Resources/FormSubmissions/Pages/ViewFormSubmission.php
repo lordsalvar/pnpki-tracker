@@ -39,6 +39,10 @@ class ViewFormSubmission extends ViewRecord
                 ->persistent()
                 ->send();
         }
+
+        if (($batchId = $this->getContextBatchId()) !== null) {
+            session(['filament.last_viewed_batch_id' => $batchId]);
+        }
     }
 
     public function getTitle(): string
@@ -60,12 +64,21 @@ class ViewFormSubmission extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('back_to_batch')
+                ->label('Back to Batch')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->color('gray')
+                ->visible(fn (): bool => $this->getContextBatchId() !== null)
+                ->url(fn (): string => BatchResource::getUrl('view', ['record' => $this->getContextBatchId()])),
             Action::make('edit_submission')
                 ->label('Edit Submission')
                 ->icon('heroicon-o-pencil-square')
                 ->color('primary')
                 ->visible(fn (): bool => $this->canSeeEditNeedsRevisionAction())
-                ->url(fn (): string => FormSubmissionResource::getUrl('edit', ['record' => $this->record])),
+                ->url(fn (): string => FormSubmissionResource::getUrl('edit', array_filter([
+                    'record' => $this->record,
+                    'batch' => $this->getContextBatchId(),
+                ], fn ($value): bool => filled($value)))),
             Action::make('for_submission')
                 ->label('Mark as For Submission')
                 ->icon('heroicon-o-paper-airplane')
@@ -357,5 +370,20 @@ class ViewFormSubmission extends ViewRecord
         }
 
         return $this->record->batch?->status === BatchStatus::NEEDS_REVISION;
+    }
+
+    private function getContextBatchId(): ?string
+    {
+        $batchId = request()->integer('batch');
+
+        if ($batchId <= 0) {
+            return null;
+        }
+
+        if ((string) $this->record->batch_id !== (string) $batchId) {
+            return null;
+        }
+
+        return (string) $batchId;
     }
 }

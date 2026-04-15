@@ -40,12 +40,19 @@ class EditFormSubmission extends EditRecord
             FormSubmissionStatus::FINALIZED,
             FormSubmissionStatus::FOR_SUBMISSION,
         ], true)) {
-            $this->redirect(FormSubmissionResource::getUrl('view', ['record' => $submission]), navigate: true);
+            $this->redirect(FormSubmissionResource::getUrl('view', array_filter([
+                'record' => $submission,
+                'batch' => request()->integer('batch') > 0 ? request()->integer('batch') : null,
+            ], fn ($value): bool => filled($value))), navigate: true);
 
             return;
         }
 
         parent::mount($record);
+
+        if (($batchId = $this->getContextBatchId()) !== null) {
+            session(['filament.last_viewed_batch_id' => $batchId]);
+        }
     }
 
     public function getTitle(): string
@@ -67,6 +74,12 @@ class EditFormSubmission extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('back_to_batch')
+                ->label('Back to Batch')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->color('gray')
+                ->visible(fn (): bool => $this->getContextBatchId() !== null)
+                ->url(fn (): string => BatchResource::getUrl('view', ['record' => $this->getContextBatchId()])),
             Action::make('finalize')
                 ->label('Finalize')
                 ->icon('heroicon-o-check-badge')
@@ -486,5 +499,20 @@ class EditFormSubmission extends EditRecord
     private function pathService(): AttachmentPathService
     {
         return app(AttachmentPathService::class);
+    }
+
+    private function getContextBatchId(): ?string
+    {
+        $batchId = request()->integer('batch');
+
+        if ($batchId <= 0) {
+            return null;
+        }
+
+        if ((string) $this->record->batch_id !== (string) $batchId) {
+            return null;
+        }
+
+        return (string) $batchId;
     }
 }

@@ -23,6 +23,44 @@ class ViewBatch extends ViewRecord
 {
     protected static string $resource = BatchResource::class;
 
+    public function mount(int|string $record): void
+    {
+        parent::mount($record);
+
+        $currentBatchId = (string) $this->record->getKey();
+
+        if (request()->boolean('from_nav')) {
+            $lastNavBatchId = (string) session('filament.batches_nav_last_batch_id', '');
+            $navClicks = (int) session('filament.batches_nav_clicks', 0);
+
+            $navClicks = $lastNavBatchId === $currentBatchId ? $navClicks + 1 : 1;
+
+            session([
+                'filament.batches_nav_last_batch_id' => $currentBatchId,
+                'filament.batches_nav_clicks' => $navClicks,
+            ]);
+
+            if ($navClicks >= 2) {
+                session()->forget([
+                    'filament.last_viewed_batch_id',
+                    'filament.batches_nav_last_batch_id',
+                    'filament.batches_nav_clicks',
+                ]);
+
+                $this->redirect(BatchResource::getUrl('index'), navigate: true);
+
+                return;
+            }
+        } else {
+            session()->forget([
+                'filament.batches_nav_last_batch_id',
+                'filament.batches_nav_clicks',
+            ]);
+        }
+
+        session(['filament.last_viewed_batch_id' => (string) $this->record->getKey()]);
+    }
+
     public function getTitle(): string|Htmlable
     {
         return $this->record->batch_name;
