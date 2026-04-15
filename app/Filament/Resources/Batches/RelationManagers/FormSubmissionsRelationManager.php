@@ -30,19 +30,45 @@ class FormSubmissionsRelationManager extends RelationManager
 
         return FormSubmissionsTable::configure($table)
             ->recordTitleAttribute('lastname')
+            ->recordUrl(function ($record): ?string {
+                if (! $record) {
+                    return null;
+                }
+
+                if ($record->status === FormSubmissionStatus::NEEDS_REVISION) {
+                    return FormSubmissionResource::getUrl('edit', [
+                        'record' => $record,
+                        'batch' => $this->ownerRecord->getKey(),
+                    ]);
+                }
+
+                return FormSubmissionResource::getUrl('view', [
+                    'record' => $record,
+                    'batch' => $this->ownerRecord->getKey(),
+                ]);
+            })
             ->recordActions(
                 $isFinalized ? [
                     ViewAction::make()
-                        ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
+                        ->url(fn ($record) => FormSubmissionResource::getUrl('view', [
+                            'record' => $record,
+                            'batch' => $this->ownerRecord->getKey(),
+                        ]))
                         ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
                 ] : [
                     EditAction::make()
-                        ->url(fn ($record) => FormSubmissionResource::getUrl('edit', ['record' => $record]))
+                        ->url(fn ($record) => FormSubmissionResource::getUrl('edit', [
+                            'record' => $record,
+                            'batch' => $this->ownerRecord->getKey(),
+                        ]))
                         ->visible(fn ($record) => $this->ownerRecord->status === BatchStatus::NEEDS_REVISION
                             && $record->status === FormSubmissionStatus::NEEDS_REVISION
                             && Gate::allows('update', $record)),
                     ViewAction::make()
-                        ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
+                        ->url(fn ($record) => FormSubmissionResource::getUrl('view', [
+                            'record' => $record,
+                            'batch' => $this->ownerRecord->getKey(),
+                        ]))
                         ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
                 ],
             )

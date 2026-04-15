@@ -10,6 +10,7 @@ use App\Actions\FormSubmission\UnFinalizeFormSubmissionAction;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
+use App\Filament\Resources\Batches\BatchResource;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
 use App\Models\Batch;
@@ -62,6 +63,22 @@ class ViewFormSubmission extends ViewRecord
                         ->title('Submission marked as For Submission.')
                         ->success()
                         ->send();
+
+                    if (Auth::user()?->role === UserRole::ADMIN->value) {
+                        $batchId = request()->integer('batch');
+
+                        if ($batchId > 0 && (int) $this->record->batch_id === $batchId) {
+                            $this->redirect(BatchResource::getUrl('view', ['record' => $batchId]), navigate: true);
+
+                            return;
+                        }
+
+                        if ($this->record->batch_id !== null) {
+                            $this->redirect(BatchResource::getUrl('view', ['record' => $this->record->batch_id]), navigate: true);
+
+                            return;
+                        }
+                    }
                 }),
             Action::make('unfinalize')
                 ->label('Revert to pending')
