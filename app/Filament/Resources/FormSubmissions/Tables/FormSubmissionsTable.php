@@ -72,7 +72,7 @@ class FormSubmissionsTable
                     ->label('Email')
                     ->searchable(),
 
-                TextColumn::make('batch.name')
+                TextColumn::make('batch.batch_name')
                     ->label('Batch')
                     ->badge()
                     ->getStateUsing(fn ($record) => $record->batch?->batch_name ?? 'Unassigned')
