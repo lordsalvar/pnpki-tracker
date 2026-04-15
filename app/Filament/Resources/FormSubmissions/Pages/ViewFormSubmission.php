@@ -129,6 +129,22 @@ class ViewFormSubmission extends ViewRecord
                         ->send();
 
                     $this->refreshFormData(['flagged_by', 'flag_remarks']);
+
+                    if (Auth::user()?->role === UserRole::ADMIN->value) {
+                        $batchId = request()->integer('batch');
+
+                        if ($batchId > 0 && (int) $this->record->batch_id === $batchId) {
+                            $this->redirect(BatchResource::getUrl('view', ['record' => $batchId]), navigate: true);
+
+                            return;
+                        }
+
+                        if ($this->record->batch_id !== null) {
+                            $this->redirect(BatchResource::getUrl('view', ['record' => $this->record->batch_id]), navigate: true);
+
+                            return;
+                        }
+                    }
                 }),
             Action::make('unflag_needs_revision')
                 ->label('Unflag Needs Revision')
