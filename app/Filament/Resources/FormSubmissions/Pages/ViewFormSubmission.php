@@ -27,6 +27,20 @@ class ViewFormSubmission extends ViewRecord
 {
     protected static string $resource = FormSubmissionResource::class;
 
+    public function mount(int|string $record): void
+    {
+        parent::mount($record);
+
+        if ($this->shouldShowPendingBatchReturnNotice()) {
+            Notification::make()
+                ->title('Batch not yet returned')
+                ->body('You can resolve the flagged submission once the admin has reviewed and returned the batch.')
+                ->warning()
+                ->persistent()
+                ->send();
+        }
+    }
+
     public function getTitle(): string
     {
         $record = $this->record;
@@ -46,6 +60,12 @@ class ViewFormSubmission extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('edit_submission')
+                ->label('Edit Submission')
+                ->icon('heroicon-o-pencil-square')
+                ->color('primary')
+                ->visible(fn (): bool => $this->canSeeEditNeedsRevisionAction())
+                ->url(fn (): string => FormSubmissionResource::getUrl('edit', ['record' => $this->record])),
             Action::make('for_submission')
                 ->label('Mark as For Submission')
                 ->icon('heroicon-o-paper-airplane')
@@ -293,5 +313,49 @@ class ViewFormSubmission extends ViewRecord
         }
 
         return $this->record->status === FormSubmissionStatus::FINALIZED;
+    }
+
+    private function shouldShowPendingBatchReturnNotice(): bool
+    {
+        $user = Auth::user();
+
+        if ($user?->role !== UserRole::REPRESENTATIVE->value) {
+            return false;
+        }
+
+        if ($this->record->status !== FormSubmissionStatus::NEEDS_REVISION) {
+            return false;
+        }
+
+        if ($this->record->batch_id === null) {
+            return false;
+        }
+
+        return $this->record->batch?->status !== BatchStatus::NEEDS_REVISION;
+    }
+
+    private function canSeeEditNeedsRevisionAction(): bool
+    {
+        if (! Auth::check()) {
+            return false;
+        }
+
+        if (! Gate::allows('update', $this->record)) {
+            return false;
+        }
+
+        if ($this->record->status !== FormSubmissionStatus::NEEDS_REVISION) {
+            return false;
+        }
+
+        if ($this->record->flagged_by === null) {
+            return false;
+        }
+
+        if ($this->record->batch_id === null) {
+            return true;
+        }
+
+        return $this->record->batch?->status === BatchStatus::NEEDS_REVISION;
     }
 }
