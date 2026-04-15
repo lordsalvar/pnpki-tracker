@@ -95,7 +95,8 @@ class EditFormSubmission extends EditRecord
                 ->label('Assign to Batch')
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->color('info')
-                ->visible(fn () => $this->record->status === FormSubmissionStatus::FINALIZED && $this->record->batch_id === null)
+                ->visible(fn () => in_array($this->record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION], true)
+                    && $this->record->batch_id === null)
                 ->modalSubmitActionLabel('Assign')
                 ->form([
                     Select::make('batch_id')

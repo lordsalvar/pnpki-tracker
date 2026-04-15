@@ -178,7 +178,7 @@ class ViewFormSubmission extends ViewRecord
                 ->icon('heroicon-o-archive-box-arrow-down')
                 ->color('info')
                 ->visible(fn () => Auth::user()->role !== UserRole::ADMIN->value
-                    && $this->record->status === FormSubmissionStatus::FINALIZED
+                    && in_array($this->record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION], true)
                     && $this->record->batch_id === null
                     && $this->record->batch?->status !== BatchStatus::FINALIZED)
                 ->form([

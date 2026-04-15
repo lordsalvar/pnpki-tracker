@@ -191,6 +191,10 @@ class FormSubmissionPolicy
             }
 
             if ($formSubmission->status === FormSubmissionStatus::NEEDS_REVISION) {
+                if ($formSubmission->batch_id === null) {
+                    return true;
+                }
+
                 return $formSubmission->batch?->status === BatchStatus::NEEDS_REVISION;
             }
 
