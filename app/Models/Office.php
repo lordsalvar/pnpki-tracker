@@ -43,5 +43,4 @@ class Office extends Model
     {
         return $this->hasMany(Batch::class, 'office_id', 'id');
     }
-    //
 }

@@ -10,6 +10,7 @@ use App\Filament\Resources\Offices\Pages\ViewOffice;
 use App\Filament\Resources\Offices\RelationManagers\FormSubmissionsRelationManager;
 use App\Filament\Resources\Offices\Schemas\OfficeForm;
 use App\Filament\Resources\Offices\Tables\OfficesTable;
+use App\Filament\Resources\Offices\Widgets\OfficeOverviewStats;
 use App\Models\Office;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -40,6 +41,16 @@ class OfficeResource extends Resource
     {
         return [
             FormSubmissionsRelationManager::class,
+        ];
+    }
+
+    /**
+     * @return array<class-string<\Filament\Widgets\Widget>>
+     */
+    public static function getWidgets(): array
+    {
+        return [
+            OfficeOverviewStats::class,
         ];
     }
 
