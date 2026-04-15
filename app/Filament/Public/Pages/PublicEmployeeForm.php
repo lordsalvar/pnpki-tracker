@@ -376,8 +376,8 @@ class PublicEmployeeForm extends Page implements HasForms
                                         ->extraInputAttributes([
                                             'inputmode' => 'numeric',
                                             'oninput' => "let value = this.value.replace(/\\D/g, ''); if (value.startsWith('09')) { value = '09' + value.slice(2); } else if (value.startsWith('9')) { value = '09' + value.slice(1).replace(/^0+/, ''); } else { value = '09' + value.replace(/^0+/, ''); } this.value = value.slice(0, 11);",
-                                        ])
-                                        
+                                        ]),
+
                                 ]),
                         ]),
 
@@ -414,7 +414,7 @@ class PublicEmployeeForm extends Page implements HasForms
                                 ->rule(self::noSymbolRule())
                                 ->validationMessages([
                                     'regex' => 'The TIN number must be 9 digits (total 9 digits).',
-                                ])
+                                ]),
                         ]),
 
                     Step::make('Documents')
@@ -425,7 +425,12 @@ class PublicEmployeeForm extends Page implements HasForms
                             Select::make('id_combo')
                                 ->label('Select ID Combination')
                                 ->options([
-                                    'national_id' => 'PNPKI form & National ID',
+                                    'national_id' => 'PNPKI form, Philippine National ID (PhilID)',
+                                    'passport_only' => 'PNPKI form, Philippine Passport',
+                                    'umid_only' => 'PNPKI form, SSS Unified Multi-Purpose ID (UMID)',
+                                    'drivers_license_only' => "PNPKI form, LTO Driver's License",
+                                    'prc_only' => 'PNPKI form, Professional Regulation Commission (PRC)',
+                                    'postal_id_only' => 'PNPKI form, ID Postal Identity Card',
                                     'birth_cert_umid' => 'PNPKI form, Birth Cert & UMID',
                                     'passport_umid' => 'PNPKI form, Passport & UMID',
                                     'birth_cert_valid_ids' => 'PNPKI form, Birth Cert & 2 Valid IDs',
@@ -505,7 +510,7 @@ class PublicEmployeeForm extends Page implements HasForms
                                 ->uploadingMessage('Uploading Passport...')
                                 ->required()
                                 ->columnSpan(1)
-                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_umid', 'passport_valid_ids'])),
+                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_only', 'passport_umid', 'passport_valid_ids'])),
 
                             FileUpload::make('upload_umid')
                                 ->label('UMID Card')
@@ -523,7 +528,61 @@ class PublicEmployeeForm extends Page implements HasForms
                                 ->uploadingMessage('Uploading UMID...')
                                 ->required()
                                 ->columnSpan(1)
-                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'passport_umid'])),
+                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['umid_only', 'birth_cert_umid', 'passport_umid'])),
+
+                            FileUpload::make('upload_drivers_license')
+                                ->label("LTO Driver's License")
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('DriversLicense'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage("Uploading Driver's License...")
+                                ->required()
+                                ->columnSpan(2)
+                                ->visible(fn (Get $get) => $get('id_combo') === 'drivers_license_only'),
+
+                            FileUpload::make('upload_prc_id')
+                                ->label('PRC ID')
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PRCID'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage('Uploading PRC ID...')
+                                ->required()
+                                ->columnSpan(2)
+                                ->visible(fn (Get $get) => $get('id_combo') === 'prc_only'),
+
+                            FileUpload::make('upload_postal_id')
+                                ->label('Postal ID')
+                                ->helperText('PDF only · Max 5 MB')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(5120)
+                                ->disk('local')
+                                ->directory('attachments')
+                                ->visibility('private')
+                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PostalID'))
+                                ->openable()
+                                ->downloadable()
+                                ->deletable(fn () => ! $this->submitted)
+                                ->previewable()
+                                ->uploadingMessage('Uploading Postal ID...')
+                                ->required()
+                                ->columnSpan(2)
+                                ->visible(fn (Get $get) => $get('id_combo') === 'postal_id_only'),
 
                             FileUpload::make('upload_id1')
                                 ->label('Valid ID #1')
