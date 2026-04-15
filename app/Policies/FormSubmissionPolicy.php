@@ -81,11 +81,19 @@ class FormSubmissionPolicy
             return false;
         }
 
-        if ($user->role === UserRole::REPRESENTATIVE->value && $formSubmission->status !== FormSubmissionStatus::FINALIZED) {
-            return false;
-        }
-
         $formSubmission->loadMissing('batch');
+
+        if ($user->role === UserRole::ADMIN->value) {
+            if (! in_array($formSubmission->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION], true)) {
+                return false;
+            }
+
+            if ($formSubmission->batch?->status !== BatchStatus::FINALIZED) {
+                return false;
+            }
+
+            return true;
+        }
 
         if ($formSubmission->status !== FormSubmissionStatus::FINALIZED) {
             return false;
