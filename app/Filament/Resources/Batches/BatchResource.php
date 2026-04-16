@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Auth;
 
 class BatchResource extends Resource
 {
+    private const LAST_VIEWED_BATCH_SESSION_KEY = 'filament.last_viewed_batch_id';
+
     protected static ?string $model = Batch::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
@@ -69,5 +71,25 @@ class BatchResource extends Resource
 
         return parent::getEloquentQuery()
             ->where('office_id', Auth::user()->office_id);
+    }
+
+    public static function getNavigationUrl(): string
+    {
+        $batchId = session(self::LAST_VIEWED_BATCH_SESSION_KEY);
+
+        if (! filled($batchId)) {
+            return static::getUrl('index');
+        }
+
+        if (static::getEloquentQuery()->whereKey($batchId)->exists()) {
+            return static::getUrl('view', [
+                'record' => $batchId,
+                'from_nav' => 1,
+            ]);
+        }
+
+        session()->forget(self::LAST_VIEWED_BATCH_SESSION_KEY);
+
+        return static::getUrl('index');
     }
 }
