@@ -20,6 +20,19 @@ class BatchSubmissionsExport
 {
     public function __construct(protected Batch $batch) {}
 
+    protected function formatTinForExport(string|int|null $tinNumber): string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $tinNumber);
+
+        if ($digits === '' || strlen($digits) < 9) {
+            return (string) $tinNumber;
+        }
+
+        $baseTin = substr($digits, 0, 9);
+
+        return substr($baseTin, 0, 3).'-'.substr($baseTin, 3, 3).'-'.substr($baseTin, 6, 3).'-000';
+    }
+
     public function headers(): array
     {
         return [
@@ -96,9 +109,9 @@ class BatchSubmissionsExport
                 $submission->email,
                 (string) $submission->phone_number,
                 $submission->sex instanceof BackedEnum ? ucfirst($submission->sex->value) : ucfirst((string) $submission->sex),
-                (string) $submission->tin_number,
-                $submission->organization,
-                $submission->organizational_unit,
+                $this->formatTinForExport($submission->tin_number),
+                'PROVINCIAL GOVERNMENT OF DAVAO DEL SUR',
+                'LOCAL GOVERNMENT UNIT',
                 $submission->office?->name ?? '',
                 $fullAddress,
                 $submission->status instanceof BackedEnum ? ucfirst($submission->status->value) : ucfirst($submission->status),
