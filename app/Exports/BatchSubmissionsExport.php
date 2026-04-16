@@ -65,6 +65,16 @@ class BatchSubmissionsExport
 
             if (in_array('NationalID', $fileTypes)) {
                 $attachmentList = 'PNPKI form & National ID';
+            } elseif (in_array('Passport', $fileTypes) && ! in_array('UMID', $fileTypes) && ! in_array('ID1', $fileTypes)) {
+                $attachmentList = 'PNPKI form, Philippine Passport';
+            } elseif (in_array('UMID', $fileTypes) && ! in_array('BirthCert', $fileTypes) && ! in_array('Passport', $fileTypes)) {
+                $attachmentList = 'PNPKI form, SSS Unified Multi-Purpose ID (UMID)';
+            } elseif (in_array('DriversLicense', $fileTypes)) {
+                $attachmentList = "PNPKI form, LTO Driver's License";
+            } elseif (in_array('PRCID', $fileTypes)) {
+                $attachmentList = 'PNPKI form, Professional Regulation Commission (PRC)';
+            } elseif (in_array('PostalID', $fileTypes)) {
+                $attachmentList = 'PNPKI form, ID Postal Identity Card';
             } elseif (in_array('UMID', $fileTypes) && in_array('BirthCert', $fileTypes)) {
                 $attachmentList = 'PNPKI form, Birth Cert & UMID';
             } elseif (in_array('UMID', $fileTypes) && in_array('Passport', $fileTypes)) {
