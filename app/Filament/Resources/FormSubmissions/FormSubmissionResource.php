@@ -64,6 +64,7 @@ class FormSubmissionResource extends Resource
         if ($user?->role === UserRole::ADMIN->value) {
             $query->whereIn('status', [
                 FormSubmissionStatus::FINALIZED->value,
+                FormSubmissionStatus::NEEDS_REVISION->value,
                 FormSubmissionStatus::FOR_SUBMISSION->value,
             ]);
         }
@@ -92,6 +93,7 @@ class FormSubmissionResource extends Resource
                     : FormSubmission::query()
                         ->whereIn('status', [
                             FormSubmissionStatus::FINALIZED->value,
+                            FormSubmissionStatus::NEEDS_REVISION->value,
                             FormSubmissionStatus::FOR_SUBMISSION->value,
                         ])
                         ->count();
