@@ -438,6 +438,17 @@ class PublicEmployeeForm extends Page implements HasForms
                                 ])
                                 ->required()
                                 ->live()
+                                ->afterStateUpdated(function (?string $state): void {
+                                    if (blank($state)) {
+                                        return;
+                                    }
+                                    Notification::make()
+                                        ->title('Include both sides if applicable')
+                                        ->body('If your ID has a back side, please upload both the front and back for a complete submission.')
+                                        ->info()
+                                        ->persistent()
+                                        ->send();
+                                })
                                 ->columnSpan(2),
 
                             FileUpload::make('upload_pnpki')
