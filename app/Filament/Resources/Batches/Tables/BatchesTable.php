@@ -3,13 +3,11 @@
 namespace App\Filament\Resources\Batches\Tables;
 
 use App\Enums\ApplicationStatus;
-use App\Enums\UserRole;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 
 class BatchesTable
 {
@@ -24,7 +22,6 @@ class BatchesTable
                     ->searchable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->visible(fn () => Auth::user()?->role !== UserRole::ADMIN->value)
                     ->searchable(),
                 TextColumn::make('application_status')
                     ->badge()
