@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Batches;
 
-use App\Enums\ApplicationStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\Batches\Pages\EditBatch;
 use App\Filament\Resources\Batches\Pages\ListBatches;
@@ -66,9 +65,7 @@ class BatchResource extends Resource
         $user = Auth::user();
 
         if ($user->role === UserRole::ADMIN->value) {
-            return parent::getEloquentQuery()
-                ->where('status', 'finalized')
-                ->where('application_status', '!=', ApplicationStatus::APPROVED_SUBMISSION->value);
+            return parent::getEloquentQuery();
         }
 
         return parent::getEloquentQuery()
