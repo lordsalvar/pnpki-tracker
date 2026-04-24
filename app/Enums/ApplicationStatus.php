@@ -12,6 +12,7 @@ enum ApplicationStatus: string implements HasColor, HasLabel
     case MODIFICATION_REQUESTED = 'modification_requested';
     case NEEDS_REVISION = 'needs_revision';
     case FOR_SUBMISSION = 'for_submission';
+    case APPROVED_SUBMISSION = 'approved_submission';
 
     public function getLabel(): string
     {
@@ -20,6 +21,7 @@ enum ApplicationStatus: string implements HasColor, HasLabel
             ApplicationStatus::MODIFICATION_REQUESTED => 'Modification Requested',
             ApplicationStatus::NEEDS_REVISION => 'Needs Revision',
             ApplicationStatus::FOR_SUBMISSION => 'For Submission',
+            ApplicationStatus::APPROVED_SUBMISSION => 'Approved Submission',
         };
     }
 
@@ -30,6 +32,7 @@ enum ApplicationStatus: string implements HasColor, HasLabel
             ApplicationStatus::MODIFICATION_REQUESTED => 'info',
             ApplicationStatus::NEEDS_REVISION => 'danger',
             ApplicationStatus::FOR_SUBMISSION => 'success',
+            ApplicationStatus::APPROVED_SUBMISSION => 'primary',
         };
     }
 }

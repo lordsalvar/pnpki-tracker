@@ -264,6 +264,29 @@ class ViewBatch extends ViewRecord
 
                     $this->redirect(BatchResource::getUrl('index'));
                 }),
+            Action::make('approve_submission')
+                ->label('Approve Submission')
+                ->icon('heroicon-o-check-badge')
+                ->color('primary')
+                ->requiresConfirmation()
+                ->modalHeading('Approve Submission')
+                ->modalDescription('This will mark the batch as Approved Submission and move it to the Approved Submissions section.')
+                ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
+                    && $this->isForSubmission())
+                ->action(function () {
+                    $this->record->update([
+                        'application_status' => ApplicationStatus::APPROVED_SUBMISSION->value,
+                    ]);
+
+                    $this->refreshFormData(['application_status']);
+
+                    Notification::make()
+                        ->title('Batch approved for submission.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(BatchResource::getUrl('index'));
+                }),
             Action::make('export_csv')
                 ->label('Export CSV')
                 ->icon('heroicon-o-arrow-down-tray')
