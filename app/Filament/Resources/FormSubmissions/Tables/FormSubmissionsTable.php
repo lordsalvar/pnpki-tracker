@@ -37,7 +37,7 @@ class FormSubmissionsTable
                         if ($record->flagged_by === Auth::user()?->role) {
                             $desc = '⚠️ Flagged for revision by '.ucfirst($record->flagged_by);
                             if ($record->flag_remarks) {
-                                $preview = str($record->flag_remarks)->limit(100);
+                                $preview = str($record->flag_remarks)->limit(30);
                                 $desc .= "\n".$preview;
                             }
 
@@ -45,8 +45,7 @@ class FormSubmissionsTable
                         }
 
                         return null;
-                    })
-                    ->getStateUsing(fn ($record) => trim(
+                    })->getStateUsing(fn ($record) => trim(
                         $record->firstname.' '.
                         (($record->middlename && $record->middlename !== 'N/A')
                             ? strtoupper(substr($record->middlename, 0, 1)).'. '
