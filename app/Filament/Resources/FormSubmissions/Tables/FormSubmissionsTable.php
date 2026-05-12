@@ -6,6 +6,7 @@ use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
+use App\Filament\Support\PasswordConfirmation;
 use App\Models\FormSubmission;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -198,15 +199,21 @@ class FormSubmissionsTable
                     RestoreAction::make()
                         ->visible(fn (FormSubmission $record) => $record->trashed()),
                     ForceDeleteAction::make()
-                        ->visible(fn (FormSubmission $record) => $record->trashed()),
+                        ->visible(fn (FormSubmission $record) => $record->trashed())
+                        ->schema(PasswordConfirmation::schema())
+                        ->before(PasswordConfirmation::before()),
                 ]),
 
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->schema(PasswordConfirmation::schema())
+                        ->before(PasswordConfirmation::before()),
                     RestoreBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make()
+                        ->schema(PasswordConfirmation::schema())
+                        ->before(PasswordConfirmation::before()),
                 ]),
             ]);
     }

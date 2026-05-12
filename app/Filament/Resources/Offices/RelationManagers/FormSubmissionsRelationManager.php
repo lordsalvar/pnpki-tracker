@@ -6,6 +6,7 @@ use App\Enums\FormSubmissionStatus;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Filament\Resources\FormSubmissions\Schemas\FormSubmissionForm;
 use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
+use App\Filament\Support\PasswordConfirmation;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
@@ -59,7 +60,9 @@ class FormSubmissionsRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->schema(PasswordConfirmation::schema())
+                        ->before(PasswordConfirmation::before()),
                 ]),
             ]);
     }
