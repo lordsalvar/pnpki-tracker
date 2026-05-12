@@ -10,6 +10,7 @@ use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
+use App\Filament\Support\PasswordConfirmation;
 use App\Models\Address;
 use App\Models\Attachment;
 use App\Models\Batch;
@@ -170,7 +171,9 @@ class EditFormSubmission extends EditRecord
 
                     $this->refreshFormWithPersistedState();
                 }),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->schema(PasswordConfirmation::schema())
+                ->before(PasswordConfirmation::before()),
         ];
     }
 

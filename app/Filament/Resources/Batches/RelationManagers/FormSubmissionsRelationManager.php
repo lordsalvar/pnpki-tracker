@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
+use App\Filament\Support\PasswordConfirmation;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -87,7 +88,9 @@ class FormSubmissionsRelationManager extends RelationManager
             ->toolbarActions(
                 $isFinalized ? [] : [
                     BulkActionGroup::make([
-                        DeleteBulkAction::make(),
+                        DeleteBulkAction::make()
+                            ->schema(PasswordConfirmation::schema())
+                            ->before(PasswordConfirmation::before()),
                     ]),
                 ],
             );
