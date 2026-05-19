@@ -5,14 +5,13 @@ namespace App\Filament\Public\Pages;
 use App\Actions\FormSubmission\StorePublicFormSubmissionAction;
 use App\Enums\CivilStatus;
 use App\Enums\Sex;
+use App\Filament\Public\Pages\Concerns\InteractsWithPnpkiAutofill;
 use App\Models\EmployeeForm;
 use App\Models\FormSubmission;
 use App\Services\PsgcService;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -20,7 +19,6 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Panel;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -41,6 +39,7 @@ use Illuminate\Support\Js;
 class PublicEmployeeForm extends Page implements HasForms
 {
     use InteractsWithForms;
+    use InteractsWithPnpkiAutofill;
 
     protected static string|BackedEnum|null $navigationIcon = null;
 
@@ -55,6 +54,8 @@ class PublicEmployeeForm extends Page implements HasForms
     public ?string $receiptPdfUrl = null;
 
     public ?string $captchaToken = null;
+
+    public bool $pnpkiAutofilled = false;
 
     public static function getRoutePath(Panel $panel): string
     {
@@ -114,41 +115,18 @@ class PublicEmployeeForm extends Page implements HasForms
         return $form
             ->components([
                 Wizard::make([
+                    Step::make('Documents')
+                        ->description('Consent, ID option, upload PNPKI form — fields auto-fill from your PDF')
+                        ->icon(Heroicon::OutlinedDocumentArrowUp)
+                        ->schema($this->documentsStepSchema()),
+
                     Step::make('Personal')
-                        ->description('Data privacy, then your legal name, sex, birth details, and civil status')
+                        ->description('Review and complete your legal name, sex, birth details, and civil status')
                         ->icon(Heroicon::OutlinedUser)
                         ->schema([
-                            Section::make('Data privacy (consent / agreement)')
-                                ->description('Acknowledge this notice before entering your information below.')
-                                ->schema([
-                                    Grid::make(12)
-                                        ->schema([
-                                            Checkbox::make('data_privacy_consent')
-                                                ->hiddenLabel()
-                                                ->inline(false)
-                                                ->accepted()
-                                                ->validationMessages([
-                                                    'accepted' => "\u{200B}",
-                                                ])
-                                                ->live()
-                                                ->dehydrated(false)
-                                                ->columnSpan([
-                                                    'default' => 12,
-                                                    'sm' => 0.5,
-                                                ])
-                                                ->extraFieldWrapperAttributes([
-                                                    'class' => '!max-w-none w-full sm:max-w-[3.5rem] [&_.fi-fo-field-wrp-error-list]:hidden [&_p.fi-fo-field-wrp-error-message]:hidden [&_div.fi-fo-field-wrp-error-message]:hidden',
-                                                ])
-                                                ->extraInputAttributes([
-                                                    'class' => 'mt-1 size-5 shrink-0 cursor-pointer',
-                                                ]),
-                                            Html::make($this->dataPrivacyConsentHtml())
-                                                ->columnSpan([
-                                                    'default' => 12,
-                                                    'sm' => 10,
-                                                ]),
-                                        ]),
-                                ]),
+                            Html::make(fn (): HtmlString => $this->pnpkiAutofillBannerHtml())
+                                ->visible(fn (): bool => $this->pnpkiAutofilled)
+                                ->columnSpanFull(),
 
                             Section::make('Personal information')
                                 ->columns(2)
@@ -270,6 +248,10 @@ class PublicEmployeeForm extends Page implements HasForms
                         ->description('Residential address and how to reach you')
                         ->icon(Heroicon::OutlinedMapPin)
                         ->schema([
+                            Html::make(fn (): HtmlString => $this->pnpkiAutofillBannerHtml())
+                                ->visible(fn (): bool => $this->pnpkiAutofilled)
+                                ->columnSpanFull(),
+
                             Section::make('Residential address')
                                 ->description('Current address in the Philippines')
                                 ->columns(2)
@@ -417,220 +399,10 @@ class PublicEmployeeForm extends Page implements HasForms
                                 ]),
                         ]),
 
-                    Step::make('Documents')
-                        ->description('ID option and PDF uploads')
-                        ->icon(Heroicon::OutlinedDocumentArrowUp)
-                        ->columns(2)
+                    Step::make('Review & submit')
+                        ->description('Confirm your details and complete security check')
+                        ->icon(Heroicon::OutlinedCheckBadge)
                         ->schema([
-                            Select::make('id_combo')
-                                ->label('Select ID Combination')
-                                ->options([
-                                    'national_id' => 'PNPKI form, Philippine National ID (PhilID)',
-                                    'passport_only' => 'PNPKI form, Philippine Passport',
-                                    'umid_only' => 'PNPKI form, SSS Unified Multi-Purpose ID (UMID)',
-                                    'drivers_license_only' => "PNPKI form, LTO Driver's License",
-                                    'prc_only' => 'PNPKI form, Professional Regulation Commission (PRC)',
-                                    'postal_id_only' => 'PNPKI form, ID Postal Identity Card',
-                                    'birth_cert_umid' => 'PNPKI form, Birth Cert & UMID',
-                                    'passport_umid' => 'PNPKI form, Passport & UMID',
-                                    'birth_cert_valid_ids' => 'PNPKI form, Birth Cert & 2 Valid IDs',
-                                    'passport_valid_ids' => 'PNPKI form, Passport & 2 valid IDs',
-                                ])
-                                ->required()
-                                ->live()
-                                ->afterStateUpdated(function (?string $state): void {
-                                    if (blank($state)) {
-                                        return;
-                                    }
-                                    Notification::make()
-                                        ->title('Include both sides if applicable')
-                                        ->body('If your ID has a back side, please upload both the front and back for a complete submission.')
-                                        ->info()
-                                        ->persistent()
-                                        ->send();
-                                })
-                                ->columnSpan(2),
-
-                            FileUpload::make('upload_pnpki')
-                                ->label('PNPKI Form')
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PNPKI'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage('Uploading PNPKI Form...')
-                                ->required()
-                                ->columnSpan(2)
-                                ->visible(fn (Get $get) => filled($get('id_combo'))),
-
-                            FileUpload::make('upload_national_id')
-                                ->label('Philippine National ID')
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('NationalID'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage('Uploading National ID...')
-                                ->required()
-                                ->columnSpan(2)
-                                ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
-
-                            FileUpload::make('upload_birth_cert')
-                                ->label('Birth Certificate')
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('BirthCert'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage('Uploading Birth Certificate...')
-                                ->required()
-                                ->columnSpan(1)
-                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'birth_cert_valid_ids'])),
-
-                            FileUpload::make('upload_passport')
-                                ->label('Passport (Bio-data page)')
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('Passport'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage('Uploading Passport...')
-                                ->required()
-                                ->columnSpan(1)
-                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_only', 'passport_umid', 'passport_valid_ids'])),
-
-                            FileUpload::make('upload_umid')
-                                ->label('UMID Card')
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('UMID'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage('Uploading UMID...')
-                                ->required()
-                                ->columnSpan(1)
-                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['umid_only', 'birth_cert_umid', 'passport_umid'])),
-
-                            FileUpload::make('upload_drivers_license')
-                                ->label("LTO Driver's License")
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('DriversLicense'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage("Uploading Driver's License...")
-                                ->required()
-                                ->columnSpan(2)
-                                ->visible(fn (Get $get) => $get('id_combo') === 'drivers_license_only'),
-
-                            FileUpload::make('upload_prc_id')
-                                ->label('PRC ID')
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PRCID'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage('Uploading PRC ID...')
-                                ->required()
-                                ->columnSpan(2)
-                                ->visible(fn (Get $get) => $get('id_combo') === 'prc_only'),
-
-                            FileUpload::make('upload_postal_id')
-                                ->label('Postal ID')
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('PostalID'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage('Uploading Postal ID...')
-                                ->required()
-                                ->columnSpan(2)
-                                ->visible(fn (Get $get) => $get('id_combo') === 'postal_id_only'),
-
-                            FileUpload::make('upload_id1')
-                                ->label('Valid ID #1')
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID1'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage('Uploading Valid ID #1...')
-                                ->required()
-                                ->columnSpan(1)
-                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
-
-                            FileUpload::make('upload_id2')
-                                ->label('Valid ID #2')
-                                ->helperText('PDF only · Max 5 MB')
-                                ->acceptedFileTypes(['application/pdf'])
-                                ->maxSize(5120)
-                                ->disk('local')
-                                ->directory('attachments')
-                                ->visibility('private')
-                                ->getUploadedFileNameForStorageUsing($this->fileNameForStorage('ID2'))
-                                ->openable()
-                                ->downloadable()
-                                ->deletable(fn () => ! $this->submitted)
-                                ->previewable()
-                                ->uploadingMessage('Uploading Valid ID #2...')
-                                ->required()
-                                ->columnSpan(1)
-                                ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
-
                             Html::make($turnstileHtml)
                                 ->columnSpanFull(),
                         ]),
@@ -769,22 +541,6 @@ class PublicEmployeeForm extends Page implements HasForms
 
             return "{$officeFolder}/Employees/{$employeeFolder}/{$filename}";
         };
-    }
-
-    private function dataPrivacyConsentHtml(): HtmlString
-    {
-        return new HtmlString(
-            '<div class="text-sm leading-relaxed text-gray-700 dark:text-gray-300">'
-            .'<p class="mb-2 font-semibold text-gray-900 dark:text-gray-100">Data Privacy (Consent/Agreement)</p>'
-            .'<p>I hereby authorize the Department of Information and Communications Technology (DICT) and recognize '
-            .'their responsibilities under the Republic Act No. 10173, also known as the Data Privacy Act of 2012, '
-            .'with respect to the data they collect, record, organize, update, use, consolidate or destruct from '
-            .'PNPKI applicants. The personal data obtained from this portal is entered and stored within the DICT '
-            .'authorized information and communications system and will only be accessed by the PNPKI RA Officers. '
-            .'The DICT have instituted appropriate organizational, technical and physical security measures to ensure '
-            .'the protection of the PNPKI applicants personal data.</p>'
-            .'</div>'
-        );
     }
 
     private function maidenNameIsApplicable(Get $get): bool
