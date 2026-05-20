@@ -14,6 +14,7 @@ use App\Enums\UserRole;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Notifications\BatchNeedsRevisionNotification;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
@@ -86,9 +87,10 @@ class ViewBatch extends ViewRecord
 
                     return null;
                 })
-                ->hidden(fn () => $this->record->status === BatchStatus::FINALIZED
-                        || Auth::user()?->role !== UserRole::REPRESENTATIVE->value)
-                ->action(function () {
+                ->visible(fn (): bool => Gate::allows('finalize', $this->record))
+                ->action(function (): void {
+                    Gate::authorize('finalize', $this->record);
+
                     if ($this->hasNeedsRevisionSubmissions()) {
                         Notification::make()
                             ->title('You cannot finalize while there are submissions that need revision')
@@ -105,6 +107,8 @@ class ViewBatch extends ViewRecord
                     }
                     $this->refreshFormData(['status']);
                 }),
+            DeleteAction::make()
+                ->successRedirectUrl(BatchResource::getUrl('index')),
             Action::make('revert_to_pending')
                 ->label('Revert to Pending')
                 ->icon('heroicon-o-arrow-uturn-left')
