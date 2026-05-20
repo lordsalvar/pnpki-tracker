@@ -271,15 +271,7 @@ class FormSubmissionPolicy
      */
     public function delete(User $user, FormSubmission $formSubmission): bool
     {
-        if ($user->role === UserRole::ADMIN->value) {
-            return true;
-        }
-
-        if ($user->role === UserRole::REPRESENTATIVE->value) {
-            return $formSubmission->office_id === $user->office_id;
-        }
-
-        return false;
+        return $user->role === UserRole::ADMIN->value;
     }
 
     /**
@@ -287,15 +279,7 @@ class FormSubmissionPolicy
      */
     public function restore(User $user, FormSubmission $formSubmission): bool
     {
-        if ($user->role === UserRole::ADMIN->value) {
-            return true;
-        }
-
-        if ($user->role === UserRole::REPRESENTATIVE->value) {
-            return $formSubmission->office_id === $user->office_id;
-        }
-
-        return false;
+        return $user->role === UserRole::ADMIN->value;
     }
 
     /**
@@ -303,14 +287,6 @@ class FormSubmissionPolicy
      */
     public function forceDelete(User $user, FormSubmission $formSubmission): bool
     {
-        if ($user->role === UserRole::ADMIN->value) {
-            return true;
-        }
-
-        if ($user->role === UserRole::REPRESENTATIVE->value) {
-            return $formSubmission->office_id === $user->office_id;
-        }
-
-        return false;
+        return $user->role === UserRole::ADMIN->value;
     }
 }

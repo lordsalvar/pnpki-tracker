@@ -77,3 +77,30 @@ it('prevents representatives from unassigning submissions in finalized batches',
 
     expect($this->policy->unassignBatch($representative, $submission))->toBeFalse();
 });
+
+it('prevents representatives from deleting submissions', function (): void {
+    $representative = User::make([
+        'role' => UserRole::REPRESENTATIVE->value,
+        'office_id' => 'office-1',
+    ]);
+
+    $submission = FormSubmission::make([
+        'office_id' => 'office-1',
+    ]);
+
+    expect($this->policy->delete($representative, $submission))->toBeFalse();
+    expect($this->policy->restore($representative, $submission))->toBeFalse();
+    expect($this->policy->forceDelete($representative, $submission))->toBeFalse();
+});
+
+it('allows admins to delete submissions', function (): void {
+    $admin = User::make(['role' => UserRole::ADMIN->value]);
+
+    $submission = FormSubmission::make([
+        'office_id' => 'office-1',
+    ]);
+
+    expect($this->policy->delete($admin, $submission))->toBeTrue();
+    expect($this->policy->restore($admin, $submission))->toBeTrue();
+    expect($this->policy->forceDelete($admin, $submission))->toBeTrue();
+});
