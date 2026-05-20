@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\FormSubmissions\Pages;
 
-use App\Actions\Batch\AssignBatchAction;
-use App\Actions\Batch\UnAssignBatchAction;
 use App\Actions\FormSubmission\FlagNeedsRevisionFormSubmissionAction;
 use App\Actions\FormSubmission\ForSubmissionAction;
 use App\Actions\FormSubmission\UnFinalizeFormSubmissionAction;
@@ -11,13 +9,12 @@ use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\Batches\BatchResource;
+use App\Filament\Resources\FormSubmissions\Concerns\HasBatchAssignmentActions;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Models\Address;
-use App\Models\Batch;
 use App\Models\User;
 use App\Services\AttachmentRuleService;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +22,8 @@ use Illuminate\Support\Facades\Gate;
 
 class ViewFormSubmission extends ViewRecord
 {
+    use HasBatchAssignmentActions;
+
     protected static string $resource = FormSubmissionResource::class;
 
     public function mount(int|string $record): void
@@ -206,60 +205,8 @@ class ViewFormSubmission extends ViewRecord
 
                     $this->refreshFormData(['flagged_by', 'flag_remarks']);
                 }),
-            Action::make('assign_batch')
-                ->label('Assign to Batch')
-                ->icon('heroicon-o-archive-box-arrow-down')
-                ->color('info')
-                ->visible(fn () => Auth::user()->role !== UserRole::ADMIN->value
-                    && in_array($this->record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION], true)
-                    && $this->record->batch_id === null
-                    && $this->record->batch?->status !== BatchStatus::FINALIZED)
-                ->form([
-                    Select::make('batch_id')
-                        ->label('Batch')
-                        ->options(
-                            Batch::query()
-                                ->where('office_id', Auth::user()->office_id)
-                                ->where('status', '!=', BatchStatus::FINALIZED->value)
-                                ->orderBy('batch_name')
-                                ->pluck('batch_name', 'id')
-                        )
-                        ->required()
-                        ->searchable()
-                        ->default(fn () => $this->record->batch_id),
-                ])
-                ->action(function (array $data) {
-                    $batch = Batch::findOrFail($data['batch_id']);
-
-                    app(AssignBatchAction::class)->execute($this->record, $batch);
-
-                    Notification::make()
-                        ->title('Batch assigned.')
-                        ->success()
-                        ->send();
-
-                    if (Auth::user()?->role === UserRole::REPRESENTATIVE->value) {
-                        $this->redirect(FormSubmissionResource::getUrl('index'), navigate: true);
-
-                        return;
-                    }
-                }),
-            Action::make('unassign_batch')
-                ->label('Remove from Batch')
-                ->icon('heroicon-o-archive-box-x-mark')
-                ->color('danger')
-                ->visible(fn (): bool => Auth::user()->role !== UserRole::ADMIN->value
-                    && $this->record->batch_id !== null
-                    && $this->record->batch?->status !== BatchStatus::FINALIZED)
-                ->requiresConfirmation()
-                ->action(function () {
-                    app(UnAssignBatchAction::class)->execute($this->record);
-
-                    Notification::make()
-                        ->title('Batch unassigned.')
-                        ->success()
-                        ->send();
-                }),
+            $this->makeAssignBatchAction(),
+            $this->makeUnassignBatchAction(),
         ];
     }
 

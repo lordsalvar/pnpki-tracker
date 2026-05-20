@@ -2,24 +2,20 @@
 
 namespace App\Filament\Resources\FormSubmissions\Pages;
 
-use App\Actions\Batch\AssignBatchAction;
-use App\Actions\Batch\UnAssignBatchAction;
 use App\Actions\FormSubmission\FinalizeFormSubmissionAction;
-use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\Batches\BatchResource;
+use App\Filament\Resources\FormSubmissions\Concerns\HasBatchAssignmentActions;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Filament\Support\PasswordConfirmation;
 use App\Models\Address;
 use App\Models\Attachment;
-use App\Models\Batch;
 use App\Models\FormSubmission;
 use App\Services\AttachmentPathService;
 use App\Services\AttachmentRuleService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +23,8 @@ use Illuminate\Support\Facades\Storage;
 
 class EditFormSubmission extends EditRecord
 {
+    use HasBatchAssignmentActions;
+
     private ?string $originalFirstname = null;
 
     private ?string $originalLastname = null;
@@ -105,72 +103,8 @@ class EditFormSubmission extends EditRecord
 
                     $this->redirect(FormSubmissionResource::getUrl('view', ['record' => $this->record]));
                 }),
-            Action::make('assign_batch')
-                ->label('Assign to Batch')
-                ->icon('heroicon-o-archive-box-arrow-down')
-                ->color('info')
-                ->visible(fn () => in_array($this->record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::NEEDS_REVISION], true)
-                    && $this->record->batch_id === null)
-                ->modalSubmitActionLabel('Assign')
-                ->form([
-                    Select::make('batch_id')
-                        ->label('Batch')
-                        ->options(
-                            Batch::query()
-                                ->where('office_id', $this->record->office_id)
-                                ->where('status', '!=', BatchStatus::FINALIZED)
-                                ->orderBy('batch_name')
-                                ->pluck('batch_name', 'id')
-                        )
-                        ->required()
-                        ->searchable()
-                        ->default(fn () => $this->record->batch_id),
-                ])
-                ->action(function (array $data) {
-                    $batch = Batch::findOrFail($data['batch_id']);
-
-                    if ($batch->status === BatchStatus::FINALIZED) {
-                        Notification::make()
-                            ->title('Cannot assign to a finalized batch.')
-                            ->danger()
-                            ->send();
-
-                        return;
-                    }
-
-                    app(AssignBatchAction::class)->execute($this->record, $batch);
-
-                    Notification::make()
-                        ->title('Batch assigned.')
-                        ->success()
-                        ->send();
-
-                    if (Auth::user()?->role === UserRole::REPRESENTATIVE->value) {
-                        $this->redirect(FormSubmissionResource::getUrl('index'), navigate: true);
-
-                        return;
-                    }
-
-                    $this->refreshFormWithPersistedState();
-                }),
-
-            Action::make('unassign_batch')
-                ->label('Remove from Batch')
-                ->icon('heroicon-o-archive-box-x-mark')
-                ->color('danger')
-                ->visible(fn (): bool => $this->record->batch_id !== null
-                    && $this->record->batch?->status !== BatchStatus::FINALIZED)
-                ->requiresConfirmation()
-                ->action(function () {
-                    app(UnAssignBatchAction::class)->execute($this->record);
-
-                    Notification::make()
-                        ->title('Batch unassigned.')
-                        ->success()
-                        ->send();
-
-                    $this->refreshFormWithPersistedState();
-                }),
+            $this->makeAssignBatchAction(),
+            $this->makeUnassignBatchAction(),
             DeleteAction::make()
                 ->schema(PasswordConfirmation::schema())
                 ->before(PasswordConfirmation::before()),

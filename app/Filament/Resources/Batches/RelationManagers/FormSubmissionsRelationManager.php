@@ -9,6 +9,7 @@ use App\Filament\Resources\Batches\BatchResource;
 use App\Filament\Resources\FormSubmissions\FormSubmissionResource;
 use App\Filament\Resources\FormSubmissions\Tables\FormSubmissionsTable;
 use App\Filament\Support\PasswordConfirmation;
+use App\Filament\Support\ReassignToBatchBulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -30,6 +31,25 @@ class FormSubmissionsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         $isFinalized = $this->ownerRecord->status === BatchStatus::FINALIZED->value;
+
+        $bulkActions = [];
+
+        if (Auth::user()?->role === UserRole::ADMIN->value) {
+            $bulkActions[] = ReassignToBatchBulkAction::make(
+                (string) $this->ownerRecord->office_id,
+                (string) $this->ownerRecord->getKey(),
+            );
+        }
+
+        if (! $isFinalized) {
+            $bulkActions[] = DeleteBulkAction::make()
+                ->schema(PasswordConfirmation::schema())
+                ->before(PasswordConfirmation::before());
+        }
+
+        $toolbarActions = $bulkActions !== []
+            ? [BulkActionGroup::make($bulkActions)]
+            : [];
 
         return FormSubmissionsTable::configure($table)
             ->recordTitleAttribute('lastname')
@@ -85,15 +105,7 @@ class FormSubmissionsRelationManager extends RelationManager
                         ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
                 ],
             )
-            ->toolbarActions(
-                $isFinalized ? [] : [
-                    BulkActionGroup::make([
-                        DeleteBulkAction::make()
-                            ->schema(PasswordConfirmation::schema())
-                            ->before(PasswordConfirmation::before()),
-                    ]),
-                ],
-            );
+            ->toolbarActions($toolbarActions);
     }
 
     public function isReadOnly(): bool

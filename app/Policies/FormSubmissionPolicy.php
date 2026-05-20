@@ -51,6 +51,68 @@ class FormSubmissionPolicy
     }
 
     /**
+     * Assign or reassign a submission to a batch (admins may target any batch status).
+     */
+    public function assignBatch(User $user, FormSubmission $formSubmission): bool
+    {
+        if (! in_array($formSubmission->status, [
+            FormSubmissionStatus::FINALIZED,
+            FormSubmissionStatus::NEEDS_REVISION,
+            FormSubmissionStatus::FOR_SUBMISSION,
+        ], true)) {
+            return false;
+        }
+
+        if ($user->role === UserRole::ADMIN->value) {
+            return true;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value) {
+            if ($formSubmission->office_id !== $user->office_id) {
+                return false;
+            }
+
+            return $formSubmission->batch_id === null;
+        }
+
+        return false;
+    }
+
+    /**
+     * Remove a submission from its batch (admins may unassign from finalized batches).
+     */
+    public function unassignBatch(User $user, FormSubmission $formSubmission): bool
+    {
+        if ($formSubmission->batch_id === null) {
+            return false;
+        }
+
+        if (! in_array($formSubmission->status, [
+            FormSubmissionStatus::FINALIZED,
+            FormSubmissionStatus::NEEDS_REVISION,
+            FormSubmissionStatus::FOR_SUBMISSION,
+        ], true)) {
+            return false;
+        }
+
+        if ($user->role === UserRole::ADMIN->value) {
+            return true;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value) {
+            if ($formSubmission->office_id !== $user->office_id) {
+                return false;
+            }
+
+            $formSubmission->loadMissing('batch');
+
+            return $formSubmission->batch?->status !== BatchStatus::FINALIZED;
+        }
+
+        return false;
+    }
+
+    /**
      * Mark a finalized submission as For Submission (admin only, parent batch must be finalized).
      */
     public function markForSubmission(User $user, FormSubmission $formSubmission): bool
@@ -209,15 +271,7 @@ class FormSubmissionPolicy
      */
     public function delete(User $user, FormSubmission $formSubmission): bool
     {
-        if ($user->role === UserRole::ADMIN->value) {
-            return true;
-        }
-
-        if ($user->role === UserRole::REPRESENTATIVE->value) {
-            return $formSubmission->office_id === $user->office_id;
-        }
-
-        return false;
+        return $user->role === UserRole::ADMIN->value;
     }
 
     /**
@@ -225,15 +279,7 @@ class FormSubmissionPolicy
      */
     public function restore(User $user, FormSubmission $formSubmission): bool
     {
-        if ($user->role === UserRole::ADMIN->value) {
-            return true;
-        }
-
-        if ($user->role === UserRole::REPRESENTATIVE->value) {
-            return $formSubmission->office_id === $user->office_id;
-        }
-
-        return false;
+        return $user->role === UserRole::ADMIN->value;
     }
 
     /**
@@ -241,14 +287,6 @@ class FormSubmissionPolicy
      */
     public function forceDelete(User $user, FormSubmission $formSubmission): bool
     {
-        if ($user->role === UserRole::ADMIN->value) {
-            return true;
-        }
-
-        if ($user->role === UserRole::REPRESENTATIVE->value) {
-            return $formSubmission->office_id === $user->office_id;
-        }
-
-        return false;
+        return $user->role === UserRole::ADMIN->value;
     }
 }

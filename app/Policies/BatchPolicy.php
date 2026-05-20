@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\BatchStatus;
 use App\Enums\UserRole;
 use App\Models\Batch;
 use App\Models\User;
@@ -53,11 +54,47 @@ class BatchPolicy
     }
 
     /**
+     * Finalize a batch (admin or owning-office representative).
+     */
+    public function finalize(User $user, Batch $batch): bool
+    {
+        if ($batch->status === BatchStatus::FINALIZED) {
+            return false;
+        }
+
+        if ($user->role === UserRole::ADMIN->value) {
+            return true;
+        }
+
+        if ($user->role === UserRole::REPRESENTATIVE->value) {
+            return $user->office_id === $batch->office_id;
+        }
+
+        return false;
+    }
+
+    /**
+     * Revert a finalized batch back to pending (admin only).
+     */
+    public function revertToPending(User $user, Batch $batch): bool
+    {
+        if ($user->role !== UserRole::ADMIN->value) {
+            return false;
+        }
+
+        return $batch->status === BatchStatus::FINALIZED;
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, Batch $batch): bool
     {
-        return false;
+        if ($user->role !== UserRole::ADMIN->value) {
+            return false;
+        }
+
+        return ! $batch->formSubmissions()->exists();
     }
 
     /**

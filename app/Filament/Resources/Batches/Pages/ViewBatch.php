@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Batches\Pages;
 use App\Actions\Batch\AcceptModificationRequestBatchAction;
 use App\Actions\Batch\DownloadBatchAttachmentsAction;
 use App\Actions\Batch\RequestModificationBatchAction;
+use App\Actions\Batch\RevertBatchToPendingAction;
 use App\Actions\FinalizeBatchAction;
 use App\Enums\ApplicationStatus;
 use App\Enums\BatchStatus;
@@ -13,10 +14,12 @@ use App\Enums\UserRole;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Notifications\BatchNeedsRevisionNotification;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 
 class ViewBatch extends ViewRecord
@@ -84,9 +87,10 @@ class ViewBatch extends ViewRecord
 
                     return null;
                 })
-                ->hidden(fn () => $this->record->status === BatchStatus::FINALIZED
-                        || Auth::user()?->role !== UserRole::REPRESENTATIVE->value)
-                ->action(function () {
+                ->visible(fn (): bool => Gate::allows('finalize', $this->record))
+                ->action(function (): void {
+                    Gate::authorize('finalize', $this->record);
+
                     if ($this->hasNeedsRevisionSubmissions()) {
                         Notification::make()
                             ->title('You cannot finalize while there are submissions that need revision')
@@ -102,6 +106,37 @@ class ViewBatch extends ViewRecord
                         $admin->notify(new \App\Notifications\BatchFinalizedNotification($this->record));
                     }
                     $this->refreshFormData(['status']);
+                }),
+            DeleteAction::make()
+                ->successRedirectUrl(BatchResource::getUrl('index')),
+            Action::make('revert_to_pending')
+                ->label('Revert to Pending')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading('Revert batch to pending?')
+                ->modalDescription('The batch will return to pending status and the representative can edit it again. Application workflow status will be cleared.')
+                ->visible(fn (): bool => Gate::allows('revertToPending', $this->record))
+                ->action(function (): void {
+                    Gate::authorize('revertToPending', $this->record);
+
+                    try {
+                        app(RevertBatchToPendingAction::class)->execute($this->record);
+                    } catch (InvalidArgumentException $exception) {
+                        Notification::make()
+                            ->title($exception->getMessage())
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    $this->refreshFormData(['status', 'application_status']);
+
+                    Notification::make()
+                        ->title('Batch reverted to pending.')
+                        ->success()
+                        ->send();
                 }),
             Action::make('mark_for_submission')
                 ->label('Mark as For Submission')
