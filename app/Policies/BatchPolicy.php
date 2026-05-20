@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\BatchStatus;
 use App\Enums\UserRole;
 use App\Models\Batch;
 use App\Models\User;
@@ -50,6 +51,18 @@ class BatchPolicy
     public function markForSubmission(User $user, Batch $batch): bool
     {
         return $user->role === UserRole::ADMIN->value;
+    }
+
+    /**
+     * Revert a finalized batch back to pending (admin only).
+     */
+    public function revertToPending(User $user, Batch $batch): bool
+    {
+        if ($user->role !== UserRole::ADMIN->value) {
+            return false;
+        }
+
+        return $batch->status === BatchStatus::FINALIZED;
     }
 
     /**
