@@ -15,6 +15,12 @@ fi
 
 chmod -R ugo+rw /.composer
 
+if [ -f /var/www/html/composer.json ] && [ ! -f /var/www/html/vendor/autoload.php ]; then
+    composer install --no-interaction --no-dev --optimize-autoloader --working-dir=/var/www/html
+elif [ -f /var/www/html/composer.json ]; then
+    composer dump-autoload --optimize --working-dir=/var/www/html
+fi
+
 if [ $# -gt 0 ]; then
     if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
         exec "$@"

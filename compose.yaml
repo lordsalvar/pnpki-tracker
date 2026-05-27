@@ -1,8 +1,8 @@
 services:
     pnpki-tracker-app:
         build:
-            context: './vendor/laravel/sail/runtimes/8.5'
-            dockerfile: Dockerfile
+            context: '.'
+            dockerfile: 'docker/8.5/Dockerfile'
             args:
                 WWWGROUP: '${WWWGROUP}'
         image: 'pnpki-tracker-app'
