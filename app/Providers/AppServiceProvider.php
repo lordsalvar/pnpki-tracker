@@ -8,6 +8,7 @@ use App\Policies\BatchPolicy;
 use App\Policies\EmployeeFormPolicy;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -36,8 +37,40 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(EmployeeForm::class, EmployeeFormPolicy::class);
         Gate::policy(Batch::class, BatchPolicy::class);
 
-        if (str_starts_with((string) config('app.url'), 'https://')) {
+        $appUrl = rtrim((string) config('app.url'), '/');
+
+        if (str_starts_with($appUrl, 'https://')) {
             URL::forceScheme('https');
+            URL::forceRootUrl($appUrl);
         }
+
+        if (! $this->app->environment('local', 'testing')) {
+            $this->registerAlternateSignedUrlValidation();
+        }
+    }
+
+    /**
+     * Accept signed URLs when the proxy terminates TLS (http vs https mismatch).
+     */
+    private function registerAlternateSignedUrlValidation(): void
+    {
+        Request::macro('hasValidSignature', function (bool $absolute = true, array $ignoreQuery = []) {
+            /** @var Request $this */
+            if (URL::hasValidSignature($this, absolute: $absolute, ignoreQuery: $ignoreQuery)) {
+                return true;
+            }
+
+            $alternate = $this->duplicate();
+
+            if ($this->isSecure()) {
+                $alternate->server->set('HTTPS', 'off');
+                $alternate->server->set('REQUEST_SCHEME', 'http');
+            } else {
+                $alternate->server->set('HTTPS', 'on');
+                $alternate->server->set('REQUEST_SCHEME', 'https');
+            }
+
+            return URL::hasValidSignature($alternate, absolute: $absolute, ignoreQuery: $ignoreQuery);
+        });
     }
 }

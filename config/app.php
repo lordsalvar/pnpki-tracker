@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies (Cloudflare / reverse proxy)
+    |--------------------------------------------------------------------------
+    |
+    | Used when generating and validating signed URLs (e.g. Livewire uploads).
+    | Configure TRUSTED_PROXIES in .env; bootstrap/app.php always trusts proxies.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES', '*'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
