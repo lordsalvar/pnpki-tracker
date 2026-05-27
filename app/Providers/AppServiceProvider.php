@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(EmployeeForm::class, EmployeeFormPolicy::class);
         Gate::policy(Batch::class, BatchPolicy::class);
 
-        if (config('app.env') !== 'local') {
+        if (str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
     }

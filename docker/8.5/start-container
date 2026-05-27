@@ -21,6 +21,11 @@ elif [ -f /var/www/html/composer.json ]; then
     composer dump-autoload --optimize --working-dir=/var/www/html
 fi
 
+if [ -f /var/www/html/artisan ]; then
+    mkdir -p /var/www/html/storage/app/public/livewire-tmp
+    php /var/www/html/artisan storage:link --force --no-interaction 2>/dev/null || true
+fi
+
 if [ $# -gt 0 ]; then
     if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
         exec "$@"
