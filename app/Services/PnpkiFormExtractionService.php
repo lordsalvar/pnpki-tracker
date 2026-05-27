@@ -6,6 +6,7 @@ use App\DataTransferObjects\PnpkiExtractedData;
 use App\Enums\Sex;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser;
 use Throwable;
@@ -36,6 +37,8 @@ class PnpkiFormExtractionService
         'text18' => 'email',
     ];
 
+    private ?string $lastParserError = null;
+
     public function __construct(
         private readonly PsgcService $psgcService,
     ) {}
@@ -56,8 +59,12 @@ class PnpkiFormExtractionService
         $text = $this->extractText($pdfPath);
 
         if ($text === '' && $rawFields === []) {
+            $parserError = $this->lastParserError;
+            $detail = $parserError !== null
+                ? ' (Parser error: '.$parserError.')'
+                : '';
             throw new \RuntimeException(
-                'No readable text was found in this PDF. Use a digitally filled PNPKI form or a PDF with selectable text—not a scanned image-only file.'
+                'No readable text was found in this PDF. Use a digitally filled PNPKI form or a PDF with selectable text—not a scanned image-only file.'.$detail
             );
         }
 
@@ -286,7 +293,14 @@ class PnpkiFormExtractionService
             }
 
             return $fields;
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            $this->lastParserError = $e->getMessage();
+            Log::warning('PnpkiFormExtractionService: AcroForm parsing failed', [
+                'path' => $pdfPath,
+                'error' => $e->getMessage(),
+                'php_version' => PHP_VERSION,
+            ]);
+
             return [];
         }
     }
@@ -297,7 +311,14 @@ class PnpkiFormExtractionService
             $parser = new Parser;
 
             return trim($parser->parseFile($pdfPath)->getText());
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            $this->lastParserError ??= $e->getMessage();
+            Log::warning('PnpkiFormExtractionService: text extraction failed', [
+                'path' => $pdfPath,
+                'error' => $e->getMessage(),
+                'php_version' => PHP_VERSION,
+            ]);
+
             return '';
         }
     }
