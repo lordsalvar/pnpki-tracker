@@ -21,6 +21,7 @@ class ListEmployeeForms extends ListRecords
         return [
             CreateAction::make()
                 ->label('New Shareable Form')
+                ->createAnother(false)
                 ->disabled(fn (): bool => $this->hasActiveShareableFormForOffice())
                 ->tooltip(fn (): ?string => $this->hasActiveShareableFormForOffice()
                     ? 'Only one active shareable form is allowed per office.'
