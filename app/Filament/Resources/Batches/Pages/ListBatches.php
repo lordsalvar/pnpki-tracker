@@ -30,8 +30,33 @@ class ListBatches extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->createAnother(false)
+                ->disabled(fn (): bool => $this->officeHasBatchNotYetForSubmission())
+                ->tooltip(fn (): ?string => $this->officeHasBatchNotYetForSubmission()
+                    ? 'A new batch cannot be created until the previous batch reaches For Submission.'
+                    : null),
         ];
+    }
+
+    private function officeHasBatchNotYetForSubmission(): bool
+    {
+        $officeId = Auth::user()?->office_id;
+
+        if (blank($officeId)) {
+            return false;
+        }
+
+        return Batch::query()
+            ->where('office_id', $officeId)
+            ->where(function (Builder $query): void {
+                $query->whereNull('application_status')
+                    ->orWhereNotIn('application_status', [
+                        ApplicationStatus::FOR_SUBMISSION->value,
+                        ApplicationStatus::APPROVED_SUBMISSION->value,
+                    ]);
+            })
+            ->exists();
     }
 
     public function getTabs(): array
