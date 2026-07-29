@@ -2,8 +2,10 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\UserRole;
 use App\Models\FormSubmission;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class FormSubmissionsChart extends ChartWidget
@@ -14,9 +16,16 @@ class FormSubmissionsChart extends ChartWidget
 
     protected ?string $heading = 'Form submissions (last 30 days)';
 
-    protected ?string $description = 'New registrations per day.';
-
     protected ?string $maxHeight = '240px';
+
+    public function getDescription(): ?string
+    {
+        if (auth()->user()?->role === UserRole::REPRESENTATIVE->value) {
+            return 'New registrations per day for your office.';
+        }
+
+        return 'New registrations per day.';
+    }
 
     /**
      * @return array<string, mixed>
@@ -27,7 +36,7 @@ class FormSubmissionsChart extends ChartWidget
         $start = now()->subDays($days - 1)->startOfDay();
 
         /** @var \Illuminate\Support\Collection<string, int> $byDay */
-        $byDay = FormSubmission::query()
+        $byDay = $this->scopedFormSubmissionsQuery()
             ->where('created_at', '>=', $start)
             ->selectRaw(sprintf('%s as d', $this->dateColumnExpression('created_at')))
             ->selectRaw('count(*) as c')
@@ -58,6 +67,21 @@ class FormSubmissionsChart extends ChartWidget
     protected function getType(): string
     {
         return 'line';
+    }
+
+    /**
+     * @return Builder<FormSubmission>
+     */
+    private function scopedFormSubmissionsQuery(): Builder
+    {
+        $query = FormSubmission::query();
+        $user = auth()->user();
+
+        if ($user?->role === UserRole::REPRESENTATIVE->value) {
+            $query->where('office_id', $user->office_id);
+        }
+
+        return $query;
     }
 
     private function dateColumnExpression(string $column): string

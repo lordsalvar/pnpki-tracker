@@ -4,10 +4,9 @@ namespace App\Filament\Clusters\Help\Pages;
 
 use App\Filament\Clusters\Help\HelpCluster;
 use BackedEnum;
-use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 
-class EmployeesGuide extends Page
+class EmployeesGuide extends HelpPage
 {
     protected string $view = 'filament.clusters.help.pages.employees-guide';
 
