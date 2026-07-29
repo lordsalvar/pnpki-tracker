@@ -14,14 +14,90 @@
         />
     </x-filament::section>
 
-    <x-filament::section heading="Step-by-step guide">
-        <ol class="list-decimal space-y-3 ps-5 text-sm text-gray-600 dark:text-gray-400">
+    <x-filament::section
+        heading="Creating and sharing a Shareable Form"
+        description="Publish an active registration link and distribute it to employees in your office."
+    >
+        <ol class="list-decimal space-y-6 ps-5 text-sm text-gray-600 dark:text-gray-400">
             <li>
-                Go to <strong class="font-medium text-gray-950 dark:text-white">Forms → Shareable Forms</strong> and click <strong class="font-medium text-gray-950 dark:text-white">New Shareable Form</strong>.
-                The form name comes from your office name automatically.
-                Save, then open the record and copy the <strong class="font-medium text-gray-950 dark:text-white">Public Link</strong>.
-                Share the link with employees via email, chat, or printed QR code.
+                <p>
+                    Go to <strong class="font-medium text-gray-950 dark:text-white">Forms → Shareable Forms</strong> and click <strong class="font-medium text-gray-950 dark:text-white">New Shareable Form</strong>.
+                    The form name comes from your office name automatically.
+                    Save, then open the record and copy the <strong class="font-medium text-gray-950 dark:text-white">Public Link</strong>.
+                    Share the link with employees via email, chat, or printed QR code.
+                </p>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <figure class="space-y-2">
+                        <figcaption class="text-center text-sm font-bold text-gray-950 dark:text-white">1. Click the Forms tab</figcaption>
+                        <img
+                            src="{{ asset('images/help/dashboard.jpg') }}"
+                            alt="Dashboard: click the Forms tab"
+                            class="w-full rounded-lg border border-gray-200 dark:border-white/10"
+                            loading="lazy"
+                        />
+                    </figure>
+                    <figure class="space-y-2">
+                        <figcaption class="text-center text-sm font-bold text-gray-950 dark:text-white">2. Click Shareable Forms</figcaption>
+                        <img
+                            src="{{ asset('images/help/form-cluster.jpg') }}"
+                            alt="Forms cluster: click Shareable Forms"
+                            class="w-full rounded-lg border border-gray-200 dark:border-white/10"
+                            loading="lazy"
+                        />
+                    </figure>
+                    <figure class="space-y-2">
+                        <figcaption class="text-center text-sm font-bold text-gray-950 dark:text-white">3. Click New Shareable Form</figcaption>
+                        <img
+                            src="{{ asset('images/help/shareable-forms.jpg') }}"
+                            alt="Shareable Forms list: click New Shareable Form"
+                            class="w-full rounded-lg border border-gray-200 dark:border-white/10"
+                            loading="lazy"
+                        />
+                    </figure>
+                    <figure class="space-y-2">
+                        <figcaption class="text-center text-sm font-bold text-gray-950 dark:text-white">4. Confirm the name and click Create</figcaption>
+                        <img
+                            src="{{ asset('images/help/create-shareable.jpg') }}"
+                            alt="Create Shareable Form modal: click Create"
+                            class="w-full rounded-lg border border-gray-200 dark:border-white/10"
+                            loading="lazy"
+                        />
+                    </figure>
+                    <figure class="space-y-2">
+                        <figcaption class="text-center text-sm font-bold text-gray-950 dark:text-white">5. Click View on the new form</figcaption>
+                        <img
+                            src="{{ asset('images/help/shareable-created.jpg') }}"
+                            alt="Shareable Forms list: click View"
+                            class="w-full rounded-lg border border-gray-200 dark:border-white/10"
+                            loading="lazy"
+                        />
+                    </figure>
+                    <figure class="space-y-2">
+                        <figcaption class="text-center text-sm font-bold text-gray-950 dark:text-white">6. Click Copy Public Link</figcaption>
+                        <img
+                            src="{{ asset('images/help/shareable-view.jpg') }}"
+                            alt="Shareable Form view: copy the public link"
+                            class="w-full rounded-lg border border-gray-200 dark:border-white/10"
+                            loading="lazy"
+                        />
+                    </figure>
+                </div>
+                <x-filament::callout
+                    class="mt-4"
+                    color="info"
+                    icon="heroicon-o-paper-airplane"
+                    heading="Next: distribute the link to office employees"
+                    description="After copying the Public Link, send it to your office employees (email, chat, SMS, or printed QR code) so they can open the public registration form and submit their application. Employees do not need an account — anyone with the link can access the form."
+                />
             </li>
+        </ol>
+    </x-filament::section>
+
+    <x-filament::section
+        heading="Reviewing submissions and finalizing a batch"
+        description="After employees submit through the public link, review records, group them into a batch, and send the package to admin."
+    >
+        <ol class="list-decimal space-y-3 ps-5 text-sm text-gray-600 dark:text-gray-400">
             <li>
                 Go to <strong class="font-medium text-gray-950 dark:text-white">Forms → Form Submissions</strong>. The badge on the menu shows how many are waiting.
                 Open each <strong class="font-medium text-gray-950 dark:text-white">Pending</strong> submission, check the data and uploaded PDFs,
