@@ -19,7 +19,10 @@ class HelpCluster extends Cluster
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->role === UserRole::ADMIN->value;
+        return in_array(auth()->user()?->role, [
+            UserRole::ADMIN->value,
+            UserRole::REPRESENTATIVE->value,
+        ], true);
     }
 
     public static function canAccessClusteredComponents(): bool

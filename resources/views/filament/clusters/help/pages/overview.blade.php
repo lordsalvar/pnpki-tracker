@@ -53,12 +53,14 @@
             </li>
         </ol>
 
-        <x-filament::callout
-            class="mt-4"
-            color="gray"
-            icon="heroicon-o-information-circle"
-            description="If corrections are needed at step 5, the admin can return the batch. See Statuses & revisions in the menu for revision loops."
-        />
+        @if (auth()->user()?->role === \App\Enums\UserRole::ADMIN->value)
+            <x-filament::callout
+                class="mt-4"
+                color="gray"
+                icon="heroicon-o-information-circle"
+                description="If corrections are needed at step 5, the admin can return the batch. See Statuses & revisions in the menu for revision loops."
+            />
+        @endif
     </x-filament::section>
 
     <x-filament::section heading="Help pages in this section">
@@ -75,22 +77,24 @@
                         <td class="py-2.5 pe-4 align-top font-medium text-gray-950 dark:text-white">Representatives</td>
                         <td class="py-2.5 align-top">How to publish forms, review submissions, and finalize batches</td>
                     </tr>
-                    <tr>
-                        <td class="py-2.5 pe-4 align-top font-medium text-gray-950 dark:text-white">Administrators</td>
-                        <td class="py-2.5 align-top">How to review, approve, flag, and export</td>
-                    </tr>
-                    <tr>
-                        <td class="py-2.5 pe-4 align-top font-medium text-gray-950 dark:text-white">Employees</td>
-                        <td class="py-2.5 align-top">Registration wizard steps, ID combinations, what happens after submit</td>
-                    </tr>
-                    <tr>
-                        <td class="py-2.5 pe-4 align-top font-medium text-gray-950 dark:text-white">Statuses &amp; revisions</td>
-                        <td class="py-2.5 align-top">Every status value explained; revision loop diagrams</td>
-                    </tr>
-                    <tr>
-                        <td class="py-2.5 pe-4 align-top font-medium text-gray-950 dark:text-white">Troubleshooting</td>
-                        <td class="py-2.5 align-top">Common problems and their fixes</td>
-                    </tr>
+                    @if (auth()->user()?->role === \App\Enums\UserRole::ADMIN->value)
+                        <tr>
+                            <td class="py-2.5 pe-4 align-top font-medium text-gray-950 dark:text-white">Administrators</td>
+                            <td class="py-2.5 align-top">How to review, approve, flag, and export</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 pe-4 align-top font-medium text-gray-950 dark:text-white">Employees</td>
+                            <td class="py-2.5 align-top">Registration wizard steps, ID combinations, what happens after submit</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 pe-4 align-top font-medium text-gray-950 dark:text-white">Statuses &amp; revisions</td>
+                            <td class="py-2.5 align-top">Every status value explained; revision loop diagrams</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 pe-4 align-top font-medium text-gray-950 dark:text-white">Troubleshooting</td>
+                            <td class="py-2.5 align-top">Common problems and their fixes</td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>

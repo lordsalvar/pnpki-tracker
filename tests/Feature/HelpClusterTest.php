@@ -37,25 +37,49 @@ it('allows admins to view help pages', function (string $pageClass): void {
     'troubleshooting' => Troubleshooting::class,
 ]);
 
-it('hides the help cluster from representatives', function (): void {
+it('allows representatives to access the help cluster with overview and representatives pages only', function (): void {
     $user = User::factory()->create([
         'role' => UserRole::REPRESENTATIVE->value,
     ]);
 
     $this->actingAs($user);
 
-    expect(HelpCluster::canAccess())->toBeFalse()
-        ->and(HelpCluster::shouldRegisterNavigation())->toBeFalse()
-        ->and(Overview::canAccess())->toBeFalse();
+    expect(HelpCluster::canAccess())->toBeTrue()
+        ->and(HelpCluster::shouldRegisterNavigation())->toBeTrue()
+        ->and(Overview::canAccess())->toBeTrue()
+        ->and(RepresentativesGuide::canAccess())->toBeTrue()
+        ->and(AdministratorsGuide::canAccess())->toBeFalse()
+        ->and(EmployeesGuide::canAccess())->toBeFalse()
+        ->and(StatusesAndRevisions::canAccess())->toBeFalse()
+        ->and(Troubleshooting::canAccess())->toBeFalse();
 });
 
-it('forbids representatives from viewing help pages', function (): void {
+it('allows representatives to view overview and representatives guide', function (string $pageClass): void {
     $user = User::factory()->create([
         'role' => UserRole::REPRESENTATIVE->value,
     ]);
 
     $this->actingAs($user);
 
-    Livewire::test(Overview::class)
+    Livewire::test($pageClass)
+        ->assertSuccessful();
+})->with([
+    'overview' => Overview::class,
+    'representatives' => RepresentativesGuide::class,
+]);
+
+it('forbids representatives from viewing admin-only help pages', function (string $pageClass): void {
+    $user = User::factory()->create([
+        'role' => UserRole::REPRESENTATIVE->value,
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test($pageClass)
         ->assertForbidden();
-});
+})->with([
+    'administrators' => AdministratorsGuide::class,
+    'employees' => EmployeesGuide::class,
+    'statuses' => StatusesAndRevisions::class,
+    'troubleshooting' => Troubleshooting::class,
+]);
