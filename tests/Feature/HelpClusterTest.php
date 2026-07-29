@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Filament\Clusters\Help\HelpCluster;
 use App\Filament\Clusters\Help\Pages\AdministratorsGuide;
 use App\Filament\Clusters\Help\Pages\EmployeesGuide;
 use App\Filament\Clusters\Help\Pages\Overview;
@@ -18,7 +19,7 @@ it('redirects guests away from help pages', function (): void {
         ->assertRedirect();
 });
 
-it('allows authenticated staff to view help pages', function (string $pageClass): void {
+it('allows admins to view help pages', function (string $pageClass): void {
     $user = User::factory()->create([
         'role' => UserRole::ADMIN->value,
     ]);
@@ -36,7 +37,19 @@ it('allows authenticated staff to view help pages', function (string $pageClass)
     'troubleshooting' => Troubleshooting::class,
 ]);
 
-it('shows overview content for representatives', function (): void {
+it('hides the help cluster from representatives', function (): void {
+    $user = User::factory()->create([
+        'role' => UserRole::REPRESENTATIVE->value,
+    ]);
+
+    $this->actingAs($user);
+
+    expect(HelpCluster::canAccess())->toBeFalse()
+        ->and(HelpCluster::shouldRegisterNavigation())->toBeFalse()
+        ->and(Overview::canAccess())->toBeFalse();
+});
+
+it('forbids representatives from viewing help pages', function (): void {
     $user = User::factory()->create([
         'role' => UserRole::REPRESENTATIVE->value,
     ]);
@@ -44,7 +57,5 @@ it('shows overview content for representatives', function (): void {
     $this->actingAs($user);
 
     Livewire::test(Overview::class)
-        ->assertSuccessful()
-        ->assertSee('PNPKI Submission Tracker')
-        ->assertSee('How the process works');
+        ->assertForbidden();
 });
