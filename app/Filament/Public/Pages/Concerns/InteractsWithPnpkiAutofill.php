@@ -69,8 +69,6 @@ trait InteractsWithPnpkiAutofill
                             'drivers_license_only' => "PNPKI form, LTO Driver's License",
                             'prc_only' => 'PNPKI form, Professional Regulation Commission (PRC)',
                             'postal_id_only' => 'PNPKI form, ID Postal Identity Card',
-                            'birth_cert_umid' => 'PNPKI form, Birth Cert & UMID',
-                            'passport_umid' => 'PNPKI form, Passport & UMID',
                             'birth_cert_valid_ids' => 'PNPKI form, Birth Cert & 2 Valid IDs',
                             'passport_valid_ids' => 'PNPKI form, Passport & 2 valid IDs',
                         ])
@@ -143,7 +141,7 @@ trait InteractsWithPnpkiAutofill
                         ->uploadingMessage('Uploading Birth Certificate...')
                         ->required()
                         ->columnSpan(1)
-                        ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_umid', 'birth_cert_valid_ids'])),
+                        ->visible(fn (Get $get) => $get('id_combo') === 'birth_cert_valid_ids'),
 
                     FileUpload::make('upload_passport')
                         ->label('Passport (Bio-data page)')
@@ -161,7 +159,7 @@ trait InteractsWithPnpkiAutofill
                         ->uploadingMessage('Uploading Passport...')
                         ->required()
                         ->columnSpan(1)
-                        ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_only', 'passport_umid', 'passport_valid_ids'])),
+                        ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_only', 'passport_valid_ids'])),
 
                     FileUpload::make('upload_umid')
                         ->label('UMID Card')
@@ -179,7 +177,7 @@ trait InteractsWithPnpkiAutofill
                         ->uploadingMessage('Uploading UMID...')
                         ->required()
                         ->columnSpan(1)
-                        ->visible(fn (Get $get) => in_array($get('id_combo'), ['umid_only', 'birth_cert_umid', 'passport_umid'])),
+                        ->visible(fn (Get $get) => $get('id_combo') === 'umid_only'),
 
                     FileUpload::make('upload_drivers_license')
                         ->label("LTO Driver's License")

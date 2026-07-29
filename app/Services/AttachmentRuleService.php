@@ -11,8 +11,6 @@ class AttachmentRuleService
         'drivers_license_only' => ['upload_pnpki', 'upload_drivers_license'],
         'prc_only' => ['upload_pnpki', 'upload_prc_id'],
         'postal_id_only' => ['upload_pnpki', 'upload_postal_id'],
-        'birth_cert_umid' => ['upload_pnpki', 'upload_birth_cert', 'upload_umid'],
-        'passport_umid' => ['upload_pnpki', 'upload_passport', 'upload_umid'],
         'birth_cert_valid_ids' => ['upload_pnpki', 'upload_birth_cert', 'upload_id1', 'upload_id2'],
         'passport_valid_ids' => ['upload_pnpki', 'upload_passport', 'upload_id1', 'upload_id2'],
     ];

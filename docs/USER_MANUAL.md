@@ -181,8 +181,6 @@ You do **not** need an account. Use only the link your office representative sen
 | PNPKI form + Driver’s License | PNPKI form, LTO Driver’s License |
 | PNPKI form + PRC | PNPKI form, PRC ID |
 | PNPKI form + Postal ID | PNPKI form, Postal ID |
-| PNPKI form + Birth Cert & UMID | PNPKI form, Birth Certificate, UMID |
-| PNPKI form + Passport & UMID | PNPKI form, Passport, UMID |
 | PNPKI form + Birth Cert & 2 Valid IDs | PNPKI form, Birth Certificate, Valid ID #1, Valid ID #2 |
 | PNPKI form + Passport & 2 Valid IDs | PNPKI form, Passport, Valid ID #1, Valid ID #2 |
 

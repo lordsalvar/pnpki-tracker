@@ -78,14 +78,6 @@
                         <td class="py-2.5 align-top">PNPKI form + Postal ID</td>
                     </tr>
                     <tr>
-                        <td class="py-2.5 pe-4 align-top">Birth Cert + UMID</td>
-                        <td class="py-2.5 align-top">PNPKI form + Birth Certificate + UMID</td>
-                    </tr>
-                    <tr>
-                        <td class="py-2.5 pe-4 align-top">Passport + UMID</td>
-                        <td class="py-2.5 align-top">PNPKI form + Passport + UMID</td>
-                    </tr>
-                    <tr>
                         <td class="py-2.5 pe-4 align-top">Birth Cert + 2 Valid IDs</td>
                         <td class="py-2.5 align-top">PNPKI form + Birth Certificate + Valid ID #1 + Valid ID #2</td>
                     </tr>
