@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Offices;
 
 use App\Enums\UserRole;
+use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Filament\Resources\Offices\Pages\CreateOffice;
 use App\Filament\Resources\Offices\Pages\EditOffice;
 use App\Filament\Resources\Offices\Pages\ListOffices;
@@ -21,6 +22,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class OfficeResource extends Resource
 {
+    protected static ?string $cluster = SettingsCluster::class;
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = Office::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
