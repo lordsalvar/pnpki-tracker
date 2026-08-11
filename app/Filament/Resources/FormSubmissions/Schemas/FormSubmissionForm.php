@@ -24,6 +24,245 @@ class FormSubmissionForm
     {
         return $schema
             ->components([
+                Section::make('Document attachments')
+                    ->description('ID combination is fixed after submission. Replace PDFs as needed; each file must be PDF, max 5 MB.')
+                    ->icon(Heroicon::OutlinedDocumentArrowUp)
+                    ->columns(2)
+                    ->schema([
+                        Select::make('id_combo')
+                            ->label('Select ID Combination')
+                            ->options([
+                                'national_id' => 'PNPKI form, Philippine National ID (PhilID)',
+                                'passport_only' => 'PNPKI form, Philippine Passport',
+                                'umid_only' => 'PNPKI form, SSS Unified Multi-Purpose ID (UMID)',
+                                'drivers_license_only' => "PNPKI form, LTO Driver's License",
+                                'prc_only' => 'PNPKI form, Professional Regulation Commission (PRC)',
+                                'postal_id_only' => 'PNPKI form, ID Postal Identity Card',
+                                'birth_cert_valid_ids' => 'PNPKI form, Birth Cert & 2 Valid IDs',
+                                'passport_valid_ids' => 'PNPKI form, Passport & 2 valid IDs',
+                            ])
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function (?string $state, Set $set, Get $get, $livewire): void {
+                                if (! $livewire instanceof \App\Filament\Resources\FormSubmissions\Pages\EditFormSubmission) {
+                                    return;
+                                }
+
+                                $ruleService = app(\App\Services\AttachmentRuleService::class);
+                                $activeFields = $ruleService->activeFieldsForCombo($state);
+
+                                foreach ($activeFields as $field) {
+                                    $currentState = $get($field);
+
+                                    // Preserve explicit user removals ([]) and current uploads.
+                                    if ($currentState !== null) {
+                                        continue;
+                                    }
+
+                                    $persistedPath = $livewire->persistedAttachmentPathForField($field);
+
+                                    if ($persistedPath === null) {
+                                        continue;
+                                    }
+
+                                    $set($field, [$persistedPath => $persistedPath]);
+                                }
+                            })
+                            ->dehydrated(false)
+                            ->columnSpan(2),
+
+                        FileUpload::make('upload_pnpki')
+                            ->label('PNPKI Form')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('PNPKI'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage('Uploading PNPKI Form...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(2)
+                            ->visible(fn (Get $get) => filled($get('id_combo'))),
+
+                        FileUpload::make('upload_national_id')
+                            ->label('Philippine National ID')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('NationalID'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage('Uploading National ID...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(2)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
+
+                        FileUpload::make('upload_birth_cert')
+                            ->label('Birth Certificate')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('BirthCert'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage('Uploading Birth Certificate...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'birth_cert_valid_ids'),
+
+                        FileUpload::make('upload_passport')
+                            ->label('Passport (Bio-data page)')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('Passport'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage('Uploading Passport...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_only', 'passport_valid_ids'])),
+
+                        FileUpload::make('upload_umid')
+                            ->label('UMID Card')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('UMID'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage('Uploading UMID...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'umid_only'),
+
+                        FileUpload::make('upload_drivers_license')
+                            ->label("LTO Driver's License")
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('DriversLicense'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage("Uploading Driver's License...")
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(2)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'drivers_license_only'),
+
+                        FileUpload::make('upload_prc_id')
+                            ->label('PRC ID')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('PRCID'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage('Uploading PRC ID...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(2)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'prc_only'),
+
+                        FileUpload::make('upload_postal_id')
+                            ->label('Postal ID')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('PostalID'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage('Uploading Postal ID...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(2)
+                            ->visible(fn (Get $get) => $get('id_combo') === 'postal_id_only'),
+
+                        FileUpload::make('upload_id1')
+                            ->label('Valid ID #1')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('ID1'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage('Uploading Valid ID #1...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
+
+                        FileUpload::make('upload_id2')
+                            ->label('Valid ID #2')
+                            ->helperText('PDF only · Max 5 MB')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->disk('local')
+                            ->directory('attachments')
+                            ->visibility('private')
+                            ->getUploadedFileNameForStorageUsing(self::fileName('ID2'))
+                            ->openable()
+                            ->downloadable()
+                            ->deletable()
+                            ->previewable()
+                            ->uploadingMessage('Uploading Valid ID #2...')
+                            ->dehydrated(false)
+                            ->required()
+                            ->columnSpan(1)
+                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
+                    ])
+                    ->columnSpanFull(),
+
                 Section::make('Flag remarks')
                     ->description('Remarks from the reviewer.')
                     ->icon(Heroicon::OutlinedExclamationTriangle)
@@ -35,6 +274,7 @@ class FormSubmissionForm
                     ])
                     ->columnSpanFull()
                     ->visible(fn ($livewire) => $livewire->record?->flagged_by !== null),
+
                 Section::make('Submission details')
                     ->description('System reference and link to the public registration form, when applicable.')
                     ->icon(Heroicon::OutlinedClipboardDocumentList)
@@ -281,245 +521,6 @@ class FormSubmissionForm
                             ->validationMessages([
                                 'regex' => 'The TIN number must be 9 digits (total 9 digits).',
                             ]),
-                    ])
-                    ->columnSpanFull(),
-
-                Section::make('Document attachments')
-                    ->description('ID combination is fixed after submission. Replace PDFs as needed; each file must be PDF, max 5 MB.')
-                    ->icon(Heroicon::OutlinedDocumentArrowUp)
-                    ->columns(2)
-                    ->schema([
-                        Select::make('id_combo')
-                            ->label('Select ID Combination')
-                            ->options([
-                                'national_id' => 'PNPKI form, Philippine National ID (PhilID)',
-                                'passport_only' => 'PNPKI form, Philippine Passport',
-                                'umid_only' => 'PNPKI form, SSS Unified Multi-Purpose ID (UMID)',
-                                'drivers_license_only' => "PNPKI form, LTO Driver's License",
-                                'prc_only' => 'PNPKI form, Professional Regulation Commission (PRC)',
-                                'postal_id_only' => 'PNPKI form, ID Postal Identity Card',
-                                'birth_cert_valid_ids' => 'PNPKI form, Birth Cert & 2 Valid IDs',
-                                'passport_valid_ids' => 'PNPKI form, Passport & 2 valid IDs',
-                            ])
-                            ->required()
-                            ->live()
-                            ->afterStateUpdated(function (?string $state, Set $set, Get $get, $livewire): void {
-                                if (! $livewire instanceof \App\Filament\Resources\FormSubmissions\Pages\EditFormSubmission) {
-                                    return;
-                                }
-
-                                $ruleService = app(\App\Services\AttachmentRuleService::class);
-                                $activeFields = $ruleService->activeFieldsForCombo($state);
-
-                                foreach ($activeFields as $field) {
-                                    $currentState = $get($field);
-
-                                    // Preserve explicit user removals ([]) and current uploads.
-                                    if ($currentState !== null) {
-                                        continue;
-                                    }
-
-                                    $persistedPath = $livewire->persistedAttachmentPathForField($field);
-
-                                    if ($persistedPath === null) {
-                                        continue;
-                                    }
-
-                                    $set($field, [$persistedPath => $persistedPath]);
-                                }
-                            })
-                            ->dehydrated(false)
-                            ->columnSpan(2),
-
-                        FileUpload::make('upload_pnpki')
-                            ->label('PNPKI Form')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('PNPKI'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage('Uploading PNPKI Form...')
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(2)
-                            ->visible(fn (Get $get) => filled($get('id_combo'))),
-
-                        FileUpload::make('upload_national_id')
-                            ->label('Philippine National ID')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('NationalID'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage('Uploading National ID...')
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(2)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'national_id'),
-
-                        FileUpload::make('upload_birth_cert')
-                            ->label('Birth Certificate')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('BirthCert'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage('Uploading Birth Certificate...')
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'birth_cert_valid_ids'),
-
-                        FileUpload::make('upload_passport')
-                            ->label('Passport (Bio-data page)')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('Passport'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage('Uploading Passport...')
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['passport_only', 'passport_valid_ids'])),
-
-                        FileUpload::make('upload_umid')
-                            ->label('UMID Card')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('UMID'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage('Uploading UMID...')
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'umid_only'),
-
-                        FileUpload::make('upload_drivers_license')
-                            ->label("LTO Driver's License")
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('DriversLicense'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage("Uploading Driver's License...")
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(2)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'drivers_license_only'),
-
-                        FileUpload::make('upload_prc_id')
-                            ->label('PRC ID')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('PRCID'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage('Uploading PRC ID...')
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(2)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'prc_only'),
-
-                        FileUpload::make('upload_postal_id')
-                            ->label('Postal ID')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('PostalID'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage('Uploading Postal ID...')
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(2)
-                            ->visible(fn (Get $get) => $get('id_combo') === 'postal_id_only'),
-
-                        FileUpload::make('upload_id1')
-                            ->label('Valid ID #1')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('ID1'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage('Uploading Valid ID #1...')
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
-
-                        FileUpload::make('upload_id2')
-                            ->label('Valid ID #2')
-                            ->helperText('PDF only · Max 5 MB')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(5120)
-                            ->disk('local')
-                            ->directory('attachments')
-                            ->visibility('private')
-                            ->getUploadedFileNameForStorageUsing(self::fileName('ID2'))
-                            ->openable()
-                            ->downloadable()
-                            ->deletable()
-                            ->previewable()
-                            ->uploadingMessage('Uploading Valid ID #2...')
-                            ->dehydrated(false)
-                            ->required()
-                            ->columnSpan(1)
-                            ->visible(fn (Get $get) => in_array($get('id_combo'), ['birth_cert_valid_ids', 'passport_valid_ids'])),
                     ])
                     ->columnSpanFull(),
 
