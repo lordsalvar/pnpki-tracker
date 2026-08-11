@@ -85,6 +85,7 @@ class FormSubmissionsTable
                         FormSubmissionStatus::FINALIZED => 'info',
                         FormSubmissionStatus::NEEDS_REVISION => 'danger',
                         FormSubmissionStatus::FOR_SUBMISSION => 'success',
+                        FormSubmissionStatus::APPROVED_SUBMISSION => 'primary',
                         default => 'warning',
                     })
                     ->searchable(),
@@ -142,7 +143,11 @@ class FormSubmissionsTable
                     return FormSubmissionResource::getUrl('edit', ['record' => $record]);
                 }
 
-                if (in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION], true)) {
+                if (in_array($record->status, [
+                    FormSubmissionStatus::FINALIZED,
+                    FormSubmissionStatus::FOR_SUBMISSION,
+                    FormSubmissionStatus::APPROVED_SUBMISSION,
+                ], true)) {
                     return FormSubmissionResource::getUrl('view', ['record' => $record]);
                 }
 
@@ -158,6 +163,8 @@ class FormSubmissionsTable
                         'pending' => 'Pending',
                         'finalized' => 'Finalized',
                         'needs_revision' => 'Needs Revision',
+                        'for_submission' => 'For Submission',
+                        'approved_submission' => 'Approved Submission',
                     ]),
 
                 SelectFilter::make('office_id')
@@ -176,7 +183,11 @@ class FormSubmissionsTable
                                 return true;
                             }
 
-                            if (in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION], true)) {
+                            if (in_array($record->status, [
+                                FormSubmissionStatus::FINALIZED,
+                                FormSubmissionStatus::FOR_SUBMISSION,
+                                FormSubmissionStatus::APPROVED_SUBMISSION,
+                            ], true)) {
                                 return true;
                             }
 
@@ -194,6 +205,7 @@ class FormSubmissionsTable
                         ->visible(fn ($record) => in_array($record->status, [
                             FormSubmissionStatus::FINALIZED,
                             FormSubmissionStatus::FOR_SUBMISSION,
+                            FormSubmissionStatus::APPROVED_SUBMISSION,
                             FormSubmissionStatus::NEEDS_REVISION,
                         ], true)),
                     RestoreAction::make()

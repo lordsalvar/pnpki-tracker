@@ -50,12 +50,14 @@ class FormSubmissionsRelationManager extends RelationManager
                     ->hidden(fn ($record) => in_array($record->status, [
                         FormSubmissionStatus::FINALIZED,
                         FormSubmissionStatus::FOR_SUBMISSION,
+                        FormSubmissionStatus::APPROVED_SUBMISSION,
                     ], true)),
                 ViewAction::make()
                     ->url(fn ($record) => FormSubmissionResource::getUrl('view', ['record' => $record]))
                     ->visible(fn ($record) => in_array($record->status, [
                         FormSubmissionStatus::FINALIZED,
                         FormSubmissionStatus::FOR_SUBMISSION,
+                        FormSubmissionStatus::APPROVED_SUBMISSION,
                     ], true)),
             ])
             ->toolbarActions([

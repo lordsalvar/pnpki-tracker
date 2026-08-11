@@ -80,6 +80,12 @@ class ListFormSubmissions extends ListRecords
                 ->modifyQueryUsing(
                     fn (Builder $query) => $query->where('status', FormSubmissionStatus::FOR_SUBMISSION->value)
                 ),
+            'approved_submission' => Tab::make('Approved Submission')
+                ->icon('heroicon-o-check-badge')
+                ->badge($this->scopedSubmissionCount(FormSubmissionStatus::APPROVED_SUBMISSION))
+                ->modifyQueryUsing(
+                    fn (Builder $query) => $query->where('status', FormSubmissionStatus::APPROVED_SUBMISSION->value)
+                ),
         ];
     }
 

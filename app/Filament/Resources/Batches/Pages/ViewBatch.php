@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Batches\Pages;
 
 use App\Actions\Batch\AcceptModificationRequestBatchAction;
+use App\Actions\Batch\ApproveBatchSubmissionAction;
 use App\Actions\Batch\DownloadBatchAttachmentsAction;
 use App\Actions\Batch\RequestModificationBatchAction;
 use App\Actions\Batch\RevertBatchToPendingAction;
@@ -305,18 +306,25 @@ class ViewBatch extends ViewRecord
                 ->color('primary')
                 ->requiresConfirmation()
                 ->modalHeading('Approve Submission')
-                ->modalDescription('This will mark the batch as Approved Submission and move it to the Approved Submissions section.')
+                ->modalDescription('This will mark the batch and all of its form submissions as Approved Submission.')
                 ->visible(fn () => Auth::user()?->role === UserRole::ADMIN->value
                     && $this->isForSubmission())
                 ->action(function () {
-                    $this->record->update([
-                        'application_status' => ApplicationStatus::APPROVED_SUBMISSION->value,
-                    ]);
+                    try {
+                        app(ApproveBatchSubmissionAction::class)->execute($this->record);
+                    } catch (InvalidArgumentException $exception) {
+                        Notification::make()
+                            ->title($exception->getMessage())
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
 
                     $this->refreshFormData(['application_status']);
 
                     Notification::make()
-                        ->title('Batch approved for submission.')
+                        ->title('Batch and submissions approved.')
                         ->success()
                         ->send();
 

@@ -66,6 +66,7 @@ class FormSubmissionResource extends Resource
                 FormSubmissionStatus::FINALIZED->value,
                 FormSubmissionStatus::NEEDS_REVISION->value,
                 FormSubmissionStatus::FOR_SUBMISSION->value,
+                FormSubmissionStatus::APPROVED_SUBMISSION->value,
             ]);
         }
 
@@ -95,6 +96,7 @@ class FormSubmissionResource extends Resource
                             FormSubmissionStatus::FINALIZED->value,
                             FormSubmissionStatus::NEEDS_REVISION->value,
                             FormSubmissionStatus::FOR_SUBMISSION->value,
+                            FormSubmissionStatus::APPROVED_SUBMISSION->value,
                         ])
                         ->count();
             }

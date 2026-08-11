@@ -87,7 +87,7 @@ class FormSubmissionsRelationManager extends RelationManager
                             'record' => $record,
                             'batch' => $this->ownerRecord->getKey(),
                         ]))
-                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
+                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::APPROVED_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
                 ] : [
                     EditAction::make()
                         ->url(fn ($record) => FormSubmissionResource::getUrl('edit', [
@@ -102,7 +102,7 @@ class FormSubmissionsRelationManager extends RelationManager
                             'record' => $record,
                             'batch' => $this->ownerRecord->getKey(),
                         ]))
-                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
+                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::APPROVED_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
                 ],
             )
             ->toolbarActions($toolbarActions);

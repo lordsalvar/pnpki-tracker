@@ -45,6 +45,7 @@ it('shows status tabs including pending for representatives', function (): void 
     createSubmissionForOffice($office, FormSubmissionStatus::FINALIZED);
     createSubmissionForOffice($office, FormSubmissionStatus::NEEDS_REVISION);
     createSubmissionForOffice($office, FormSubmissionStatus::FOR_SUBMISSION);
+    createSubmissionForOffice($office, FormSubmissionStatus::APPROVED_SUBMISSION);
 
     $this->actingAs($representative);
 
@@ -59,12 +60,14 @@ it('shows status tabs including pending for representatives', function (): void 
         'finalized',
         'needs_revision',
         'for_submission',
+        'approved_submission',
     ])
-        ->and($tabs['submissions']->getBadge())->toBe(4)
+        ->and($tabs['submissions']->getBadge())->toBe(5)
         ->and($tabs['pending']->getBadge())->toBe(1)
         ->and($tabs['finalized']->getBadge())->toBe(1)
         ->and($tabs['needs_revision']->getBadge())->toBe(1)
-        ->and($tabs['for_submission']->getBadge())->toBe(1);
+        ->and($tabs['for_submission']->getBadge())->toBe(1)
+        ->and($tabs['approved_submission']->getBadge())->toBe(1);
 });
 
 it('shows status tabs without pending for admins', function (): void {
@@ -82,6 +85,7 @@ it('shows status tabs without pending for admins', function (): void {
     createSubmissionForOffice($office, FormSubmissionStatus::FINALIZED);
     createSubmissionForOffice($office, FormSubmissionStatus::NEEDS_REVISION);
     createSubmissionForOffice($office, FormSubmissionStatus::FOR_SUBMISSION);
+    createSubmissionForOffice($office, FormSubmissionStatus::APPROVED_SUBMISSION);
 
     $this->actingAs($admin);
 
@@ -95,12 +99,14 @@ it('shows status tabs without pending for admins', function (): void {
         'finalized',
         'needs_revision',
         'for_submission',
+        'approved_submission',
     ])
         ->and($tabs)->not->toHaveKey('pending')
-        ->and($tabs['submissions']->getBadge())->toBe(3)
+        ->and($tabs['submissions']->getBadge())->toBe(4)
         ->and($tabs['finalized']->getBadge())->toBe(1)
         ->and($tabs['needs_revision']->getBadge())->toBe(1)
-        ->and($tabs['for_submission']->getBadge())->toBe(1);
+        ->and($tabs['for_submission']->getBadge())->toBe(1)
+        ->and($tabs['approved_submission']->getBadge())->toBe(1);
 });
 
 it('filters the table when a representative selects the pending tab', function (): void {

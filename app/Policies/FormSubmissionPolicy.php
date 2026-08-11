@@ -169,6 +169,10 @@ class FormSubmissionPolicy
             return false;
         }
 
+        if ($formSubmission->batch?->application_status === ApplicationStatus::APPROVED_SUBMISSION) {
+            return false;
+        }
+
         return $formSubmission->flagged_by === null;
     }
 
@@ -236,6 +240,14 @@ class FormSubmissionPolicy
     public function update(User $user, FormSubmission $formSubmission): bool
     {
         if ($formSubmission->batch?->application_status === ApplicationStatus::FOR_SUBMISSION) {
+            return false;
+        }
+
+        if ($formSubmission->batch?->application_status === ApplicationStatus::APPROVED_SUBMISSION) {
+            return false;
+        }
+
+        if ($formSubmission->status === FormSubmissionStatus::APPROVED_SUBMISSION) {
             return false;
         }
 
