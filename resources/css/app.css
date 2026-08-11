@@ -11,3 +11,26 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Move Filament table pagination above the table content */
+.fi-ta-main {
+    @apply flex flex-col;
+}
+
+.fi-ta-main > * {
+    order: 10;
+}
+
+.fi-ta-main > .fi-ta-header-ctn {
+    order: 1;
+}
+
+.fi-ta-main > .fi-pagination {
+    @apply order-2 border-t-0 border-b border-gray-200 dark:border-white/10;
+}
+
+.fi-ta-main > .fi-ta-reorder-indicator,
+.fi-ta-main > .fi-ta-selection-indicator,
+.fi-ta-main > .fi-ta-filter-indicators {
+    order: 3;
+}
