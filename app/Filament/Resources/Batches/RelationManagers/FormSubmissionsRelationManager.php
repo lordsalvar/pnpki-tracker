@@ -58,17 +58,7 @@ class FormSubmissionsRelationManager extends RelationManager
                     return null;
                 }
 
-                if ($record->status === FormSubmissionStatus::NEEDS_REVISION) {
-                    if (
-                        Auth::user()?->role === UserRole::REPRESENTATIVE->value
-                        && $this->ownerRecord->status !== BatchStatus::NEEDS_REVISION->value
-                    ) {
-                        return FormSubmissionResource::getUrl('view', [
-                            'record' => $record,
-                            'batch' => $this->ownerRecord->getKey(),
-                        ]);
-                    }
-
+                if (Gate::allows('update', $record)) {
                     return FormSubmissionResource::getUrl('edit', [
                         'record' => $record,
                         'batch' => $this->ownerRecord->getKey(),
@@ -94,15 +84,13 @@ class FormSubmissionsRelationManager extends RelationManager
                             'record' => $record,
                             'batch' => $this->ownerRecord->getKey(),
                         ]))
-                        ->visible(fn ($record) => $this->ownerRecord->status === BatchStatus::NEEDS_REVISION
-                            && $record->status === FormSubmissionStatus::NEEDS_REVISION
-                            && Gate::allows('update', $record)),
+                        ->visible(fn ($record) => Gate::allows('update', $record)),
                     ViewAction::make()
                         ->url(fn ($record) => FormSubmissionResource::getUrl('view', [
                             'record' => $record,
                             'batch' => $this->ownerRecord->getKey(),
                         ]))
-                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::APPROVED_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
+                        ->visible(fn ($record) => ! Gate::allows('update', $record)),
                 ],
             )
             ->toolbarActions($toolbarActions);
