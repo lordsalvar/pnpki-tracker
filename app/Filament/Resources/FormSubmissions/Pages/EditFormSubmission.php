@@ -33,15 +33,19 @@ class EditFormSubmission extends EditRecord
 
     public function mount(int|string $record): void
     {
-        $submission = FormSubmission::find($record);
+        $submission = FormSubmission::query()->find($record);
 
         if ($submission && in_array($submission->status, [
             FormSubmissionStatus::FINALIZED,
             FormSubmissionStatus::FOR_SUBMISSION,
         ], true)) {
+            $this->record = $submission;
+
+            $batchId = request()->query('batch');
+
             $this->redirect(FormSubmissionResource::getUrl('view', array_filter([
                 'record' => $submission,
-                'batch' => request()->integer('batch') > 0 ? request()->integer('batch') : null,
+                'batch' => is_string($batchId) && $batchId !== '' ? $batchId : null,
             ], fn ($value): bool => filled($value))), navigate: true);
 
             return;
@@ -440,16 +444,16 @@ class EditFormSubmission extends EditRecord
 
     private function getContextBatchId(): ?string
     {
-        $batchId = request()->integer('batch');
+        $batchId = request()->query('batch');
 
-        if ($batchId <= 0) {
+        if (! is_string($batchId) || $batchId === '') {
             return null;
         }
 
-        if ((string) $this->record->batch_id !== (string) $batchId) {
+        if ((string) $this->record->batch_id !== $batchId) {
             return null;
         }
 
-        return (string) $batchId;
+        return $batchId;
     }
 }

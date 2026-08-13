@@ -30,7 +30,7 @@ class FormSubmissionsRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
-        $isFinalized = $this->ownerRecord->status === BatchStatus::FINALIZED->value;
+        $isFinalized = $this->ownerRecord->status === BatchStatus::FINALIZED;
 
         $bulkActions = [];
 
@@ -53,12 +53,12 @@ class FormSubmissionsRelationManager extends RelationManager
 
         return FormSubmissionsTable::configure($table)
             ->recordTitleAttribute('lastname')
-            ->recordUrl(function ($record): ?string {
+            ->recordUrl(function ($record) use ($isFinalized): ?string {
                 if (! $record) {
                     return null;
                 }
 
-                if (Gate::allows('update', $record)) {
+                if (! $isFinalized && Gate::allows('update', $record)) {
                     return FormSubmissionResource::getUrl('edit', [
                         'record' => $record,
                         'batch' => $this->ownerRecord->getKey(),
@@ -77,7 +77,7 @@ class FormSubmissionsRelationManager extends RelationManager
                             'record' => $record,
                             'batch' => $this->ownerRecord->getKey(),
                         ]))
-                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::APPROVED_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION])),
+                        ->visible(fn ($record) => in_array($record->status, [FormSubmissionStatus::FINALIZED, FormSubmissionStatus::FOR_SUBMISSION, FormSubmissionStatus::APPROVED_SUBMISSION, FormSubmissionStatus::NEEDS_REVISION], true)),
                 ] : [
                     EditAction::make()
                         ->url(fn ($record) => FormSubmissionResource::getUrl('edit', [

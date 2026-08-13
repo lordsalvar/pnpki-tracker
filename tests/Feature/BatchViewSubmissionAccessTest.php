@@ -111,3 +111,55 @@ it('keeps finalized submissions view only from the batch page', function (): voi
         ]), $submission->getKey())
         ->assertTableActionHidden('edit', $submission->getKey());
 });
+
+it('lets admins open finalized submissions in view mode from a finalized batch', function (): void {
+    $office = Office::query()->create([
+        'name' => 'Davao Occidental',
+        'acronym' => 'DOC',
+        'number_of_employees' => 8,
+    ]);
+
+    $admin = User::factory()->create([
+        'role' => UserRole::ADMIN->value,
+        'office_id' => $office->id,
+    ]);
+
+    $batch = Batch::query()->create([
+        'office_id' => $office->id,
+        'user_id' => $admin->id,
+        'batch_name' => 'DOC-1',
+        'status' => BatchStatus::FINALIZED->value,
+        'application_status' => null,
+    ]);
+
+    $submission = createBatchSubmission($office, $batch, FormSubmissionStatus::FINALIZED);
+
+    $this->actingAs($admin);
+
+    Livewire::test(FormSubmissionsRelationManager::class, [
+        'ownerRecord' => $batch,
+        'pageClass' => ViewBatch::class,
+    ])
+        ->assertSuccessful()
+        ->loadTable()
+        ->assertCanSeeTableRecords([$submission])
+        ->assertTableActionVisible('view', $submission->getKey())
+        ->assertTableActionHasUrl('view', FormSubmissionResource::getUrl('view', [
+            'record' => $submission,
+            'batch' => $batch->getKey(),
+        ]), $submission->getKey())
+        ->assertTableActionHidden('edit', $submission->getKey());
+
+    $this->get(FormSubmissionResource::getUrl('view', [
+        'record' => $submission,
+        'batch' => $batch->getKey(),
+    ]))->assertSuccessful();
+
+    $this->get(FormSubmissionResource::getUrl('edit', [
+        'record' => $submission,
+        'batch' => $batch->getKey(),
+    ]))->assertRedirect(FormSubmissionResource::getUrl('view', [
+        'record' => $submission,
+        'batch' => $batch->getKey(),
+    ]));
+});

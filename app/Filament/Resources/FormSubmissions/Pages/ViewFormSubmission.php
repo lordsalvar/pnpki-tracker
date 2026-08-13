@@ -97,18 +97,10 @@ class ViewFormSubmission extends ViewRecord
                         ->send();
 
                     if (Auth::user()?->role === UserRole::ADMIN->value) {
-                        $batchId = request()->integer('batch');
+                        $batchId = $this->getContextBatchId() ?? $this->record->batch_id;
 
-                        if ($batchId > 0 && (int) $this->record->batch_id === $batchId) {
+                        if ($batchId !== null) {
                             $this->redirect(BatchResource::getUrl('view', ['record' => $batchId]), navigate: true);
-
-                            return;
-                        }
-
-                        if ($this->record->batch_id !== null) {
-                            $this->redirect(BatchResource::getUrl('view', ['record' => $this->record->batch_id]), navigate: true);
-
-                            return;
                         }
                     }
                 }),
@@ -163,18 +155,10 @@ class ViewFormSubmission extends ViewRecord
                     $this->refreshFormData(['flagged_by', 'flag_remarks']);
 
                     if (Auth::user()?->role === UserRole::ADMIN->value) {
-                        $batchId = request()->integer('batch');
+                        $batchId = $this->getContextBatchId() ?? $this->record->batch_id;
 
-                        if ($batchId > 0 && (int) $this->record->batch_id === $batchId) {
+                        if ($batchId !== null) {
                             $this->redirect(BatchResource::getUrl('view', ['record' => $batchId]), navigate: true);
-
-                            return;
-                        }
-
-                        if ($this->record->batch_id !== null) {
-                            $this->redirect(BatchResource::getUrl('view', ['record' => $this->record->batch_id]), navigate: true);
-
-                            return;
                         }
                     }
                 }),
@@ -321,16 +305,16 @@ class ViewFormSubmission extends ViewRecord
 
     private function getContextBatchId(): ?string
     {
-        $batchId = request()->integer('batch');
+        $batchId = request()->query('batch');
 
-        if ($batchId <= 0) {
+        if (! is_string($batchId) || $batchId === '') {
             return null;
         }
 
-        if ((string) $this->record->batch_id !== (string) $batchId) {
+        if ((string) $this->record->batch_id !== $batchId) {
             return null;
         }
 
-        return (string) $batchId;
+        return $batchId;
     }
 }
