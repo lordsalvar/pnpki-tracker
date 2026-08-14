@@ -135,6 +135,24 @@ class FormSubmissionPolicy
     }
 
     /**
+     * Revert a for-submission record to pending (admin only; blocked once the batch is approved).
+     */
+    public function revertForSubmissionToPending(User $user, FormSubmission $formSubmission): bool
+    {
+        if ($user->role !== UserRole::ADMIN->value) {
+            return false;
+        }
+
+        if ($formSubmission->status !== FormSubmissionStatus::FOR_SUBMISSION) {
+            return false;
+        }
+
+        $formSubmission->loadMissing('batch');
+
+        return $formSubmission->batch?->application_status !== ApplicationStatus::APPROVED_SUBMISSION;
+    }
+
+    /**
      * Flag a finalized submission for revision (finalized batch, not yet for submission to DICT).
      */
     public function flagNeedsRevision(User $user, FormSubmission $formSubmission): bool

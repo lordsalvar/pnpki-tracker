@@ -4,6 +4,7 @@ namespace App\Filament\Resources\FormSubmissions\Pages;
 
 use App\Actions\FormSubmission\FlagNeedsRevisionFormSubmissionAction;
 use App\Actions\FormSubmission\ForSubmissionAction;
+use App\Actions\FormSubmission\RevertForSubmissionToPendingAction;
 use App\Actions\FormSubmission\UnFinalizeFormSubmissionAction;
 use App\Enums\BatchStatus;
 use App\Enums\FormSubmissionStatus;
@@ -103,6 +104,34 @@ class ViewFormSubmission extends ViewRecord
                             $this->redirect(BatchResource::getUrl('view', ['record' => $batchId]), navigate: true);
                         }
                     }
+                }),
+            Action::make('revert_for_submission_to_pending')
+                ->label('Revert to Pending')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading('Revert submission to pending?')
+                ->modalDescription('The submission will return to Pending and be removed from its batch so the representative can edit it again. If the batch was marked For Submission, its application status returns to Pending for Review.')
+                ->visible(fn (): bool => Gate::allows('revertForSubmissionToPending', $this->record))
+                ->action(function (): void {
+                    $batchId = $this->getContextBatchId() ?? $this->record->batch_id;
+
+                    app(RevertForSubmissionToPendingAction::class)->execute($this->record);
+
+                    $this->record->refresh();
+
+                    Notification::make()
+                        ->title('Submission reverted to pending.')
+                        ->success()
+                        ->send();
+
+                    if ($batchId !== null) {
+                        $this->redirect(BatchResource::getUrl('view', ['record' => $batchId]), navigate: true);
+
+                        return;
+                    }
+
+                    $this->redirect(FormSubmissionResource::getUrl('index'), navigate: true);
                 }),
             Action::make('unfinalize')
                 ->label('Revert to pending')
