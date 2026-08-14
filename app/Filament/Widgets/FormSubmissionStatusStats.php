@@ -34,7 +34,7 @@ class FormSubmissionStatusStats extends StatsOverviewWidget
                 ->color('warning'),
 
             Stat::make('For Submission', number_format($counts['for_submission']))
-                ->description('Cleared for the DICT package')
+                ->description('Ready to submit')
                 ->descriptionIcon(Heroicon::OutlinedPaperAirplane)
                 ->color('success'),
 
