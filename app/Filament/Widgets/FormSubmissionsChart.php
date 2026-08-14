@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class FormSubmissionsChart extends ChartWidget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
     protected int|string|array $columnSpan = 'full';
 

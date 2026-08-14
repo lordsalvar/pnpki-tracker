@@ -7,6 +7,7 @@ use App\Enums\Sex;
 use App\Enums\UserRole;
 use App\Filament\Widgets\AccountWidget;
 use App\Filament\Widgets\FormSubmissionsChart;
+use App\Filament\Widgets\FormSubmissionStatusStats;
 use App\Filament\Widgets\StatsOverview;
 use App\Models\Batch;
 use App\Models\EmployeeForm;
@@ -67,6 +68,54 @@ it('shows global dashboard overview stats for admins', function (): void {
         ->assertSee('Registered offices')
         ->assertDontSee('Your office')
         ->assertDontSee('Headcount for your office');
+});
+
+it('shows form status totals for admins', function (): void {
+    $office = Office::query()->create([
+        'name' => 'Davao Oriental',
+        'acronym' => 'DOR',
+        'number_of_employees' => 20,
+    ]);
+
+    createFormSubmission($office, 'PendingOne', FormSubmissionStatus::PENDING);
+    createFormSubmission($office, 'PendingTwo', FormSubmissionStatus::PENDING);
+    createFormSubmission($office, 'ForSubOne', FormSubmissionStatus::FOR_SUBMISSION);
+    createFormSubmission($office, 'ForSubTwo', FormSubmissionStatus::FOR_SUBMISSION);
+    createFormSubmission($office, 'ForSubThree', FormSubmissionStatus::FOR_SUBMISSION);
+    createFormSubmission($office, 'ApprovedOne', FormSubmissionStatus::APPROVED_SUBMISSION);
+
+    $admin = User::factory()->create([
+        'role' => UserRole::ADMIN->value,
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(FormSubmissionStatusStats::class)
+        ->assertSuccessful()
+        ->assertSee('Form status')
+        ->assertSee('Pending')
+        ->assertSee('For Submission')
+        ->assertSee('Approved')
+        ->assertSee('2')
+        ->assertSee('3')
+        ->assertSee('1');
+});
+
+it('hides form status totals from representatives', function (): void {
+    $office = Office::query()->create([
+        'name' => 'Compostela Valley',
+        'acronym' => 'COM',
+        'number_of_employees' => 8,
+    ]);
+
+    $representative = User::factory()->create([
+        'role' => UserRole::REPRESENTATIVE->value,
+        'office_id' => $office->id,
+    ]);
+
+    $this->actingAs($representative);
+
+    expect(FormSubmissionStatusStats::canView())->toBeFalse();
 });
 
 it('scopes the form submissions chart to the representative office', function (): void {
@@ -178,8 +227,11 @@ function createOfficesWithAnalyticsFixture(): array
     return [$ownOffice, $otherOffice];
 }
 
-function createFormSubmission(Office $office, string $firstname): FormSubmission
-{
+function createFormSubmission(
+    Office $office,
+    string $firstname,
+    FormSubmissionStatus $status = FormSubmissionStatus::PENDING,
+): FormSubmission {
     return FormSubmission::query()->create([
         'firstname' => $firstname,
         'lastname' => 'Tester',
@@ -188,8 +240,9 @@ function createFormSubmission(Office $office, string $firstname): FormSubmission
         'office_id' => $office->id,
         'organizational_unit' => 'IT',
         'civil_status' => CivilStatus::Single->value,
-        'status' => FormSubmissionStatus::PENDING->value,
+        'status' => $status->value,
         'sex' => Sex::Male->value,
         'tin_number' => '123-456-789',
+        'birth_date' => fake()->unique()->date(),
     ]);
 }
